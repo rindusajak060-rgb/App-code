@@ -1,0 +1,1319 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>USAHA JAHIT ABAH - POS & Manajemen Tailor Premium</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Space Mono', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            gold: '#D4AF37',
+                            goldDark: '#B5952F',
+                            textMain: '#0F172A', 
+                            textMuted: '#64748B', 
+                            accent: '#4F46E5', // Indigo 600
+                            accentHover: '#4338CA',
+                        }
+                    },
+                    boxShadow: {
+                        'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.07)',
+                        'premium': '0 20px 40px -10px rgba(0, 0, 0, 0.1)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- React & Libraries -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <style>
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.5); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(100, 116, 139, 0.8); }
+
+        .bg-mesh {
+            background-color: #f6f8fd;
+            background-image: 
+                radial-gradient(at 81% 0%, hsla(240, 100%, 93%, 1) 0px, transparent 50%),
+                radial-gradient(at 11% 88%, hsla(282, 100%, 90%, 1) 0px, transparent 50%),
+                radial-gradient(at 93% 81%, hsla(190, 100%, 88%, 1) 0px, transparent 50%),
+                radial-gradient(at 0% 21%, hsla(348, 100%, 92%, 1) 0px, transparent 50%);
+            background-attachment: fixed;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
+        }
+        
+        .glass-header {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.6);
+        }
+
+        .receipt-preview {
+            background-color: #ffffff;
+            font-family: 'Space Mono', monospace;
+            box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.15);
+            color: #000000;
+        }
+        .receipt-edge {
+            background: radial-gradient(circle, transparent, transparent 50%, #fff 50%, #fff 100%) -5px -5px / 10px 10px repeat-x;
+            height: 6px;
+            width: 100%;
+        }
+
+        @media print {
+            body { background: white !important; color: black !important; margin: 0 !important; padding: 0 !important; }
+            .no-print { display: none !important; }
+            #print-area { display: block !important; position: absolute; left: 0; top: 0; width: 100%; }
+            .receipt-edge { display: none !important; }
+        }
+    </style>
+</head>
+<body class="bg-mesh text-brand-textMain font-sans antialiased overflow-x-hidden selection:bg-brand-accent/30 selection:text-brand-accent">
+    
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        const defaultSettings = {
+            namaUsaha: "USAHA JAHIT ABAH",
+            subNama: "Penjahit & Vermak Express",
+            alamat: "Jl. Raya Kebon Jeruk No. 45, Jakarta Barat",
+            telepon: "0812-8899-7700",
+            logo: null,
+            footerText: "Terima Kasih atas Kepercayaan Anda.\nGaransi Jahitan & Vermak 7 Hari.",
+            paperSize: "58mm", 
+            marginTop: 0,     
+            logoPosition: "side", 
+            receiptFontSize: "text-xs" 
+        };
+
+        const presetServices = [
+            { id: 'p1', name: 'Permak Celana Jeans', price: 35000, category: 'Permak' },
+            { id: 'p2', name: 'Kecilkan Pinggang', price: 40000, category: 'Permak' },
+            { id: 'p3', name: 'Potong Panjang Baju/Celana', price: 25000, category: 'Permak' },
+            { id: 'p4', name: 'Ganti Resleting Jepang', price: 30000, category: 'Permak' },
+            { id: 'p5', name: 'Jahit Kebaya Akad/Pesta', price: 350000, category: 'Jahit Baru' },
+            { id: 'p6', name: 'Jahit Kemeja Batik', price: 180000, category: 'Jahit Baru' },
+            { id: 'p7', name: 'Jahit Celana Bahan Slimfit', price: 175000, category: 'Jahit Baru' },
+            { id: 'p8', name: 'Jahit Jas Formal', price: 650000, category: 'Jahit Baru' }
+        ];
+
+        const statuses = ['Masuk', 'Diukur', 'Sedang Dijahit', 'Fitting', 'Selesai', 'Diambil'];
+
+        const CustomModal = ({ modalData, closeModal }) => {
+            if (!modalData.isOpen) return null;
+            return (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-[fadeIn_0.2s_ease-out]">
+                    <div className="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-md shadow-2xl relative text-center">
+                        <div className={`w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center text-3xl shadow-md ${
+                            modalData.type === 'confirm' ? 'bg-amber-100 text-amber-600' : 'bg-indigo-100 text-brand-accent'
+                        }`}>
+                            <i className={`ph-fill ${modalData.type === 'confirm' ? 'ph-warning' : 'ph-info'}`}></i>
+                        </div>
+                        <h3 className="text-xl font-black text-gray-900 mb-2" style={{ fontFamily: '"Arial Black", sans-serif' }}>
+                            {modalData.title || 'Informasi'}
+                        </h3>
+                        <p className="text-sm font-medium text-gray-600 mb-6 whitespace-pre-wrap">{modalData.message}</p>
+                        
+                        <div className="flex gap-3 justify-center">
+                            {modalData.type === 'confirm' ? (
+                                <>
+                                    <button 
+                                        onClick={closeModal} 
+                                        className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 rounded-xl transition"
+                                    >
+                                        Batal
+                                    </button>
+                                    <button 
+                                        onClick={() => { modalData.onConfirm(); closeModal(); }} 
+                                        className="flex-1 bg-red-600 hover:bg-red-700 text-white font-black py-3 rounded-xl transition shadow-lg shadow-red-200"
+                                    >
+                                        Ya, Lanjutkan
+                                    </button>
+                                </>
+                            ) : (
+                                <button 
+                                    onClick={closeModal} 
+                                    className="w-full bg-brand-accent hover:bg-brand-accentHover text-white font-black py-3.5 rounded-xl transition shadow-lg shadow-indigo-200 uppercase tracking-wider text-sm"
+                                >
+                                    Mengerti
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const Receipt = ({ settings, order, isPrintArea = false }) => {
+            const today = new Date().toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+            
+            const displayOrder = order || {
+                id: 'TRX-SAMPLE',
+                customer: 'Pelanggan Contoh',
+                date: today,
+                dateOut: '2026-09-01',
+                items: [
+                    { name: 'Jahit Kebaya Pesta', notes: 'Kecilkan pinggang 2cm, pasang furing', qty: 1, price: 350000 },
+                    { name: 'Permak Celana Jeans', notes: 'Potong bawah 3cm', qty: 2, price: 35000 }
+                ],
+                subtotal: 420000,
+                discount: 20000,
+                total: 400000,
+                dp: 200000
+            };
+
+            const sisa = displayOrder.total - displayOrder.dp;
+            const is80 = settings.paperSize === '80mm';
+            const fontSizeClass = settings.receiptFontSize || 'text-xs';
+
+            return (
+                <div 
+                    style={{ paddingTop: `${settings.marginTop || 0}mm` }}
+                    className={`bg-white text-black p-4 w-full mx-auto ${fontSizeClass} ${
+                        is80 ? 'max-w-[380px]' : 'max-w-[300px]'
+                    } ${!isPrintArea ? 'receipt-preview rounded-b-md' : ''}`}
+                >
+                    <div className="text-center mb-3">
+                        {settings.logoPosition === 'side' && settings.logo ? (
+                            <div className="flex items-center justify-center gap-3 mb-2 text-left">
+                                <img src={settings.logo} alt="Logo" className="w-14 h-14 object-contain grayscale shrink-0" />
+                                <div>
+                                    <h2 style={{ fontFamily: '"Arial Black", Impact, sans-serif' }} className="font-black text-xl sm:text-2xl leading-none uppercase tracking-wide">{settings.namaUsaha || 'NAMA USAHA'}</h2>
+                                    <p className="font-bold text-[12px] text-gray-800 mt-1">{settings.subNama}</p>
+                                </div>
+                            </div>
+                        ) : (
+                            <>
+                                {settings.logo && <img src={settings.logo} alt="Logo" className="w-16 h-16 mx-auto mb-2 object-contain grayscale" />}
+                                <h2 style={{ fontFamily: '"Arial Black", Impact, sans-serif' }} className="font-black text-xl sm:text-2xl leading-none uppercase tracking-wide">{settings.namaUsaha || 'NAMA USAHA'}</h2>
+                                <p className="font-bold text-[12px] text-gray-800 mt-1">{settings.subNama}</p>
+                            </>
+                        )}
+                        <p className="mt-1.5 text-[11px] leading-tight text-gray-700 font-medium">{settings.alamat}</p>
+                        <p className="text-[11px] text-gray-700 font-medium mt-0.5">Telp/WA: {settings.telepon}</p>
+                    </div>
+
+                    <div className="border-t-2 border-dashed border-gray-400 my-2"></div>
+
+                    <div className="mb-2 text-[11px] space-y-1">
+                        <div className="flex justify-between"><span>No. Transaksi:</span><span className="font-bold">{displayOrder.id}</span></div>
+                        <div className="flex justify-between"><span>Tanggal:</span><span>{displayOrder.date}</span></div>
+                        {displayOrder.dateOut && <div className="flex justify-between"><span>Est. Selesai:</span><span>{displayOrder.dateOut}</span></div>}
+                        <div className="flex justify-between"><span>Pelanggan:</span><span className="font-semibold">{displayOrder.customer}</span></div>
+                    </div>
+
+                    <div className="border-t-2 border-dashed border-gray-400 my-2"></div>
+
+                    <div className="mb-2">
+                        {displayOrder.items.map((item, idx) => (
+                            <div key={idx} className="mb-2.5">
+                                <div className="flex justify-between font-bold text-[11px]">
+                                    <span>{item.name}</span>
+                                    <span>Rp {(item.price * item.qty).toLocaleString('id-ID')}</span>
+                                </div>
+                                <div className="text-gray-600 text-[10px] mt-0.5">
+                                    {item.qty} x @Rp {Number(item.price).toLocaleString('id-ID')}
+                                </div>
+                                {item.notes && (
+                                    <div className="text-gray-800 italic text-[10px] bg-gray-50 border border-gray-200 p-1 rounded mt-1">
+                                        *Catatan: {item.notes}
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="border-t-2 border-dashed border-gray-400 my-2"></div>
+
+                    <div className="mb-3 space-y-1">
+                        {displayOrder.discount > 0 && (
+                            <>
+                                <div className="flex justify-between text-[11px] text-gray-700">
+                                    <span>Subtotal:</span>
+                                    <span>Rp {displayOrder.subtotal.toLocaleString('id-ID')}</span>
+                                </div>
+                                <div className="flex justify-between text-[11px] text-gray-700">
+                                    <span>Diskon:</span>
+                                    <span>- Rp {displayOrder.discount.toLocaleString('id-ID')}</span>
+                                </div>
+                            </>
+                        )}
+                        <div className="flex justify-between font-bold text-[13px] pt-1">
+                            <span>GRAND TOTAL:</span>
+                            <span>Rp {displayOrder.total.toLocaleString('id-ID')}</span>
+                        </div>
+                        <div className="flex justify-between text-[11px] mt-1 border-t border-gray-200 pt-1">
+                            <span>Uang Muka (DP):</span>
+                            <span>Rp {displayOrder.dp.toLocaleString('id-ID')}</span>
+                        </div>
+                        
+                        <div className="mt-3 text-center text-[11px] font-bold border-2 border-black p-2 uppercase tracking-wide">
+                            {sisa <= 0 ? 'STATUS: LUNAS TERBAYAR' : `Sisa Pembayaran: Rp ${sisa.toLocaleString('id-ID')} saat pengambilan`}
+                        </div>
+                    </div>
+
+                    <div className="border-t-2 border-dashed border-gray-400 my-2"></div>
+
+                    <div className="text-center mt-3 text-[10px] text-gray-700 whitespace-pre-wrap leading-relaxed font-medium">
+                        {settings.footerText}
+                    </div>
+                </div>
+            );
+        };
+
+        const TopNav = ({ activeTab, setActiveTab, stockAlerts, toggleMobileMenu, mobileMenuOpen, settings }) => {
+            const [showAlerts, setShowAlerts] = useState(false);
+
+            return (
+                <header className="h-16 glass-header px-4 lg:px-8 flex items-center justify-between no-print sticky top-0 z-40">
+                    <div className="flex items-center gap-3">
+                        <button onClick={toggleMobileMenu} className="lg:hidden p-2 rounded-lg text-brand-textMuted hover:text-brand-accent transition">
+                            <i className={`ph ${mobileMenuOpen ? 'ph-x' : 'ph-list'} text-2xl`}></i>
+                        </button>
+                        
+                        <div className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition" onClick={() => setActiveTab('dashboard')}>
+                            {settings.logo ? (
+                                <img src={settings.logo} alt="Logo" className="w-10 h-10 rounded-xl object-contain bg-white p-1 shadow-sm border border-gray-100" />
+                            ) : (
+                                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-accent to-purple-500 shadow-md flex items-center justify-center text-white">
+                                    <i className="ph-fill ph-scissors text-xl"></i>
+                                </div>
+                            )}
+                            <span className="font-black text-brand-textMain tracking-wide text-lg sm:text-xl uppercase max-w-[150px] sm:max-w-[250px] truncate" style={{ fontFamily: '"Arial Black", sans-serif' }}>
+                                {settings.namaUsaha || 'POS JAHIT'}
+                            </span>
+                        </div>
+                    </div>
+
+                    <nav className="hidden lg:flex items-center gap-1.5 bg-white/50 backdrop-blur-md p-1.5 rounded-2xl border border-white shadow-sm">
+                        {[
+                            { id: 'dashboard', label: 'Dashboard', icon: 'ph-squares-four' },
+                            { id: 'transaction', label: 'Kasir', icon: 'ph-monitor-play' },
+                            { id: 'pickup', label: 'Alur Kerja', icon: 'ph-kanban' },
+                            { id: 'inventory', label: 'Stok', icon: 'ph-package' },
+                            { id: 'settings', label: 'Pengaturan', icon: 'ph-gear' }
+                        ].map((tab) => (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id)}
+                                className={`px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-all duration-300 ${
+                                    activeTab === tab.id
+                                        ? 'bg-white text-brand-accent shadow-md border border-white'
+                                        : 'text-gray-500 hover:text-brand-textMain hover:bg-white/40 border border-transparent'
+                                }`}
+                            >
+                                <i className={`ph-fill ${tab.icon} ${activeTab === tab.id ? 'text-brand-accent' : ''} text-lg`}></i>
+                                {tab.label}
+                            </button>
+                        ))}
+                    </nav>
+
+                    <div className="flex items-center gap-4">
+                        <div className="relative">
+                            <button 
+                                onClick={() => setShowAlerts(!showAlerts)}
+                                className="relative p-2.5 rounded-xl bg-white/60 border border-white shadow-sm hover:shadow-md text-gray-700 hover:text-brand-accent transition focus:outline-none"
+                            >
+                                <i className="ph-fill ph-bell text-xl"></i>
+                                {stockAlerts.length > 0 && (
+                                    <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center animate-bounce border-2 border-white shadow-sm">
+                                        {stockAlerts.length}
+                                    </span>
+                                )}
+                            </button>
+
+                            {showAlerts && (
+                                <div className="absolute right-0 mt-3 w-80 sm:w-96 bg-white/95 backdrop-blur-xl border border-gray-100 rounded-2xl shadow-premium p-4 z-50">
+                                    <div className="flex items-center justify-between pb-3 border-b border-gray-100 mb-3">
+                                        <div className="flex items-center gap-2 text-red-500 font-bold text-sm">
+                                            <i className="ph-fill ph-warning-circle text-lg"></i>
+                                            <span>Peringatan Stok Menipis ({stockAlerts.length})</span>
+                                        </div>
+                                        <button onClick={() => setShowAlerts(false)} className="text-gray-400 hover:text-gray-700"><i className="ph-bold ph-x"></i></button>
+                                    </div>
+                                    <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                                        {stockAlerts.length === 0 ? (
+                                            <p className="text-sm text-gray-500 text-center py-4 font-medium">Semua stok bahan aman.</p>
+                                        ) : (
+                                            stockAlerts.map(item => (
+                                                <div key={item.id} className="p-3 rounded-xl bg-red-50/80 border border-red-100 flex justify-between items-center">
+                                                    <div>
+                                                        <p className="text-sm font-bold text-gray-900">{item.item}</p>
+                                                        <p className="text-[11px] text-gray-500 font-medium">{item.category}</p>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <span className="text-xs font-bold text-white bg-red-500 px-2.5 py-1 rounded-md shadow-sm">Sisa: {item.qty} {item.unit}</span>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="flex items-center gap-3 pl-4 border-l border-gray-300/50">
+                            <div className="hidden sm:block text-right">
+                                <p className="text-sm font-bold text-gray-900 leading-none">Abah Tailor</p>
+                                <p className="text-[11px] text-brand-textMuted mt-1 font-medium">Super Admin</p>
+                            </div>
+                            <img src="https://ui-avatars.com/api/?name=Abah+Tailor&background=4F46E5&color=fff&bold=true" alt="Avatar" className="w-10 h-10 rounded-xl shadow-md border-2 border-white" />
+                        </div>
+                    </div>
+                </header>
+            );
+        };
+
+        const DigitalClock = () => {
+            const [time, setTime] = useState(new Date());
+            useEffect(() => {
+                const timer = setInterval(() => setTime(new Date()), 1000);
+                return () => clearInterval(timer);
+            }, []);
+            return (
+                <div className="flex flex-col items-end">
+                    <h3 className="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-brand-accent to-purple-600 tracking-tight drop-shadow-sm">
+                        {time.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+                        <span className="text-lg text-gray-400 font-bold ml-1">{time.toLocaleTimeString('id-ID', { second: '2-digit' })}</span>
+                    </h3>
+                    <p className="text-sm text-gray-600 font-bold mt-1 uppercase tracking-wider bg-white/50 px-3 py-1 rounded-full border border-white shadow-sm backdrop-blur-sm">
+                        {time.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                    </p>
+                </div>
+            );
+        };
+
+        const Dashboard = ({ orders }) => {
+            const chartRef = useRef(null);
+            const pieRef = useRef(null);
+            const chartInstance = useRef(null);
+            const pieInstance = useRef(null);
+
+            const todayObj = new Date();
+            const todayStr = todayObj.toISOString().split('T')[0];
+            const yesterdayObj = new Date();
+            yesterdayObj.setDate(yesterdayObj.getDate() - 1);
+            const yesterdayStr = yesterdayObj.toISOString().split('T')[0];
+
+            const salesToday = orders.filter(o => o.date === todayStr).reduce((sum, o) => sum + o.total, 0);
+            const salesYesterday = orders.filter(o => o.date === yesterdayStr).reduce((sum, o) => sum + o.total, 0);
+            
+            let salesGrowth = 0;
+            if (salesYesterday > 0) salesGrowth = ((salesToday - salesYesterday) / salesYesterday) * 100;
+            else if (salesToday > 0) salesGrowth = 100;
+
+            const activeOrdersCount = orders.filter(o => o.status !== 'Diambil').length;
+            const totalCustomers = new Set(orders.map(o => (o.phone || o.customer).toLowerCase().trim())).size;
+            const newCustomers = new Set(orders.filter(o => o.date === todayStr).map(o => (o.phone || o.customer).toLowerCase().trim())).size;
+
+            const pipelineCounts = statuses.reduce((acc, status) => {
+                acc[status] = orders.filter(o => o.status === status).length;
+                return acc;
+            }, {});
+
+            const itemCounts = {};
+            orders.forEach(o => o.items.forEach(i => { itemCounts[i.name] = (itemCounts[i.name] || 0) + i.qty; }));
+            const topServices = Object.entries(itemCounts)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 3)
+                .map((item, idx) => ({
+                    rank: idx + 1,
+                    title: item[0],
+                    count: item[1],
+                    icon: idx === 0 ? 'ph-fire' : idx === 1 ? 'ph-star' : 'ph-check-circle',
+                    color: idx === 0 ? 'from-amber-400 to-orange-500' : idx === 1 ? 'from-blue-400 to-indigo-500' : 'from-pink-400 to-rose-500'
+                }));
+
+            useEffect(() => {
+                if (chartInstance.current) chartInstance.current.destroy();
+                if (pieInstance.current) pieInstance.current.destroy();
+
+                Chart.defaults.font.family = 'Inter';
+                Chart.defaults.color = '#64748B';
+                Chart.defaults.font.weight = '600';
+
+                const chartLabels = [];
+                const chartData = [];
+                for (let i = 6; i >= 0; i--) {
+                    const d = new Date();
+                    d.setDate(d.getDate() - i);
+                    chartLabels.push(d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }));
+                    const dStr = d.toISOString().split('T')[0];
+                    chartData.push(orders.filter(o => o.date === dStr).reduce((sum, o) => sum + o.total, 0));
+                }
+
+                const ctxLine = chartRef.current.getContext('2d');
+                const gradientLine = ctxLine.createLinearGradient(0, 0, 0, 300);
+                gradientLine.addColorStop(0, 'rgba(79, 70, 229, 0.4)');
+                gradientLine.addColorStop(1, 'rgba(79, 70, 229, 0.0)');
+
+                chartInstance.current = new Chart(ctxLine, {
+                    type: 'line',
+                    data: {
+                        labels: chartLabels,
+                        datasets: [{
+                            label: 'Pendapatan (Rp)',
+                            data: chartData,
+                            borderColor: '#4F46E5',
+                            backgroundColor: gradientLine,
+                            borderWidth: 4,
+                            tension: 0.4,
+                            fill: true,
+                            pointBackgroundColor: '#FFFFFF',
+                            pointBorderColor: '#4F46E5',
+                            pointBorderWidth: 3,
+                            pointRadius: 5,
+                            pointHoverRadius: 7
+                        }]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { display: false }, tooltip: { padding: 14, cornerRadius: 12, backgroundColor: 'rgba(15, 23, 42, 0.9)' } },
+                        scales: {
+                            y: { grid: { color: 'rgba(0,0,0,0.04)', drawBorder: false }, border: { display: false } },
+                            x: { grid: { display: false }, border: { display: false } }
+                        }
+                    }
+                });
+
+                const ctxPie = pieRef.current.getContext('2d');
+                pieInstance.current = new Chart(ctxPie, {
+                    type: 'doughnut',
+                    data: {
+                        labels: Object.keys(pipelineCounts),
+                        datasets: [{
+                            data: Object.values(pipelineCounts),
+                            backgroundColor: ['#4F46E5', '#8B5CF6', '#EC4899', '#F59E0B', '#10B981', '#94A3B8'],
+                            borderWidth: 2,
+                            borderColor: '#ffffff',
+                            hoverOffset: 8
+                        }]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20, font: {size: 12} } } },
+                        cutout: '75%'
+                    }
+                });
+            }, [orders]);
+
+            return (
+                <div className="p-4 sm:p-6 lg:p-8 space-y-8 max-w-7xl mx-auto animate-[fadeIn_0.5s_ease-out]">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 glass-panel p-6 rounded-3xl relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-brand-accent/20 to-purple-400/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
+                        <div className="relative z-10">
+                            <h1 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight" style={{ fontFamily: '"Arial Black", sans-serif' }}>Wawasan Bisnis</h1>
+                            <p className="text-base text-gray-600 mt-2 font-medium max-w-md">Pantau performa harian, alur kerja penjahit, dan statistik keuangan secara real-time.</p>
+                        </div>
+                        <div className="relative z-10">
+                            <DigitalClock />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div className="glass-panel p-6 rounded-3xl relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300">
+                            <div className="flex justify-between items-start relative z-10">
+                                <div>
+                                    <p className="text-sm text-gray-500 font-bold uppercase tracking-wider">Penjualan Hari Ini</p>
+                                    <h3 className="text-2xl sm:text-3xl font-black text-gray-900 mt-2 truncate">Rp {salesToday.toLocaleString('id-ID')}</h3>
+                                </div>
+                                <div className="p-3 bg-gradient-to-br from-green-400 to-emerald-600 text-white rounded-2xl shadow-lg shadow-green-200"><i className="ph-bold ph-trend-up text-2xl"></i></div>
+                            </div>
+                            <div className={`mt-5 flex items-center text-sm font-bold gap-1.5 w-max px-3 py-1.5 rounded-lg border relative z-10 ${salesGrowth >= 0 ? 'text-green-600 bg-green-50 border-green-100' : 'text-gray-500 bg-gray-50 border-gray-200'}`}>
+                                {salesGrowth > 0 && <i className="ph-bold ph-arrow-up"></i>}
+                                {salesGrowth > 0 ? `+${salesGrowth.toFixed(1)}%` : '0%'} <span className="text-gray-500 font-medium ml-1">vs kemarin</span>
+                            </div>
+                        </div>
+
+                        <div className="glass-panel p-6 rounded-3xl relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300">
+                            <div className="flex justify-between items-start relative z-10">
+                                <div>
+                                    <p className="text-sm text-gray-500 font-bold uppercase tracking-wider">Pesanan Aktif</p>
+                                    <h3 className="text-3xl font-black text-gray-900 mt-2">{activeOrdersCount}</h3>
+                                </div>
+                                <div className="p-3 bg-gradient-to-br from-blue-400 to-brand-accent text-white rounded-2xl shadow-lg shadow-blue-200"><i className="ph-bold ph-scissors text-2xl"></i></div>
+                            </div>
+                            <p className="mt-5 text-sm text-brand-accent font-bold bg-blue-50 w-max px-3 py-1.5 rounded-lg border border-blue-100 relative z-10">
+                                Dalam antrean jahit & permak
+                            </p>
+                        </div>
+
+                        <div className="glass-panel p-6 rounded-3xl relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300">
+                            <div className="flex justify-between items-start relative z-10">
+                                <div>
+                                    <p className="text-sm text-gray-500 font-bold uppercase tracking-wider">Pelanggan Baru (Harian)</p>
+                                    <h3 className="text-3xl font-black text-gray-900 mt-2">{newCustomers}</h3>
+                                </div>
+                                <div className="p-3 bg-gradient-to-br from-purple-400 to-pink-500 text-white rounded-2xl shadow-lg shadow-purple-200"><i className="ph-bold ph-users-three text-2xl"></i></div>
+                            </div>
+                            <p className="mt-5 text-sm text-pink-600 font-bold bg-pink-50 w-max px-3 py-1.5 rounded-lg border border-pink-100 relative z-10">
+                                Bertransaksi hari ini
+                            </p>
+                        </div>
+
+                        <div className="p-6 rounded-3xl relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300 bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white shadow-2xl">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-400/10 rounded-full blur-2xl"></div>
+                            <div className="flex justify-between items-start relative z-10">
+                                <div>
+                                    <p className="text-sm font-bold text-gray-400 uppercase tracking-wider">Total Pelanggan</p>
+                                    <h3 className="text-4xl font-black text-white mt-2">{totalCustomers}</h3>
+                                </div>
+                                <div className="p-3 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20"><i className="ph-fill ph-crown text-2xl text-yellow-400"></i></div>
+                            </div>
+                            <p className="mt-5 text-sm font-bold text-yellow-400 flex items-center gap-2 relative z-10">
+                                <i className="ph-bold ph-star"></i> Basis pelanggan setia
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div className="glass-panel p-6 rounded-3xl lg:col-span-2">
+                            <h2 className="text-xl font-black text-gray-900 mb-6">Laporan Keuangan (7 Hari Terakhir)</h2>
+                            <div className="h-72 w-full"><canvas ref={chartRef}></canvas></div>
+                        </div>
+
+                        <div className="glass-panel p-6 rounded-3xl">
+                            <h2 className="text-xl font-black text-gray-900 mb-2">Status Pengerjaan</h2>
+                            <p className="text-sm text-gray-500 font-medium mb-6">Real-time production pipeline</p>
+                            <div className="h-64 w-full relative">
+                                <canvas ref={pieRef}></canvas>
+                                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none pb-8">
+                                    <span className="text-3xl font-black text-gray-900">{activeOrdersCount}</span>
+                                    <span className="text-[10px] font-bold text-gray-400 uppercase">Aktif</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="glass-panel p-6 rounded-3xl">
+                        <h2 className="text-xl font-black text-gray-900 mb-6 flex items-center gap-2">
+                            <i className="ph-fill ph-fire text-orange-500"></i> Layanan Paling Laris
+                        </h2>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            {topServices.length > 0 ? (
+                                topServices.map((service) => (
+                                    <div key={service.rank} className="p-4 bg-white/50 backdrop-blur-sm rounded-2xl border border-white hover:bg-white transition duration-300 flex items-center gap-4 shadow-sm hover:shadow-md group">
+                                        <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${service.color} shadow-inner text-white font-bold flex items-center justify-center text-3xl transform group-hover:scale-110 transition shrink-0`}>
+                                            <i className={`ph-fill ${service.icon}`}></i>
+                                        </div>
+                                        <div className="overflow-hidden">
+                                            <h3 className="text-sm font-black text-gray-900 leading-tight truncate">{service.title}</h3>
+                                            <p className="text-xs font-bold text-gray-500 mt-1">{service.count} Transaksi</p>
+                                        </div>
+                                        <div className="ml-auto text-3xl font-black text-gray-200 group-hover:text-gray-300 transition">#{service.rank}</div>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="col-span-1 md:col-span-3 text-center py-8 text-gray-400 font-bold border-2 border-dashed border-gray-200 rounded-2xl">
+                                    Belum ada data transaksi yang diselesaikan.
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const Inventory = ({ inventory, setInventory, showModal }) => {
+            const [newItem, setNewItem] = useState({ item: '', qty: '', min: '', unit: 'Pcs', category: 'Benang' });
+
+            const handleAdd = () => {
+                if(!newItem.item || !newItem.qty) {
+                    return showModal('Form Belum Lengkap', 'Masukkan nama bahan dan jumlah stok.');
+                }
+                setInventory([{ ...newItem, qty: Number(newItem.qty), min: Number(newItem.min || 0), id: Date.now() }, ...inventory]);
+                setNewItem({ item: '', qty: '', min: '', unit: 'Pcs', category: 'Benang' });
+            };
+
+            const handleDelete = (id) => {
+                showModal('Konfirmasi Hapus', 'Hapus bahan ini dari daftar stok?', 'confirm', () => {
+                    setInventory(inventory.filter(i => i.id !== id));
+                });
+            };
+
+            return (
+                <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 animate-[fadeIn_0.3s_ease-out]">
+                    <div className="glass-panel p-6 rounded-3xl mb-6">
+                        <h1 className="text-3xl font-black text-gray-900 tracking-tight" style={{ fontFamily: '"Arial Black", sans-serif' }}>Manajemen Stok Bahan</h1>
+                        <p className="text-sm font-medium text-gray-600 mt-2">Kelola persediaan benang, kain, dan aksesoris jahit. Notifikasi lonceng otomatis muncul jika stok menipis.</p>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <div className="lg:col-span-1">
+                            <div className="glass-panel p-6 rounded-3xl space-y-5 sticky top-28">
+                                <h2 className="text-lg font-black text-gray-900 border-b border-gray-200/50 pb-3 flex items-center gap-2">
+                                    <i className="ph-fill ph-plus-circle text-brand-accent"></i> Input Stok Baru
+                                </h2>
+                                
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1.5">Nama Bahan</label>
+                                    <input type="text" value={newItem.item} onChange={e => setNewItem({...newItem, item: e.target.value})} placeholder="Misal: Benang Merah" className="w-full bg-white/80 border border-white rounded-xl p-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand-accent shadow-sm" />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1.5">Sisa Stok</label>
+                                        <input type="number" value={newItem.qty} onChange={e => setNewItem({...newItem, qty: e.target.value})} className="w-full bg-white/80 border border-white rounded-xl p-3 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-brand-accent shadow-sm" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1.5">Batas Min.</label>
+                                        <input type="number" value={newItem.min} onChange={e => setNewItem({...newItem, min: e.target.value})} className="w-full bg-white/80 border border-white rounded-xl p-3 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-brand-accent shadow-sm" />
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1.5">Satuan</label>
+                                        <select value={newItem.unit} onChange={e => setNewItem({...newItem, unit: e.target.value})} className="w-full bg-white/80 border border-white rounded-xl p-3 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-brand-accent shadow-sm">
+                                            <option>Roll</option><option>Pcs</option><option>Meter</option><option>Lusin</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1.5">Kategori</label>
+                                        <select value={newItem.category} onChange={e => setNewItem({...newItem, category: e.target.value})} className="w-full bg-white/80 border border-white rounded-xl p-3 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-brand-accent shadow-sm">
+                                            <option>Benang</option><option>Kain</option><option>Aksesoris</option><option>Kancing</option><option>Lainnya</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <button onClick={handleAdd} className="w-full bg-gradient-to-r from-brand-accent to-indigo-600 hover:from-brand-accentHover hover:to-indigo-700 text-white font-black py-3.5 rounded-xl transition-all shadow-lg shadow-indigo-200 flex items-center justify-center gap-2 mt-4 text-sm uppercase tracking-wider">
+                                    <i className="ph-bold ph-check"></i> Tambah Ke Database
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="lg:col-span-2">
+                            <div className="glass-panel rounded-3xl overflow-hidden">
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left text-sm">
+                                        <thead className="bg-gray-100/50 border-b border-gray-200/50 text-gray-500 font-black uppercase tracking-wider text-xs">
+                                            <tr>
+                                                <th className="p-5">Nama Bahan</th>
+                                                <th className="p-5">Kategori</th>
+                                                <th className="p-5 text-center">Stok Sisa</th>
+                                                <th className="p-5 text-center">Batas Min</th>
+                                                <th className="p-5 text-right">Aksi</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-100/50">
+                                            {inventory.map(item => {
+                                                const isLow = item.qty <= item.min;
+                                                return (
+                                                    <tr key={item.id} className="hover:bg-white/40 transition">
+                                                        <td className="p-5 font-bold text-gray-900">{item.item}</td>
+                                                        <td className="p-5 text-gray-600 font-medium">{item.category}</td>
+                                                        <td className="p-5 text-center">
+                                                            <span className={`inline-flex px-3 py-1.5 rounded-lg text-xs font-black shadow-sm ${isLow ? 'bg-red-500 text-white animate-pulse' : 'bg-green-100 text-green-700'}`}>
+                                                                {item.qty} {item.unit}
+                                                            </span>
+                                                        </td>
+                                                        <td className="p-5 text-center font-bold text-gray-400">{item.min} {item.unit}</td>
+                                                        <td className="p-5 text-right">
+                                                            <button onClick={() => handleDelete(item.id)} className="p-2 text-red-500 hover:bg-red-500 hover:text-white rounded-lg transition shadow-sm bg-white" title="Hapus">
+                                                                <i className="ph-bold ph-trash text-lg"></i>
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
+                                            {inventory.length === 0 && (
+                                                <tr><td colSpan="5" className="p-8 text-center text-gray-400 font-bold">Belum ada data stok bahan.</td></tr>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const Transaction = ({ settings, setPrintOrder, setOrders, orders, showModal }) => {
+            const [customer, setCustomer] = useState('');
+            const [phone, setPhone] = useState('');
+            const [items, setItems] = useState([{ name: '', notes: '', price: 0, qty: 1 }]);
+            const [dp, setDp] = useState('');
+            const [discount, setDiscount] = useState('');
+            const [dateOut, setDateOut] = useState(() => {
+                const nextWeek = new Date();
+                nextWeek.setDate(nextWeek.getDate() + 5);
+                return nextWeek.toISOString().split('T')[0];
+            });
+
+            const togglePresetService = (preset) => {
+                const existingIndex = items.findIndex(i => i.name === preset.name);
+                if (existingIndex >= 0) {
+                    const filtered = items.filter((_, idx) => idx !== existingIndex);
+                    setItems(filtered.length > 0 ? filtered : [{ name: '', notes: '', price: 0, qty: 1 }]);
+                } else {
+                    if (items.length === 1 && items[0].name === '' && items[0].price === 0) {
+                        setItems([{ name: preset.name, notes: '', price: preset.price, qty: 1 }]);
+                    } else {
+                        setItems([...items, { name: preset.name, notes: '', price: preset.price, qty: 1 }]);
+                    }
+                }
+            };
+
+            const updateItem = (index, field, value) => {
+                const newItems = [...items];
+                newItems[index][field] = value;
+                setItems(newItems);
+            };
+
+            const subtotal = items.reduce((sum, item) => sum + (Number(item.price || 0) * Number(item.qty || 1)), 0);
+            const numDiscount = Number(discount || 0);
+            const total = subtotal - numDiscount;
+            const sisa = total - Number(dp || 0);
+
+            const handleSaveTransaction = () => {
+                if (!customer.trim()) return showModal('Nama Kosong', 'Masukkan nama pelanggan terlebih dahulu.');
+                if (items.some(i => !i.name.trim() || i.price <= 0)) return showModal('Item Belum Lengkap', 'Lengkapi nama layanan dan harga pada item.');
+
+                const newOrder = {
+                    id: `TRX-${Math.floor(1000 + Math.random() * 9000)}`,
+                    customer, phone: phone || '-',
+                    date: new Date().toISOString().split('T')[0], dateOut,
+                    items, subtotal, discount: numDiscount, total, dp: Number(dp || 0),
+                    status: 'Masuk'
+                };
+                const updatedOrders = [newOrder, ...orders];
+                setOrders(updatedOrders);
+                setPrintOrder(newOrder);
+                setTimeout(() => window.print(), 500);
+            };
+
+            return (
+                <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 animate-[fadeIn_0.3s_ease-out]">
+                    <div className="glass-panel p-6 rounded-3xl">
+                        <h1 className="text-3xl font-black text-gray-900 tracking-tight" style={{ fontFamily: '"Arial Black", sans-serif' }}>Kasir & Penerimaan Pesanan</h1>
+                        <p className="text-sm font-medium text-gray-600 mt-2">Buat pesanan jahit/vermak baru, catat permintaan khusus pelanggan, dan langsung cetak nota tanda terima bergaransi.</p>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                        <div className="lg:col-span-8 space-y-6">
+                            <div className="glass-panel p-6 rounded-3xl space-y-4">
+                                <h2 className="text-lg font-black text-gray-900 border-b border-gray-200/60 pb-3 flex items-center gap-2">
+                                    <i className="ph-fill ph-user-circle text-brand-accent"></i> Info Pelanggan
+                                </h2>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1.5">Nama Pelanggan *</label>
+                                        <input type="text" value={customer} onChange={(e) => setCustomer(e.target.value)} placeholder="Contoh: Bpk. Budi Santoso" className="w-full bg-white border border-white rounded-xl p-3 font-semibold focus:outline-none focus:ring-2 focus:ring-brand-accent shadow-sm" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1.5">No. WhatsApp</label>
+                                        <input type="text" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="0812..." className="w-full bg-white border border-white rounded-xl p-3 font-semibold focus:outline-none focus:ring-2 focus:ring-brand-accent shadow-sm" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="glass-panel p-6 rounded-3xl space-y-4">
+                                <h2 className="text-lg font-black text-gray-900 border-b border-gray-200/60 pb-3 flex items-center gap-2">
+                                    <i className="ph-fill ph-check-square-offset text-brand-accent"></i> Pilih Cepat Layanan Populer
+                                </h2>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    {presetServices.map((preset) => {
+                                        const isChecked = items.some(i => i.name === preset.name);
+                                        return (
+                                            <label key={preset.id} className={`flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 shadow-sm ${isChecked ? 'bg-indigo-50 border-brand-accent' : 'bg-white/80 border-transparent hover:border-gray-200'}`}>
+                                                <div className="flex items-center gap-3">
+                                                    <input type="checkbox" checked={isChecked} onChange={() => togglePresetService(preset)} className="w-5 h-5 accent-brand-accent rounded cursor-pointer" />
+                                                    <span className={`text-sm font-bold ${isChecked ? 'text-brand-accent' : 'text-gray-700'}`}>{preset.name}</span>
+                                                </div>
+                                                <span className="text-sm font-black text-gray-900">Rp {preset.price.toLocaleString('id-ID')}</span>
+                                            </label>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            <div className="glass-panel p-6 rounded-3xl space-y-4">
+                                <div className="flex justify-between items-center border-b border-gray-200/60 pb-3">
+                                    <h2 className="text-lg font-black text-gray-900 flex items-center gap-2">
+                                        <i className="ph-fill ph-scissors text-brand-accent"></i> Rincian Jahitan & Catatan Khusus
+                                    </h2>
+                                </div>
+
+                                <div className="space-y-4 mt-2">
+                                    {items.map((item, index) => (
+                                        <div key={index} className="bg-white/80 p-5 rounded-2xl border border-white shadow-sm space-y-4 relative group">
+                                            {items.length > 1 && (
+                                                <button onClick={() => setItems(items.filter((_, i) => i !== index))} className="absolute top-4 right-4 text-red-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded-lg transition opacity-0 group-hover:opacity-100"><i className="ph-bold ph-trash text-lg"></i></button>
+                                            )}
+                                            
+                                            <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 pr-8 sm:pr-0">
+                                                <div className="sm:col-span-6">
+                                                    <label className="block text-[10px] font-black text-gray-500 uppercase tracking-wider mb-1">Item / Layanan</label>
+                                                    <input type="text" value={item.name} onChange={(e) => updateItem(index, 'name', e.target.value)} placeholder="Misal: Jahit Jas Pria" className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2.5 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-brand-accent" />
+                                                </div>
+                                                <div className="sm:col-span-2">
+                                                    <label className="block text-[10px] font-black text-gray-500 uppercase tracking-wider mb-1">Qty</label>
+                                                    <input type="number" min="1" value={item.qty} onChange={(e) => updateItem(index, 'qty', Math.max(1, parseInt(e.target.value) || 1))} className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2.5 text-sm font-black text-center focus:outline-none focus:ring-2 focus:ring-brand-accent" />
+                                                </div>
+                                                <div className="sm:col-span-4">
+                                                    <label className="block text-[10px] font-black text-gray-500 uppercase tracking-wider mb-1">Harga Satuan (Rp)</label>
+                                                    <input type="number" value={item.price} onChange={(e) => updateItem(index, 'price', parseFloat(e.target.value) || 0)} className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2.5 text-sm font-black focus:outline-none focus:ring-2 focus:ring-brand-accent" />
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label className="block text-[10px] font-black text-brand-accent uppercase tracking-wider mb-1 flex items-center gap-1">
+                                                    <i className="ph-fill ph-note-pencil"></i> Instruksi Khusus Penjahit
+                                                </label>
+                                                <input type="text" value={item.notes} onChange={(e) => updateItem(index, 'notes', e.target.value)} placeholder="Contoh: Pinggang kecilkan 2cm, potong bawah 3cm, pakai benang sewarna" className="w-full bg-indigo-50/50 border border-indigo-100 rounded-lg p-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand-accent" />
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                                <button onClick={() => setItems([...items, { name: '', notes: '', price: 0, qty: 1 }])} className="w-full py-4 border-2 border-dashed border-gray-300 rounded-2xl text-gray-500 hover:bg-white hover:border-brand-accent hover:text-brand-accent font-black transition flex items-center justify-center gap-2">
+                                    <i className="ph-bold ph-plus-circle text-xl"></i> Tambah Baris Manual
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="lg:col-span-4 space-y-6">
+                            <div className="glass-panel p-6 rounded-3xl shadow-premium sticky top-28 border border-white">
+                                <h2 className="text-xl font-black text-gray-900 border-b border-gray-200/60 pb-4 mb-4">Pembayaran</h2>
+
+                                <div className="space-y-4">
+                                    <div className="flex justify-between items-center text-sm">
+                                        <span className="text-gray-600 font-bold">Subtotal</span>
+                                        <span className="font-black text-gray-900">Rp {subtotal.toLocaleString('id-ID')}</span>
+                                    </div>
+                                    
+                                    <div className="flex items-center justify-between gap-3">
+                                        <span className="text-gray-600 font-bold text-sm">Diskon</span>
+                                        <div className="relative w-1/2">
+                                            <span className="absolute left-3 top-2.5 text-red-500 font-bold text-sm">-Rp</span>
+                                            <input type="number" value={discount} onChange={(e) => setDiscount(e.target.value)} placeholder="0" className="w-full bg-red-50 border border-red-100 rounded-lg p-2.5 pl-10 text-right text-sm font-black text-red-600 focus:outline-none focus:ring-2 focus:ring-red-400" />
+                                        </div>
+                                    </div>
+
+                                    <div className="flex justify-between items-center text-xl pt-4 border-t border-gray-200/60 mt-2">
+                                        <span className="font-black text-gray-900">GRAND TOTAL</span>
+                                        <span className="font-black text-brand-accent">Rp {total.toLocaleString('id-ID')}</span>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-5 mt-6 pt-6 border-t border-gray-200/60 bg-white/40 p-4 rounded-2xl">
+                                    <div>
+                                        <label className="block text-xs font-black text-gray-600 uppercase tracking-wider mb-2">Uang Muka / DP (Rp)</label>
+                                        <div className="relative">
+                                            <span className="absolute left-4 top-3.5 text-green-600 font-black">Rp</span>
+                                            <input type="number" value={dp} onChange={(e) => setDp(e.target.value)} className="w-full bg-green-50 border border-green-200 rounded-xl p-3.5 pl-12 text-xl font-black text-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 shadow-inner" />
+                                        </div>
+                                    </div>
+
+                                    <div className="p-4 bg-gradient-to-r from-red-50 to-orange-50 border border-red-100 rounded-xl flex justify-between items-center shadow-sm">
+                                        <span className="text-sm text-red-600 font-black">SISA BAYAR:</span>
+                                        <span className="text-xl font-black text-red-600">Rp {sisa > 0 ? sisa.toLocaleString('id-ID') : 0}</span>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs font-black text-gray-600 uppercase tracking-wider mb-2">Estimasi Selesai</label>
+                                        <input type="date" value={dateOut} onChange={(e) => setDateOut(e.target.value)} className="w-full bg-white border border-gray-200 rounded-xl p-3 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-brand-accent shadow-sm" />
+                                    </div>
+                                </div>
+
+                                <button onClick={handleSaveTransaction} className="w-full mt-6 bg-gradient-to-r from-gray-900 to-black hover:from-black hover:to-gray-900 text-white font-black py-4.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-xl hover:shadow-2xl hover:-translate-y-0.5 text-sm uppercase tracking-widest h-14">
+                                    <i className="ph-bold ph-printer text-xl text-brand-gold"></i> Simpan & Cetak Struk
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const Pickup = ({ orders, setOrders, setPrintOrder, showModal }) => {
+            const [search, setSearch] = useState('');
+            const [filterStatus, setFilterStatus] = useState('All');
+            const [editingOrder, setEditingOrder] = useState(null);
+
+            const getStatusBadge = (status) => {
+                const styles = {
+                    'Masuk': 'bg-blue-100 text-blue-800 border-blue-200',
+                    'Diukur': 'bg-purple-100 text-purple-800 border-purple-200',
+                    'Sedang Dijahit': 'bg-orange-100 text-orange-800 border-orange-200',
+                    'Fitting': 'bg-indigo-100 text-indigo-800 border-indigo-200',
+                    'Selesai': 'bg-green-100 text-green-800 border-green-200',
+                    'Diambil': 'bg-gray-200 text-gray-700 border-gray-300'
+                };
+                return styles[status] || 'bg-gray-100 text-gray-700';
+            };
+
+            const updateOrderStatus = (id, newStatus) => setOrders(orders.map(o => o.id === id ? { ...o, status: newStatus } : o));
+
+            const handlePelunasan = (order) => {
+                showModal('Konfirmasi Pelunasan', `Proses pelunasan penuh untuk resi ${order.id}?`, 'confirm', () => {
+                    const updatedOrder = { ...order, dp: order.total, status: 'Diambil' };
+                    setOrders(orders.map(o => o.id === order.id ? updatedOrder : o));
+                    setPrintOrder(updatedOrder);
+                    setTimeout(() => window.print(), 300);
+                });
+            };
+
+            const handleDeleteOrder = (id) => {
+                showModal('Konfirmasi Hapus', 'Anda yakin ingin menghapus data pesanan ini secara permanen?', 'confirm', () => {
+                    setOrders(orders.filter(o => o.id !== id));
+                });
+            };
+
+            const saveEdit = () => {
+                if (!editingOrder.customer.trim()) return showModal('Nama Kosong', 'Nama pelanggan tidak boleh kosong.');
+                setOrders(orders.map(o => o.id === editingOrder.id ? editingOrder : o));
+                setEditingOrder(null);
+            };
+
+            const filteredOrders = orders.filter(o => (o.customer.toLowerCase().includes(search.toLowerCase()) || o.id.toLowerCase().includes(search.toLowerCase())) && (filterStatus === 'All' || o.status === filterStatus));
+
+            return (
+                <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 animate-[fadeIn_0.3s_ease-out]">
+                    <div className="glass-panel p-6 rounded-3xl mb-6">
+                        <h1 className="text-3xl font-black text-gray-900 tracking-tight" style={{ fontFamily: '"Arial Black", sans-serif' }}>Alur Kerja & Pengambilan</h1>
+                        <p className="text-sm font-medium text-gray-600 mt-2">Ubah status pengerjaan, proses pelunasan sisa bayar, serta kelola (edit/hapus) data transaksi pelanggan.</p>
+                    </div>
+
+                    <div className="glass-panel p-4 rounded-3xl flex flex-col md:flex-row gap-4 items-center justify-between shadow-sm">
+                        <div className="relative w-full md:w-96">
+                            <i className="ph-bold ph-magnifying-glass absolute left-4 top-4 text-gray-400 text-lg"></i>
+                            <input type="text" placeholder="Cari Resi atau Nama Pelanggan..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full bg-white/80 border border-white rounded-xl p-3.5 pl-12 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-brand-accent shadow-sm" />
+                        </div>
+                        <div className="flex flex-wrap gap-2 w-full md:w-auto p-1 bg-gray-100/50 rounded-2xl border border-white">
+                            <button onClick={() => setFilterStatus('All')} className={`px-4 py-2.5 rounded-xl text-xs font-black transition-all ${filterStatus === 'All' ? 'bg-gray-900 text-white shadow-md' : 'text-gray-600 hover:bg-white'}`}>Semua</button>
+                            {statuses.map(s => (
+                                <button key={s} onClick={() => setFilterStatus(s)} className={`px-4 py-2.5 rounded-xl text-xs font-black transition-all ${filterStatus === s ? 'bg-gray-900 text-white shadow-md' : 'text-gray-600 hover:bg-white'}`}>{s}</button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="glass-panel rounded-3xl overflow-hidden shadow-sm">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left text-sm">
+                                <thead className="bg-white/40 border-b border-gray-200/50 text-gray-500 font-black uppercase tracking-wider text-[11px]">
+                                    <tr>
+                                        <th className="p-5">No. Resi</th>
+                                        <th className="p-5">Pelanggan</th>
+                                        <th className="p-5">Tgl & Est</th>
+                                        <th className="p-5">Total / Sisa Bayar</th>
+                                        <th className="p-5">Status Produksi</th>
+                                        <th className="p-5 text-right">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100/50">
+                                    {filteredOrders.map(order => {
+                                        const sisa = order.total - order.dp;
+                                        return (
+                                            <tr key={order.id} className="hover:bg-white/60 transition duration-150">
+                                                <td className="p-5 font-mono font-black text-brand-accent tracking-tight">{order.id}</td>
+                                                <td className="p-5">
+                                                    <p className="font-black text-gray-900 text-base">{order.customer}</p>
+                                                    <p className="text-xs font-bold text-gray-500 mt-0.5">{order.phone}</p>
+                                                </td>
+                                                <td className="p-5">
+                                                    <p className="text-gray-600 font-bold text-xs"><span className="text-gray-400">Masuk:</span> {order.date}</p>
+                                                    <p className="text-xs text-brand-accent font-black mt-1">Selesai: {order.dateOut}</p>
+                                                </td>
+                                                <td className="p-5">
+                                                    <p className="font-black text-gray-900 text-base">Rp {order.total.toLocaleString('id-ID')}</p>
+                                                    <p className={`text-[11px] font-black mt-1 px-2 py-0.5 rounded-md inline-block ${sisa > 0 ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+                                                        {sisa > 0 ? `SISA: Rp ${sisa.toLocaleString('id-ID')}` : 'LUNAS'}
+                                                    </p>
+                                                </td>
+                                                <td className="p-5">
+                                                    <select value={order.status} onChange={(e) => updateOrderStatus(order.id, e.target.value)} className={`p-2 rounded-lg border-2 font-black text-xs focus:outline-none cursor-pointer shadow-sm appearance-none text-center min-w-[120px] ${getStatusBadge(order.status)}`}>
+                                                        {statuses.map(s => <option key={s} value={s} className="bg-white text-black font-bold">{s}</option>)}
+                                                    </select>
+                                                </td>
+                                                <td className="p-5 text-right">
+                                                    <div className="flex items-center justify-end gap-2">
+                                                        <button onClick={() => setEditingOrder({...order})} className="p-2.5 bg-white text-blue-600 hover:bg-blue-600 hover:text-white rounded-xl border border-white transition shadow-sm" title="Edit Transaksi">
+                                                            <i className="ph-bold ph-pencil-simple text-lg"></i>
+                                                        </button>
+                                                        <button onClick={() => handleDeleteOrder(order.id)} className="p-2.5 bg-white text-red-500 hover:bg-red-500 hover:text-white rounded-xl border border-white transition shadow-sm" title="Hapus Permanen">
+                                                            <i className="ph-bold ph-trash text-lg"></i>
+                                                        </button>
+                                                        <button onClick={() => { setPrintOrder(order); setTimeout(() => window.print(), 300); }} className="p-2.5 bg-white text-gray-600 hover:text-brand-accent hover:border-brand-accent rounded-xl border border-white transition shadow-sm" title="Cetak Ulang Struk">
+                                                            <i className="ph-bold ph-printer text-lg"></i>
+                                                        </button>
+                                                        {sisa > 0 && order.status !== 'Diambil' && (
+                                                            <button onClick={() => handlePelunasan(order)} className="px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white font-black rounded-xl text-xs transition flex items-center gap-2 shadow-lg shadow-green-200 uppercase">
+                                                                <i className="ph-bold ph-money text-base"></i> Pelunasan
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                    {filteredOrders.length === 0 && (
+                                        <tr><td colSpan="6" className="p-8 text-center text-gray-500 font-bold">Tidak ada data pesanan yang sesuai pencarian.</td></tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    {editingOrder && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-[fadeIn_0.2s_ease-out]">
+                            <div className="bg-white rounded-3xl p-6 md:p-8 w-full max-w-lg shadow-2xl relative">
+                                <button onClick={() => setEditingOrder(null)} className="absolute top-5 right-5 text-gray-400 hover:text-gray-800 bg-gray-100 rounded-full p-1"><i className="ph-bold ph-x text-xl"></i></button>
+                                <h3 className="text-xl font-black text-gray-900 mb-6 flex items-center gap-2" style={{ fontFamily: '"Arial Black", sans-serif' }}>
+                                    <i className="ph-fill ph-pencil-simple text-brand-accent"></i> Edit Pesanan {editingOrder.id}
+                                </h3>
+                                
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-600 uppercase mb-1">Pelanggan</label>
+                                        <input type="text" value={editingOrder.customer} onChange={e => setEditingOrder({...editingOrder, customer: e.target.value})} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 font-bold focus:ring-2 focus:ring-brand-accent focus:outline-none" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-600 uppercase mb-1">No. WhatsApp</label>
+                                        <input type="text" value={editingOrder.phone} onChange={e => setEditingOrder({...editingOrder, phone: e.target.value})} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 font-bold focus:ring-2 focus:ring-brand-accent focus:outline-none" />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-xs font-bold text-gray-600 uppercase mb-1">Estimasi Selesai</label>
+                                            <input type="date" value={editingOrder.dateOut} onChange={e => setEditingOrder({...editingOrder, dateOut: e.target.value})} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 font-bold focus:ring-2 focus:ring-brand-accent focus:outline-none" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-gray-600 uppercase mb-1">Total (Rp)</label>
+                                            <input type="number" value={editingOrder.total} onChange={e => setEditingOrder({...editingOrder, total: Number(e.target.value)})} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 font-bold focus:ring-2 focus:ring-brand-accent focus:outline-none" />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-600 uppercase mb-1">DP yang dibayar (Rp)</label>
+                                        <input type="number" value={editingOrder.dp} onChange={e => setEditingOrder({...editingOrder, dp: Number(e.target.value)})} className="w-full bg-green-50 border border-green-200 text-green-700 rounded-xl p-3 font-black focus:ring-2 focus:ring-green-500 focus:outline-none" />
+                                    </div>
+                                </div>
+                                <div className="mt-8 flex gap-3">
+                                    <button onClick={saveEdit} className="flex-1 bg-brand-accent hover:bg-brand-accentHover text-white font-black py-3 rounded-xl transition shadow-md uppercase tracking-wide">Simpan Perubahan</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const Settings = ({ settings, setSettings, setPrintOrder }) => {
+            const handleInputChange = (e) => setSettings({ ...settings, [e.target.name]: e.target.value });
+
+            const handleLogoUpload = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onloadend = () => setSettings({ ...settings, logo: reader.result });
+                    reader.readAsDataURL(file);
+                }
+            };
+
+            const handleTestPrint = () => {
+                setPrintOrder(null);
+                setTimeout(() => window.print(), 300);
+            };
+
+            return (
+                <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 animate-[fadeIn_0.3s_ease-out]">
+                    <div className="glass-panel p-6 rounded-3xl mb-6">
+                        <h1 className="text-3xl font-black text-gray-900 tracking-tight" style={{ fontFamily: '"Arial Black", sans-serif' }}>Pengaturan & Kustomisasi Struk</h1>
+                        <p className="text-sm font-medium text-gray-600 mt-2">Sesuaikan identitas usaha Anda, unggah logo resolusi tinggi, dan atur tata letak cetak thermal printer secara interaktif.</p>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                        <div className="lg:col-span-7 space-y-6">
+                            <div className="glass-panel p-6 sm:p-8 rounded-3xl space-y-5">
+                                <h2 className="text-lg font-black text-gray-900 border-b border-gray-200/50 pb-3 flex items-center gap-2">
+                                    <i className="ph-fill ph-storefront text-brand-accent"></i> Profil Utama Usaha
+                                </h2>
+                                <div className="space-y-4">
+                                    <div><label className="block text-xs font-bold text-gray-600 uppercase mb-1.5">Nama Usaha (Akan tercetak tebal dengan font Arial Black)</label><input type="text" name="namaUsaha" value={settings.namaUsaha} onChange={handleInputChange} className="w-full bg-white border border-white rounded-xl p-3.5 font-bold focus:outline-none focus:ring-2 focus:ring-brand-accent shadow-sm text-lg" /></div>
+                                    <div><label className="block text-xs font-bold text-gray-600 uppercase mb-1.5">Sub-nama / Slogan</label><input type="text" name="subNama" value={settings.subNama} onChange={handleInputChange} className="w-full bg-white border border-white rounded-xl p-3 font-semibold focus:outline-none focus:ring-2 focus:ring-brand-accent shadow-sm" /></div>
+                                    <div><label className="block text-xs font-bold text-gray-600 uppercase mb-1.5">Alamat Lengkap</label><input type="text" name="alamat" value={settings.alamat} onChange={handleInputChange} className="w-full bg-white border border-white rounded-xl p-3 font-semibold focus:outline-none focus:ring-2 focus:ring-brand-accent shadow-sm" /></div>
+                                    <div><label className="block text-xs font-bold text-gray-600 uppercase mb-1.5">No. Telepon / WhatsApp</label><input type="text" name="telepon" value={settings.telepon} onChange={handleInputChange} className="w-full bg-white border border-white rounded-xl p-3 font-semibold focus:outline-none focus:ring-2 focus:ring-brand-accent shadow-sm" /></div>
+                                </div>
+                            </div>
+
+                            <div className="glass-panel p-6 sm:p-8 rounded-3xl space-y-5">
+                                <h2 className="text-lg font-black text-gray-900 border-b border-gray-200/50 pb-3 flex items-center gap-2">
+                                    <i className="ph-fill ph-printer text-brand-accent"></i> Format Cetak Thermal
+                                </h2>
+                                
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-600 uppercase mb-2">Upload Logo Usaha (High-Res Tanpa Batas Ukuran)</label>
+                                    <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                                        <label className="cursor-pointer bg-white border-2 border-dashed border-brand-accent/50 hover:border-brand-accent hover:bg-indigo-50 text-brand-accent font-black px-6 py-4 rounded-xl transition flex items-center justify-center gap-2 text-sm shadow-sm">
+                                            <i className="ph-bold ph-upload-simple text-xl"></i> Pilih Gambar Logo
+                                            <input type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" />
+                                        </label>
+                                        {settings.logo && <button onClick={() => setSettings({ ...settings, logo: null })} className="text-red-500 font-bold text-sm bg-red-50 px-4 py-2 rounded-lg hover:bg-red-100">Hapus Logo Saat Ini</button>}
+                                    </div>
+                                    <p className="text-[11px] text-gray-500 mt-2 font-medium">Logo akan otomatis diposisikan di samping nama usaha pada struk sesuai format retail modern.</p>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mt-4">
+                                    <div><label className="block text-xs font-bold text-gray-600 uppercase mb-1.5">Ukuran Kertas Printer</label><select name="paperSize" value={settings.paperSize} onChange={handleInputChange} className="w-full bg-white border border-white rounded-xl p-3.5 font-bold focus:outline-none focus:ring-2 focus:ring-brand-accent shadow-sm"><option value="58mm">58 mm (Standard)</option><option value="80mm">80 mm (Lebar)</option></select></div>
+                                    <div><label className="block text-xs font-bold text-gray-600 uppercase mb-1.5">Posisi Logo Cetak</label><select name="logoPosition" value={settings.logoPosition} onChange={handleInputChange} className="w-full bg-white border border-white rounded-xl p-3.5 font-bold focus:outline-none focus:ring-2 focus:ring-brand-accent shadow-sm"><option value="side">Di Samping Teks (Rekomendasi)</option><option value="top">Di Atas Teks (Tengah)</option></select></div>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                    <div className="bg-white/50 p-3 rounded-xl border border-white shadow-sm">
+                                        <label className="block text-xs font-bold text-gray-600 uppercase mb-1.5 flex justify-between">Spasi Pinggir Atas <span>{settings.marginTop}mm</span></label>
+                                        <input type="range" min="0" max="30" name="marginTop" value={settings.marginTop} onChange={handleInputChange} className="w-full accent-brand-accent mt-2" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-600 uppercase mb-1.5">Ukuran Font Body Struk</label>
+                                        <select name="receiptFontSize" value={settings.receiptFontSize} onChange={handleInputChange} className="w-full bg-white border border-white rounded-xl p-3.5 font-bold focus:outline-none focus:ring-2 focus:ring-brand-accent shadow-sm"><option value="text-[10px]">Kecil</option><option value="text-xs">Normal</option><option value="text-sm">Besar</option></select>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-600 uppercase mb-1.5">Teks Footer (Ucapan Terima Kasih & Info Garansi)</label>
+                                    <textarea name="footerText" value={settings.footerText} onChange={handleInputChange} rows="3" className="w-full bg-white border border-white rounded-xl p-3 font-semibold focus:outline-none focus:ring-2 focus:ring-brand-accent shadow-sm resize-none"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="lg:col-span-5">
+                            <div className="sticky top-28 w-full flex flex-col items-center space-y-4">
+                                <div className="glass-panel w-full p-3 rounded-2xl flex items-center justify-center gap-2">
+                                    <span className="relative flex h-3 w-3"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span><span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span></span>
+                                    <span className="text-gray-900 font-black uppercase tracking-widest text-sm">Pratinjau Langsung (Live Preview)</span>
+                                </div>
+                                <div className="bg-gray-800 p-8 pt-10 rounded-[40px] shadow-2xl relative w-full flex flex-col items-center justify-center border-8 border-gray-900 max-w-[400px]">
+                                    <div className="absolute top-2 left-1/2 -translate-x-1/2 w-20 h-4 bg-gray-900 rounded-b-2xl"></div>
+                                    <div className="w-full h-full overflow-hidden rounded-lg bg-gray-200 relative flex flex-col">
+                                        <Receipt settings={settings} />
+                                        <div className="receipt-edge mt-0 w-full z-10 relative"></div>
+                                    </div>
+                                </div>
+                                <button onClick={handleTestPrint} className="w-full max-w-[400px] bg-gradient-to-r from-gray-900 to-black hover:from-black hover:to-gray-900 text-white font-black py-4 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-xl hover:-translate-y-0.5 text-sm uppercase tracking-widest mt-4 border border-gray-700">
+                                    <i className="ph-bold ph-printer text-xl text-brand-gold"></i> Test Cetak Struk
+                                </button>
+                                <p className="text-center text-xs font-bold text-gray-500 max-w-[300px]">Format cetak akan otomatis menyesuaikan ukuran 58mm atau 80mm pada printer Thermal/Epson/Canon.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const App = () => {
+            const [activeTab, setActiveTab] = useState('dashboard');
+            
+            // Persistent storage for settings
+            const [settings, setSettings] = useState(() => {
+                const saved = localStorage.getItem('jahit_pro_settings');
+                return saved ? JSON.parse(saved) : defaultSettings;
+            });
+
+            // Persistent storage for orders (defaults to [] so dashboard starts at 0 if no data)
+            const [orders, setOrders] = useState(() => {
+                const saved = localStorage.getItem('jahit_pro_orders');
+                return saved ? JSON.parse(saved) : [];
+            });
+
+            // Persistent storage for inventory (defaults to [])
+            const [inventory, setInventory] = useState(() => {
+                const saved = localStorage.getItem('jahit_pro_inventory');
+                return saved ? JSON.parse(saved) : [];
+            });
+
+            const [printOrder, setPrintOrder] = useState(null);
+            const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+            // Modal state for custom alert/confirm boxes
+            const [modalData, setModalData] = useState({ isOpen: false, title: '', message: '', type: 'alert', onConfirm: null });
+
+            const showModal = (title, message, type = 'alert', onConfirm = null) => {
+                setModalData({ isOpen: true, title, message, type, onConfirm });
+            };
+
+            const closeModal = () => {
+                setModalData({ isOpen: false, title: '', message: '', type: 'alert', onConfirm: null });
+            };
+
+            // Save state to localStorage whenever it changes
+            useEffect(() => {
+                localStorage.setItem('jahit_pro_settings', JSON.stringify(settings));
+            }, [settings]);
+
+            useEffect(() => {
+                localStorage.setItem('jahit_pro_orders', JSON.stringify(orders));
+            }, [orders]);
+
+            useEffect(() => {
+                localStorage.setItem('jahit_pro_inventory', JSON.stringify(inventory));
+            }, [inventory]);
+
+            const stockAlerts = inventory.filter(item => item.qty <= item.min);
+            const toggleMobileMenu = () => setMobileMenuOpen(!mobileMenuOpen);
+
+            return (
+                <div className="min-h-screen flex flex-col relative">
+                    <TopNav activeTab={activeTab} setActiveTab={(t) => { setActiveTab(t); setMobileMenuOpen(false); }} stockAlerts={stockAlerts} toggleMobileMenu={toggleMobileMenu} mobileMenuOpen={mobileMenuOpen} settings={settings} />
+
+                    {mobileMenuOpen && (
+                        <div className="lg:hidden no-print glass-header p-4 space-y-2 shadow-xl absolute top-16 left-0 right-0 z-40">
+                            {[
+                                { id: 'dashboard', label: 'Dashboard', icon: 'ph-squares-four' },
+                                { id: 'transaction', label: 'Kasir Transaksi', icon: 'ph-monitor-play' },
+                                { id: 'pickup', label: 'Alur Kerja', icon: 'ph-kanban' },
+                                { id: 'inventory', label: 'Stok Bahan', icon: 'ph-package' },
+                                { id: 'settings', label: 'Pengaturan', icon: 'ph-gear' }
+                            ].map((tab) => (
+                                <button key={tab.id} onClick={() => { setActiveTab(tab.id); setMobileMenuOpen(false); }} className={`w-full text-left p-4 rounded-2xl text-sm font-black flex items-center gap-3 ${activeTab === tab.id ? 'bg-brand-accent text-white shadow-md' : 'text-gray-600 hover:bg-white/60'}`}>
+                                    <i className={`ph-bold ${tab.icon} text-xl`}></i> {tab.label}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+
+                    <main className="flex-1 no-print pb-12 relative z-10">
+                        {activeTab === 'dashboard' && <Dashboard orders={orders} />}
+                        {activeTab === 'transaction' && <Transaction settings={settings} setPrintOrder={setPrintOrder} setOrders={setOrders} orders={orders} showModal={showModal} />}
+                        {activeTab === 'pickup' && <Pickup orders={orders} setOrders={setOrders} setPrintOrder={setPrintOrder} showModal={showModal} />}
+                        {activeTab === 'inventory' && <Inventory inventory={inventory} setInventory={setInventory} showModal={showModal} />}
+                        {activeTab === 'settings' && <Settings settings={settings} setSettings={setSettings} setPrintOrder={setPrintOrder} />}
+                    </main>
+
+                    <div id="print-area" className="hidden print:block">
+                        <Receipt settings={settings} order={printOrder} isPrintArea={true} />
+                    </div>
+
+                    <CustomModal modalData={modalData} closeModal={closeModal} />
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
