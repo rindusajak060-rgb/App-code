@@ -1,0 +1,570 @@
+import React, { useState, useEffect } from 'react';
+import { 
+  Printer, 
+  Upload, 
+  Trash2, 
+  Plus, 
+  Save, 
+  History, 
+  FileText, 
+  X,
+  Fish
+} from 'lucide-react';
+
+export default function App() {
+  const [activeTab, setActiveTab] = useState('create'); // 'create' or 'history'
+  
+  // State for Invoice Data
+  const [logo, setLogo] = useState(null);
+  const [companyInfo, setCompanyInfo] = useState({
+    name: 'PT Ocean Seafood Nusantara',
+    address: 'Jl. Pelabuhan Perikanan No. 8, Jakarta',
+    phone: '0812-3456-7890'
+  });
+  
+  const [invoiceMeta, setInvoiceMeta] = useState({
+    no: 'INV-' + new Date().getFullYear() + '-' + Date.now().toString().slice(-4),
+    date: new Date().toISOString().split('T')[0],
+    buyerName: '',
+    buyerAddress: ''
+  });
+
+  const [items, setItems] = useState([
+    { id: 1, name: '', grade: '', weight: '', price: '' }
+  ]);
+
+  const [costs, setCosts] = useState({
+    discount: '',
+    taxRate: '',
+    shipping: '',
+    iceCost: ''
+  });
+
+  // Default Catatan Rekening
+  const [paymentNotes, setPaymentNotes] = useState(
+    "Pembayaran dapat ditransfer melalui:\nBank BCA: 1234567890\nBank Mandiri: 0987654321\na.n PT Ocean Seafood Nusantara\n\n*Mohon cantumkan No. Invoice pada berita transfer."
+  );
+
+  const [history, setHistory] = useState([]);
+
+  // Load history on initial render
+  useEffect(() => {
+    const savedHistory = localStorage.getItem('invoiceHistory');
+    if (savedHistory) {
+      setHistory(JSON.parse(savedHistory));
+    }
+  }, []);
+
+  // Handlers
+  const handleLogoUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLogo(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveLogo = () => setLogo(null);
+
+  const addItem = () => {
+    const newId = items.length > 0 ? Math.max(...items.map(i => i.id)) + 1 : 1;
+    setItems([...items, { id: newId, name: '', grade: '', weight: '', price: '' }]);
+  };
+
+  const removeItem = (id) => {
+    setItems(items.filter(item => item.id !== id));
+  };
+
+  const updateItem = (id, field, value) => {
+    setItems(items.map(item => 
+      item.id === id ? { ...item, [field]: value } : item
+    ));
+  };
+
+  // Calculations
+  const parseNum = (val) => parseFloat(val) || 0;
+
+  const subtotal = items.reduce((sum, item) => sum + (parseNum(item.weight) * parseNum(item.price)), 0);
+  const discountAmount = parseNum(costs.discount);
+  const afterDiscount = subtotal - discountAmount;
+  
+  const taxAmount = afterDiscount * (parseNum(costs.taxRate) / 100);
+  const shippingAmount = parseNum(costs.shipping);
+  const iceAmount = parseNum(costs.iceCost);
+  
+  const grandTotal = afterDiscount + taxAmount + shippingAmount + iceAmount;
+
+  // Format Currency
+  const formatIDR = (number) => {
+    return new Intl.NumberFormat('id-ID', { 
+      style: 'currency', 
+      currency: 'IDR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(number);
+  };
+
+  // Save to History
+  const saveInvoice = () => {
+    if (!invoiceMeta.buyerName) {
+      alert("Mohon isi nama pembeli terlebih dahulu.");
+      return;
+    }
+    
+    const newInvoiceRecord = {
+      id: Date.now(),
+      no: invoiceMeta.no,
+      date: invoiceMeta.date,
+      buyer: invoiceMeta.buyerName,
+      total: grandTotal
+    };
+
+    const updatedHistory = [newInvoiceRecord, ...history];
+    setHistory(updatedHistory);
+    localStorage.setItem('invoiceHistory', JSON.stringify(updatedHistory));
+    alert('Invoice berhasil disimpan ke riwayat!');
+    
+    // Generate new invoice number for next use
+    setInvoiceMeta({
+      ...invoiceMeta,
+      no: 'INV-' + new Date().getFullYear() + '-' + Date.now().toString().slice(-4)
+    });
+  };
+
+  const deleteHistoryItem = (id) => {
+    const updatedHistory = history.filter(h => h.id !== id);
+    setHistory(updatedHistory);
+    localStorage.setItem('invoiceHistory', JSON.stringify(updatedHistory));
+  };
+
+  const printInvoice = () => {
+    window.print();
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50 text-slate-800 font-sans">
+      <style>
+        {`
+          .invoice-logo {
+            max-height: 80px;
+            width: auto;
+            object-fit: contain;
+          }
+          
+          @media print {
+            body * {
+              visibility: hidden;
+            }
+            #printable-invoice, #printable-invoice * {
+              visibility: visible;
+            }
+            #printable-invoice {
+              position: absolute;
+              left: 0;
+              top: 0;
+              width: 100%;
+              padding: 20px;
+              background-color: white;
+            }
+            .no-print {
+              display: none !important;
+            }
+            .print-border {
+              border-color: #000 !important;
+            }
+            .print-bg-transparent {
+              background-color: transparent !important;
+            }
+          }
+        `}
+      </style>
+
+      {/* Navigation */}
+      <nav className="bg-blue-900 text-white p-4 shadow-md no-print">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
+          <div className="flex items-center gap-2 font-bold text-xl">
+            <Fish className="w-6 h-6" />
+            <span>FishVoice Auto</span>
+          </div>
+          <div className="flex gap-4">
+            <button 
+              onClick={() => setActiveTab('create')}
+              className={`flex items-center gap-1 px-3 py-2 rounded-md transition-colors ${activeTab === 'create' ? 'bg-blue-700' : 'hover:bg-blue-800'}`}
+            >
+              <FileText className="w-4 h-4" /> Buat Invoice
+            </button>
+            <button 
+              onClick={() => setActiveTab('history')}
+              className={`flex items-center gap-1 px-3 py-2 rounded-md transition-colors ${activeTab === 'history' ? 'bg-blue-700' : 'hover:bg-blue-800'}`}
+            >
+              <History className="w-4 h-4" /> Riwayat
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto p-4 md:p-6">
+        
+        {/* --- TAB: RIWAYAT --- */}
+        {activeTab === 'history' && (
+          <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+            <h2 className="text-2xl font-bold mb-6 text-slate-800 border-b pb-2">Riwayat Invoice</h2>
+            {history.length === 0 ? (
+              <p className="text-slate-500 text-center py-8">Belum ada riwayat invoice yang disimpan.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-slate-100 text-slate-700">
+                      <th className="p-3 border-b">No. Invoice</th>
+                      <th className="p-3 border-b">Tanggal</th>
+                      <th className="p-3 border-b">Pembeli</th>
+                      <th className="p-3 border-b">Total</th>
+                      <th className="p-3 border-b text-center">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {history.map((inv) => (
+                      <tr key={inv.id} className="hover:bg-slate-50 transition-colors">
+                        <td className="p-3 border-b font-medium">{inv.no}</td>
+                        <td className="p-3 border-b">{inv.date}</td>
+                        <td className="p-3 border-b">{inv.buyer}</td>
+                        <td className="p-3 border-b font-semibold text-blue-700">{formatIDR(inv.total)}</td>
+                        <td className="p-3 border-b text-center">
+                          <button 
+                            onClick={() => deleteHistoryItem(inv.id)}
+                            className="text-red-500 hover:bg-red-50 p-2 rounded-full transition-colors"
+                            title="Hapus riwayat"
+                          >
+                            <Trash2 className="w-5 h-5" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* --- TAB: BUAT INVOICE --- */}
+        {activeTab === 'create' && (
+          <div className="flex flex-col lg:flex-row gap-6">
+            
+            {/* Left Column: Form Controls (No-Print) */}
+            <div className="w-full lg:w-1/2 space-y-6 no-print">
+              
+              {/* Logo & Company Settings */}
+              <div className="bg-white p-5 rounded-lg shadow-sm border border-slate-200">
+                <h3 className="text-lg font-bold mb-4 flex items-center gap-2 border-b pb-2">
+                  <Upload className="w-5 h-5 text-blue-600" /> Profil Perusahaan
+                </h3>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Logo Perusahaan</label>
+                  <div className="flex items-center gap-4">
+                    {logo ? (
+                      <div className="relative">
+                        <img src={logo} alt="Company Logo" className="h-16 w-auto object-contain bg-slate-100 p-1 border rounded" />
+                        <button onClick={handleRemoveLogo} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600">
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="relative border-2 border-dashed border-slate-300 rounded-md p-4 text-center hover:bg-slate-50 transition-colors w-full cursor-pointer">
+                        <input 
+                          type="file" 
+                          accept="image/png, image/jpeg, image/jpg" 
+                          onChange={handleLogoUpload}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        />
+                        <Upload className="w-6 h-6 text-slate-400 mx-auto mb-1" />
+                        <span className="text-sm text-slate-500">Klik atau drop logo (Ukuran bebas)</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-600 mb-1">Nama Perusahaan</label>
+                    <input type="text" value={companyInfo.name} onChange={e => setCompanyInfo({...companyInfo, name: e.target.value})} className="w-full p-2 border rounded-md text-sm" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-600 mb-1">Kontak/Telp</label>
+                    <input type="text" value={companyInfo.phone} onChange={e => setCompanyInfo({...companyInfo, phone: e.target.value})} className="w-full p-2 border rounded-md text-sm" />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-xs font-medium text-slate-600 mb-1">Alamat</label>
+                    <input type="text" value={companyInfo.address} onChange={e => setCompanyInfo({...companyInfo, address: e.target.value})} className="w-full p-2 border rounded-md text-sm" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Invoice Meta */}
+              <div className="bg-white p-5 rounded-lg shadow-sm border border-slate-200">
+                <h3 className="text-lg font-bold mb-4 border-b pb-2">Informasi Invoice</h3>
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">No. Invoice</label>
+                    <input type="text" value={invoiceMeta.no} onChange={e => setInvoiceMeta({...invoiceMeta, no: e.target.value})} className="w-full p-2 border rounded-md font-mono text-sm" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Tanggal</label>
+                    <input type="date" value={invoiceMeta.date} onChange={e => setInvoiceMeta({...invoiceMeta, date: e.target.value})} className="w-full p-2 border rounded-md text-sm" />
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Nama Pembeli (Buyer)</label>
+                    <input type="text" placeholder="Misal: PT Maju Jaya Laut" value={invoiceMeta.buyerName} onChange={e => setInvoiceMeta({...invoiceMeta, buyerName: e.target.value})} className="w-full p-2 border rounded-md" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Alamat Pengiriman/Pembeli</label>
+                    <textarea placeholder="Alamat lengkap..." value={invoiceMeta.buyerAddress} onChange={e => setInvoiceMeta({...invoiceMeta, buyerAddress: e.target.value})} className="w-full p-2 border rounded-md" rows="2" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Items Management */}
+              <div className="bg-white p-5 rounded-lg shadow-sm border border-slate-200 overflow-x-auto">
+                <div className="flex justify-between items-center mb-4 border-b pb-2">
+                  <h3 className="text-lg font-bold text-slate-800">Daftar Ikan</h3>
+                  <button onClick={addItem} className="flex items-center gap-1 text-sm bg-blue-100 text-blue-700 px-3 py-1.5 rounded-md hover:bg-blue-200 font-medium">
+                    <Plus className="w-4 h-4" /> Tambah Baris
+                  </button>
+                </div>
+                
+                <div className="space-y-3">
+                  {items.map((item, index) => (
+                    <div key={item.id} className="p-3 bg-slate-50 border border-slate-200 rounded-md relative group">
+                      <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+                        <div className="md:col-span-4">
+                          <label className="block text-xs font-medium text-slate-500 mb-1">Jenis Ikan</label>
+                          <input type="text" placeholder="Cakalang, Tuna..." value={item.name} onChange={(e) => updateItem(item.id, 'name', e.target.value)} className="w-full p-2 text-sm border rounded-md" />
+                        </div>
+                        <div className="md:col-span-2">
+                          <label className="block text-xs font-medium text-slate-500 mb-1">Grade/Uk.</label>
+                          <input type="text" placeholder="Grade A" value={item.grade} onChange={(e) => updateItem(item.id, 'grade', e.target.value)} className="w-full p-2 text-sm border rounded-md" />
+                        </div>
+                        <div className="md:col-span-2">
+                          <label className="block text-xs font-medium text-slate-500 mb-1">Berat (Kg)</label>
+                          <input type="number" min="0" value={item.weight} onChange={(e) => updateItem(item.id, 'weight', e.target.value)} className="w-full p-2 text-sm border rounded-md" />
+                        </div>
+                        <div className="md:col-span-3">
+                          <label className="block text-xs font-medium text-slate-500 mb-1">Harga/Kg (Rp)</label>
+                          <input type="number" min="0" value={item.price} onChange={(e) => updateItem(item.id, 'price', e.target.value)} className="w-full p-2 text-sm border rounded-md" />
+                        </div>
+                        <div className="md:col-span-1 text-center pb-1">
+                          <button onClick={() => removeItem(item.id)} className="text-red-500 hover:bg-red-100 p-1.5 rounded-md transition-colors" title="Hapus Baris">
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  {items.length === 0 && <p className="text-center text-sm text-slate-400 py-2">Belum ada item ditambahkan.</p>}
+                </div>
+              </div>
+
+              {/* Costs & Discounts */}
+              <div className="bg-white p-5 rounded-lg shadow-sm border border-slate-200">
+                <h3 className="text-lg font-bold mb-4 border-b pb-2">Diskon & Biaya Tambahan</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-700 mb-1">Diskon (Rp)</label>
+                    <input type="number" min="0" placeholder="0" value={costs.discount} onChange={e => setCosts({...costs, discount: e.target.value})} className="w-full p-2 text-sm border rounded-md" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-700 mb-1">Pajak (%)</label>
+                    <input type="number" min="0" max="100" placeholder="0" value={costs.taxRate} onChange={e => setCosts({...costs, taxRate: e.target.value})} className="w-full p-2 text-sm border rounded-md" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-700 mb-1">Ongkir (Rp)</label>
+                    <input type="number" min="0" placeholder="0" value={costs.shipping} onChange={e => setCosts({...costs, shipping: e.target.value})} className="w-full p-2 text-sm border rounded-md" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-700 mb-1">Biaya Es (Rp)</label>
+                    <input type="number" min="0" placeholder="0" value={costs.iceCost} onChange={e => setCosts({...costs, iceCost: e.target.value})} className="w-full p-2 text-sm border rounded-md" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Payment Notes */}
+              <div className="bg-white p-5 rounded-lg shadow-sm border border-slate-200">
+                <h3 className="text-lg font-bold mb-4 border-b pb-2">Catatan / Info Rekening</h3>
+                <textarea 
+                  rows="4" 
+                  value={paymentNotes} 
+                  onChange={e => setPaymentNotes(e.target.value)} 
+                  placeholder="Masukkan detail bank atau informasi lainnya di sini..."
+                  className="w-full p-3 text-sm border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-4">
+                <button onClick={saveInvoice} className="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors">
+                  <Save className="w-5 h-5" /> Simpan ke Riwayat
+                </button>
+                <button onClick={printInvoice} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors">
+                  <Printer className="w-5 h-5" /> Cetak / PDF
+                </button>
+              </div>
+
+            </div>
+
+            {/* Right Column: Live Preview / Printable Area */}
+            <div className="w-full lg:w-1/2">
+              <div className="sticky top-6">
+                <div className="text-sm font-semibold text-slate-500 mb-2 no-print flex items-center justify-between">
+                  <span>Pratinjau Invoice (Real-time)</span>
+                  <span className="text-xs font-normal bg-blue-100 text-blue-700 px-2 py-1 rounded">Format Siap Cetak</span>
+                </div>
+                
+                {/* --- START OF PRINTABLE INVOICE --- */}
+                <div id="printable-invoice" className="bg-white p-8 rounded-lg shadow-lg border border-slate-200 text-slate-800 flex flex-col min-h-[800px]">
+                  
+                  {/* Bagian Atas / Konten Utama Invoice */}
+                  <div className="flex-grow">
+                    {/* Header */}
+                    <div className="flex justify-between items-start border-b-2 border-slate-800 pb-6 mb-6 print-border">
+                      <div className="flex gap-4 items-center">
+                        {logo ? (
+                           <img src={logo} alt="Logo" className="invoice-logo" />
+                        ) : (
+                           <div className="h-[80px] w-[80px] bg-slate-100 border border-slate-300 flex items-center justify-center text-slate-400 text-xs italic print-bg-transparent">Logo Sini</div>
+                        )}
+                        <div>
+                          <h1 className="text-2xl font-black text-slate-900 uppercase tracking-tight">{companyInfo.name || 'NAMA PERUSAHAAN'}</h1>
+                          <p className="text-sm text-slate-600 mt-1 max-w-xs">{companyInfo.address}</p>
+                          <p className="text-sm text-slate-600">Telp: {companyInfo.phone}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <h2 className="text-3xl font-light text-blue-900 tracking-widest mb-2">INVOICE</h2>
+                        <p className="text-sm font-medium"><span className="text-slate-500">NO:</span> {invoiceMeta.no}</p>
+                        <p className="text-sm font-medium"><span className="text-slate-500">TGL:</span> {invoiceMeta.date}</p>
+                      </div>
+                    </div>
+
+                    {/* Bill To */}
+                    <div className="mb-8 bg-slate-50 p-4 rounded-md print-bg-transparent print-border border border-transparent">
+                      <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Ditagihkan Kepada:</h3>
+                      <p className="text-lg font-bold text-slate-800">{invoiceMeta.buyerName || '......................................'}</p>
+                      <p className="text-sm text-slate-600 whitespace-pre-wrap mt-1">{invoiceMeta.buyerAddress || '......................................'}</p>
+                    </div>
+
+                    {/* Table Item */}
+                    <div className="mb-8">
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="border-b-2 border-slate-800 print-border">
+                            <th className="py-3 px-2 text-sm font-bold w-[40%]">NAMA JENIS IKAN</th>
+                            <th className="py-3 px-2 text-sm font-bold text-center">GRADE/UK.</th>
+                            <th className="py-3 px-2 text-sm font-bold text-right">BERAT (Kg)</th>
+                            <th className="py-3 px-2 text-sm font-bold text-right">HARGA/Kg</th>
+                            <th className="py-3 px-2 text-sm font-bold text-right">JUMLAH</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {items.map((item, idx) => {
+                            const weight = parseNum(item.weight);
+                            const price = parseNum(item.price);
+                            const totalItem = weight * price;
+                            return (
+                              <tr key={item.id || idx} className="border-b border-slate-200">
+                                <td className="py-3 px-2 text-sm font-semibold">{item.name || '-'}</td>
+                                <td className="py-3 px-2 text-sm text-center text-slate-600">{item.grade || '-'}</td>
+                                <td className="py-3 px-2 text-sm text-right">{weight > 0 ? weight.toLocaleString('id-ID') : '-'}</td>
+                                <td className="py-3 px-2 text-sm text-right">{price > 0 ? formatIDR(price) : '-'}</td>
+                                <td className="py-3 px-2 text-sm text-right font-medium">{totalItem > 0 ? formatIDR(totalItem) : '-'}</td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Summary / Total */}
+                    <div className="flex justify-end mt-4 mb-8">
+                      <div className="w-full md:w-2/3 lg:w-3/4 max-w-sm space-y-2">
+                        
+                        {/* Subtotal */}
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="font-semibold text-slate-600">Subtotal:</span>
+                          <span className="font-semibold">{formatIDR(subtotal)}</span>
+                        </div>
+                        
+                        {/* Diskon */}
+                        {discountAmount > 0 && (
+                          <div className="flex justify-between items-center text-sm text-red-600">
+                            <span className="font-semibold">Diskon:</span>
+                            <span className="font-semibold">- {formatIDR(discountAmount)}</span>
+                          </div>
+                        )}
+
+                        {/* After Discount */}
+                        {discountAmount > 0 && (
+                          <div className="flex justify-between items-center text-sm border-t border-slate-200 pt-1">
+                            <span className="font-semibold text-slate-600">Total Setelah Diskon:</span>
+                            <span className="font-semibold">{formatIDR(afterDiscount)}</span>
+                          </div>
+                        )}
+
+                        {/* Pajak */}
+                        {taxAmount > 0 && (
+                          <div className="flex justify-between items-center text-sm">
+                            <span className="font-semibold text-slate-600">Pajak ({costs.taxRate}%):</span>
+                            <span className="font-semibold">{formatIDR(taxAmount)}</span>
+                          </div>
+                        )}
+
+                        {/* Ongkir */}
+                        {shippingAmount > 0 && (
+                          <div className="flex justify-between items-center text-sm">
+                            <span className="font-semibold text-slate-600">Biaya Pengiriman:</span>
+                            <span className="font-semibold">{formatIDR(shippingAmount)}</span>
+                          </div>
+                        )}
+
+                        {/* Biaya Es */}
+                        {iceAmount > 0 && (
+                          <div className="flex justify-between items-center text-sm">
+                            <span className="font-semibold text-slate-600">Biaya Es / Cold Storage:</span>
+                            <span className="font-semibold">{formatIDR(iceAmount)}</span>
+                          </div>
+                        )}
+
+                        {/* Grand Total */}
+                        <div className="flex justify-between items-center pt-3 mt-3 border-t-2 border-slate-800 print-border">
+                          <span className="font-bold text-lg">TOTAL:</span>
+                          <span className="font-bold text-xl text-blue-800">{formatIDR(grandTotal)}</span>
+                        </div>
+
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Payment Notes Section (Pengganti Tanda Tangan) */}
+                  {paymentNotes && (
+                    <div className="mt-auto pt-6 border-t border-slate-200 print-border">
+                      <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Informasi Pembayaran & Catatan:</h3>
+                      <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">{paymentNotes}</p>
+                    </div>
+                  )}
+
+                </div>
+                {/* --- END OF PRINTABLE INVOICE --- */}
+                
+              </div>
+            </div>
+          </div>
+        )}
+      </main>
+    </div>
+  );
+}
