@@ -53,7 +53,6 @@
                 max-width: 100% !important;
                 background: white !important;
             }
-            /* Hapus garis tepi (border) di luar tabel saat dicetak */
             .print-container div {
                 border: none !important;
             }
@@ -65,7 +64,6 @@
                 border: 1px solid #d1d5db !important;
                 padding: 8px 10px !important;
             }
-            /* Pastikan layout catatan dan ringkasan tetap sejajar saat dicetak */
             .print-side-by-side {
                 display: flex !important;
                 justify-content: space-between !important;
@@ -153,7 +151,6 @@
                 </div>
             </div>
 
-            <!-- Pengaturan Lebar Kolom -->
             <div class="border-t pt-4 space-y-3">
                 <h3 class="text-xs font-bold text-slate-600 uppercase flex items-center gap-1.5">
                     <i class="fa-solid fa-columns text-ocean-600"></i> Pengaturan Lebar Kolom (%)
@@ -183,7 +180,7 @@
             </div>
 
             <div class="border-t pt-4 space-y-4">
-                <h3 class="text-xs font-bold text-slate-600 uppercase">Diskon & Penyesuaian</h3>
+                <h3 class="text-xs font-bold text-slate-600 uppercase">Diskon & Biaya Tambahan</h3>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs text-slate-500 mb-1">Diskon (%)</label>
@@ -192,6 +189,19 @@
                     <div>
                         <label class="block text-xs text-slate-500 mb-1">Diskon (Rp)</label>
                         <input type="number" id="inputDiskonRp" value="0" min="0" class="w-full text-sm border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-ocean-600 focus:outline-none" oninput="hitungTotal()">
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <label class="block text-xs text-slate-500 font-bold uppercase">Biaya Tambahan Kustom</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-[11px] text-slate-400 mb-1">Nama Biaya</label>
+                            <input type="text" id="inputNamaBiayaTambahan" value="Biaya Tambahan" class="w-full text-sm border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-ocean-600 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] text-slate-400 mb-1">Nominal (Rp)</label>
+                            <input type="number" id="inputBiayaTambahan" value="0" min="0" step="1000" class="w-full text-sm border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-ocean-600 focus:outline-none" oninput="hitungTotal()">
+                        </div>
                     </div>
                 </div>
                 <div>
@@ -205,7 +215,6 @@
             </button>
         </section>
 
-        <!-- Preview Lembar Invoice -->
         <section class="lg:col-span-2">
             <div id="invoicePreview" class="print-container bg-white rounded-xl shadow-md border border-slate-200 p-8 space-y-6 text-slate-900">
                 
@@ -294,6 +303,10 @@
                                 <span>After Discon:</span>
                                 <span id="viewAfterDiscon" class="font-semibold text-slate-900">Rp 8.200.000</span>
                             </div>
+                            <div id="rowBiayaTambahan" class="flex justify-between text-slate-600 hidden">
+                                <span id="viewLabelBiayaTambahan">Biaya Tambahan:</span>
+                                <span id="viewBiayaTambahan" class="font-semibold text-slate-900">Rp 0</span>
+                            </div>
                             <div class="border-t border-slate-300 pt-2 flex justify-between text-base font-extrabold text-slate-900">
                                 <span>Total Tagihan:</span>
                                 <span id="viewTotalTagihan" class="text-blue-600">Rp 8.200.000</span>
@@ -325,16 +338,13 @@
     </div>
 
     <script>
-        // Inisialisasi Data Item Ikan Sesuai Contoh Gambar
         let items = [
             { nama: "IKAN CAKALANG", grade: "1;7", berat: 100, harga: 50000 },
             { nama: "UDAN VANAME", grade: "1;7", berat: 40, harga: 80000 }
         ];
 
-        // Set tanggal hari ini secara otomatis jika belum ada
         document.getElementById('inputTanggal').valueAsDate = new Date();
 
-        // Event listener sinkronisasi input teks secara real-time
         const inputBindings = [
             { input: 'inputNamaPerusahaan', view: 'viewNamaPerusahaan' },
             { input: 'inputAlamatPerusahaan', view: 'viewAlamatPerusahaan', isHtml: true },
@@ -342,7 +352,8 @@
             { input: 'inputJatuhTempo', view: 'viewJatuhTempo' },
             { input: 'inputNamaPembeli', view: 'viewNamaPembeli' },
             { input: 'inputAlamatPembeli', view: 'viewAlamatPembeli', isHtml: true },
-            { input: 'inputInfoRekening', view: 'viewInfoRekening', isHtml: true }
+            { input: 'inputInfoRekening', view: 'viewInfoRekening', isHtml: true },
+            { input: 'inputNamaBiayaTambahan', view: 'viewLabelBiayaTambahan', isSuffix: true }
         ];
 
         inputBindings.forEach(item => {
@@ -351,6 +362,8 @@
             elInput.addEventListener('input', () => {
                 if (item.isHtml) {
                     elView.innerHTML = elInput.value.replace(/\n/g, '<br>');
+                } else if (item.isSuffix) {
+                    elView.innerText = (elInput.value.trim() ? elInput.value : 'Biaya Tambahan') + ':';
                 } else {
                     elView.innerText = elInput.value;
                 }
@@ -363,7 +376,6 @@
             document.getElementById('viewTanggal').innerText = isNaN(tgl) ? e.target.value : tgl.toLocaleDateString('id-ID', options);
         });
 
-        // Penanganan Logo Perusahaan
         document.getElementById('logoInput').addEventListener('change', function(event) {
             const file = event.target.files[0];
             if (file) {
@@ -386,13 +398,11 @@
             const wBerat = parseFloat(document.getElementById('colWidthBerat').value) || 15;
             const wHarga = parseFloat(document.getElementById('colWidthHarga').value) || 15;
             
-            // Sisa untuk Subtotal
             let wSubtotal = 100 - (wNama + wGrade + wBerat + wHarga);
             if (wSubtotal < 10) wSubtotal = 10;
             
             document.getElementById('colWidthSubtotal').value = wSubtotal + '%';
 
-            // Terapkan ke Header
             document.getElementById('thNama').style.width = wNama + '%';
             document.getElementById('thGrade').style.width = wGrade + '%';
             document.getElementById('thBerat').style.width = wBerat + '%';
@@ -400,7 +410,6 @@
             document.getElementById('thSubtotal').style.width = wSubtotal + '%';
         }
 
-        // Render Tabel Item Ikan
         function renderTabelItem() {
             const tbody = document.getElementById('tabelItemBody');
             tbody.innerHTML = '';
@@ -464,23 +473,33 @@
             hitungTotal();
         }
 
-        // Perhitungan Otomatis Subtotal, Diskon, After Discon, dan Total Tagihan
         function hitungTotal() {
             let subtotal = items.reduce((acc, item) => acc + (item.berat * item.harga), 0);
             
             const diskonPersen = parseFloat(document.getElementById('inputDiskonPersen').value) || 0;
             const diskonRpInput = parseFloat(document.getElementById('inputDiskonRp').value) || 0;
+            const biayaTambahan = parseFloat(document.getElementById('inputBiayaTambahan').value) || 0;
 
             let diskonDariPersen = (subtotal * diskonPersen) / 100;
             let totalDiskon = diskonDariPersen + diskonRpInput;
             if (totalDiskon > subtotal) totalDiskon = subtotal;
 
             let afterDiscon = subtotal - totalDiskon;
-            let totalTagihan = afterDiscon;
+            let totalTagihan = afterDiscon + biayaTambahan;
 
             document.getElementById('viewSubtotal').innerText = `Rp ${formatRupiah(subtotal)}`;
             document.getElementById('viewDiskon').innerText = `- Rp ${formatRupiah(totalDiskon)}`;
             document.getElementById('viewAfterDiscon').innerText = `Rp ${formatRupiah(afterDiscon)}`;
+            
+            const rowBiayaTambahan = document.getElementById('rowBiayaTambahan');
+            const viewBiayaTambahan = document.getElementById('viewBiayaTambahan');
+            if (biayaTambahan > 0) {
+                rowBiayaTambahan.classList.remove('hidden');
+                viewBiayaTambahan.innerText = `Rp ${formatRupiah(biayaTambahan)}`;
+            } else {
+                rowBiayaTambahan.classList.add('hidden');
+            }
+
             document.getElementById('viewTotalTagihan').innerText = `Rp ${formatRupiah(totalTagihan)}`;
         }
 
@@ -488,7 +507,6 @@
             return Math.round(angka).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
         }
 
-        // Penyimpanan Data Riwayat Sederhana (localStorage)
         function simpanKeRiwayat() {
             const noInvoice = document.getElementById('inputNoInvoice').value;
             const namaPembeli = document.getElementById('inputNamaPembeli').value;
@@ -540,10 +558,9 @@
             bukaRiwayatModal();
         }
 
-        // Jalankan render dan inisialisasi awal saat halaman dimuat
         updateColumnWidths();
         renderTabelItem();
-    </script>    </script>
+    </script>
 
 </body>
-  </html>
+    </html>
