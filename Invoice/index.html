@@ -81,6 +81,12 @@
 </head>
 <body class="bg-slate-100 font-sans text-slate-800 min-h-screen">
 
+    <!-- Toast Notifikasi Kustom (Pengganti Alert) -->
+    <div id="toastNotification" class="no-print fixed bottom-5 right-5 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl text-sm z-50 transition-all duration-300 transform translate-y-20 opacity-0 flex items-center gap-2">
+        <i class="fa-solid fa-circle-check text-emerald-400"></i>
+        <span id="toastMessage">Notifikasi sistem</span>
+    </div>
+
     <header class="no-print bg-ocean-800 text-white shadow-md">
         <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
             <div class="flex items-center space-x-3">
@@ -93,7 +99,7 @@
                 </div>
             </div>
             <div class="flex items-center gap-3">
-                <button onclick="window.print()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 shadow">
+                <button onclick="cetakInvoice()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 shadow">
                     <i class="fa-solid fa-print"></i> Cetak / Simpan PDF
                 </button>
                 <button onclick="bukaRiwayatModal()" class="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 border border-white/20">
@@ -129,8 +135,8 @@
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-bold text-slate-600 uppercase mb-1">No. Invoice</label>
-                        <input type="text" id="inputNoInvoice" value="INV-2026-001" class="w-full text-sm border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-ocean-600 focus:outline-none">
+                        <label class="block text-xs font-bold text-slate-600 uppercase mb-1">No. Invoice (Auto / Edit)</label>
+                        <input type="text" id="inputNoInvoice" class="w-full text-sm border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-ocean-600 focus:outline-none font-semibold text-ocean-800">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Tanggal Transaksi</label>
@@ -151,6 +157,7 @@
                 </div>
             </div>
 
+            <!-- Pengaturan Tata Letak Kolom -->
             <div class="border-t pt-4 space-y-3">
                 <h3 class="text-xs font-bold text-slate-600 uppercase flex items-center gap-1.5">
                     <i class="fa-solid fa-columns text-ocean-600"></i> Pengaturan Lebar Kolom (%)
@@ -210,11 +217,12 @@
                 </div>
             </div>
 
-            <button onclick="simpanKeRiwayat()" class="w-full bg-ocean-700 hover:bg-ocean-800 text-white font-medium py-2.5 rounded-lg text-sm transition shadow flex items-center justify-center gap-2">
+            <button onclick="simpanKeRiwayat(false)" class="w-full bg-ocean-700 hover:bg-ocean-800 text-white font-medium py-2.5 rounded-lg text-sm transition shadow flex items-center justify-center gap-2">
                 <i class="fa-solid fa-floppy-disk"></i> Simpan ke Riwayat Database
             </button>
         </section>
 
+        <!-- Pratinjau Invoice -->
         <section class="lg:col-span-2">
             <div id="invoicePreview" class="print-container bg-white rounded-xl shadow-md border border-slate-200 p-8 space-y-6 text-slate-900">
                 
@@ -320,6 +328,7 @@
 
     </main>
 
+    <!-- Modal Riwayat -->
     <div id="riwayatModal" class="no-print fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
         <div class="bg-white rounded-xl max-w-2xl w-full p-6 shadow-2xl space-y-4 max-h-[80vh] flex flex-col">
             <div class="flex justify-between items-center border-b pb-3">
@@ -340,10 +349,21 @@
     <script>
         let items = [
             { nama: "IKAN CAKALANG", grade: "1;7", berat: 100, harga: 50000 },
-            { nama: "UDAN VANAME", grade: "1;7", berat: 40, harga: 80000 }
+            { nama: "UDANG VANAME", grade: "1;7", berat: 40, harga: 80000 }
         ];
 
         document.getElementById('inputTanggal').valueAsDate = new Date();
+
+        // Inisialisasi Nomor Invoice Otomatis Berurutan berdasarkan Riwayat
+        function initAutoInvoiceNumber() {
+            let riwayat = JSON.parse(localStorage.getItem('riwayat_invoice_ikan')) || [];
+            let nextSeq = riwayat.length + 1;
+            let formattedNo = `INV-2026-${String(nextSeq).padStart(3, '0')}`;
+            document.getElementById('inputNoInvoice').value = formattedNo;
+            document.getElementById('viewNoInvoice').innerText = formattedNo;
+        }
+
+        initAutoInvoiceNumber();
 
         const inputBindings = [
             { input: 'inputNamaPerusahaan', view: 'viewNamaPerusahaan' },
@@ -459,7 +479,7 @@
                 items.splice(index, 1);
                 renderTabelItem();
             } else {
-                alert("Invoice harus memiliki minimal 1 item ikan.");
+                showToast("Invoice harus memiliki minimal 1 item ikan.");
             }
         }
 
@@ -507,17 +527,44 @@
             return Math.round(angka).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
         }
 
-        function simpanKeRiwayat() {
+        function showToast(message) {
+            const toast = document.getElementById('toastNotification');
+            const msg = document.getElementById('toastMessage');
+            msg.innerText = message;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        function simpanKeRiwayat(silent = false) {
             const noInvoice = document.getElementById('inputNoInvoice').value;
             const namaPembeli = document.getElementById('inputNamaPembeli').value;
             const tanggal = document.getElementById('viewTanggal').innerText;
             const totalNominal = document.getElementById('viewTotalTagihan').innerText;
 
             let riwayat = JSON.parse(localStorage.getItem('riwayat_invoice_ikan')) || [];
-            riwayat.push({ noInvoice, namaPembeli, tanggal, totalNominal, timestamp: new Date().toLocaleString() });
+            
+            // Cek apakah no invoice sudah ada di riwayat, jika belum tambahkan
+            const existingIndex = riwayat.findIndex(item => item.noInvoice === noInvoice);
+            const dataEntry = { noInvoice, namaPembeli, tanggal, totalNominal, timestamp: new Date().toLocaleString() };
+            
+            if (existingIndex >= 0) {
+                riwayat[existingIndex] = dataEntry;
+            } else {
+                riwayat.push(dataEntry);
+            }
+
             localStorage.setItem('riwayat_invoice_ikan', JSON.stringify(riwayat));
 
-            alert("Invoice berhasil disimpan ke riwayat penyimpanan database lokal!");
+            if (!silent) {
+                showToast("Invoice berhasil disimpan ke riwayat database!");
+            }
+        }
+
+        function cetakInvoice() {
+            simpanKeRiwayat(true); // Otomatis simpan ke riwayat saat dicetak
+            window.print();
         }
 
         function bukaRiwayatModal() {
@@ -556,6 +603,7 @@
             riwayat.splice(index, 1);
             localStorage.setItem('riwayat_invoice_ikan', JSON.stringify(riwayat));
             bukaRiwayatModal();
+            showToast("Item riwayat berhasil dihapus.");
         }
 
         updateColumnWidths();
@@ -563,4 +611,4 @@
     </script>
 
 </body>
-    </html>
+</html>
