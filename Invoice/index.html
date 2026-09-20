@@ -102,6 +102,9 @@
                 <button onclick="cetakInvoice()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 shadow">
                     <i class="fa-solid fa-print"></i> Cetak / Simpan PDF
                 </button>
+                <button onclick="resetDraft()" class="bg-rose-600 hover:bg-rose-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 shadow" title="Reset ke Default">
+                    <i class="fa-solid fa-rotate-right"></i> Reset Form
+                </button>
                 <button onclick="bukaRiwayatModal()" class="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 border border-white/20">
                     <i class="fa-solid fa-clock-rotate-left"></i> Riwayat Invoice
                 </button>
@@ -379,7 +382,35 @@
             { nama: "UDANG VANAME", grade: "1;7", berat: 40, harga: 80000 }
         ];
 
+        // Inisialisasi Tanggal Default jika belum ada
         document.getElementById('inputTanggal').valueAsDate = new Date();
+
+        // Fungsi Menyimpan Draft Otomatis ke localStorage
+        function saveDraft() {
+            const draft = {
+                namaPerusahaan: document.getElementById('inputNamaPerusahaan').value,
+                alamatPerusahaan: document.getElementById('inputAlamatPerusahaan').value,
+                noInvoice: document.getElementById('inputNoInvoice').value,
+                tanggal: document.getElementById('inputTanggal').value,
+                jatuhTempo: document.getElementById('inputJatuhTempo').value,
+                namaPembeli: document.getElementById('inputNamaPembeli').value,
+                alamatPembeli: document.getElementById('inputAlamatPembeli').value,
+                colWidthNama: document.getElementById('colWidthNama').value,
+                colWidthGrade: document.getElementById('colWidthGrade').value,
+                colWidthBerat: document.getElementById('colWidthBerat').value,
+                colWidthHarga: document.getElementById('colWidthHarga').value,
+                diskonPersen: document.getElementById('inputDiskonPersen').value,
+                diskonRp: document.getElementById('inputDiskonRp').value,
+                namaBiayaTambahan: document.getElementById('inputNamaBiayaTambahan').value,
+                biayaTambahan: document.getElementById('inputBiayaTambahan').value,
+                infoRekening: document.getElementById('inputInfoRekening').value,
+                jabatanTandatangan: document.getElementById('inputJabatanTandatangan').value,
+                namaTandatangan: document.getElementById('inputNamaTandatangan').value,
+                items: items,
+                logoSrc: document.getElementById('previewLogo').src || ''
+            };
+            localStorage.setItem('draft_invoice_ikan', JSON.stringify(draft));
+        }
 
         // Inisialisasi Nomor Invoice Otomatis Berurutan berdasarkan Riwayat
         function initAutoInvoiceNumber() {
@@ -390,7 +421,84 @@
             document.getElementById('viewNoInvoice').innerText = formattedNo;
         }
 
-        initAutoInvoiceNumber();
+        // Memuat Draft yang Tersimpan saat Halaman Dimuat / Direfresh
+        function loadDraft() {
+            const saved = localStorage.getItem('draft_invoice_ikan');
+            if (saved) {
+                try {
+                    const draft = JSON.parse(saved);
+                    if (draft.namaPerusahaan !== undefined) {
+                        document.getElementById('inputNamaPerusahaan').value = draft.namaPerusahaan;
+                        document.getElementById('viewNamaPerusahaan').innerText = draft.namaPerusahaan;
+                    }
+                    if (draft.alamatPerusahaan !== undefined) {
+                        document.getElementById('inputAlamatPerusahaan').value = draft.alamatPerusahaan;
+                        document.getElementById('viewAlamatPerusahaan').innerHTML = draft.alamatPerusahaan.replace(/\n/g, '<br>');
+                    }
+                    if (draft.noInvoice !== undefined) {
+                        document.getElementById('inputNoInvoice').value = draft.noInvoice;
+                        document.getElementById('viewNoInvoice').innerText = draft.noInvoice;
+                    }
+                    if (draft.tanggal !== undefined) {
+                        document.getElementById('inputTanggal').value = draft.tanggal;
+                        const tgl = new Date(draft.tanggal);
+                        const options = { year: 'numeric', month: 'long', day: 'numeric' };
+                        document.getElementById('viewTanggal').innerText = isNaN(tgl) ? draft.tanggal : tgl.toLocaleDateString('id-ID', options);
+                    }
+                    if (draft.jatuhTempo !== undefined) {
+                        document.getElementById('inputJatuhTempo').value = draft.jatuhTempo;
+                        document.getElementById('viewJatuhTempo').innerText = draft.jatuhTempo;
+                    }
+                    if (draft.namaPembeli !== undefined) {
+                        document.getElementById('inputNamaPembeli').value = draft.namaPembeli;
+                        document.getElementById('viewNamaPembeli').innerText = draft.namaPembeli;
+                    }
+                    if (draft.alamatPembeli !== undefined) {
+                        document.getElementById('inputAlamatPembeli').value = draft.alamatPembeli;
+                        document.getElementById('viewAlamatPembeli').innerHTML = draft.alamatPembeli.replace(/\n/g, '<br>');
+                    }
+                    if (draft.colWidthNama !== undefined) document.getElementById('colWidthNama').value = draft.colWidthNama;
+                    if (draft.colWidthGrade !== undefined) document.getElementById('colWidthGrade').value = draft.colWidthGrade;
+                    if (draft.colWidthBerat !== undefined) document.getElementById('colWidthBerat').value = draft.colWidthBerat;
+                    if (draft.colWidthHarga !== undefined) document.getElementById('colWidthHarga').value = draft.colWidthHarga;
+                    
+                    if (draft.diskonPersen !== undefined) document.getElementById('inputDiskonPersen').value = draft.diskonPersen;
+                    if (draft.diskonRp !== undefined) document.getElementById('inputDiskonRp').value = draft.diskonRp;
+                    if (draft.namaBiayaTambahan !== undefined) {
+                        document.getElementById('inputNamaBiayaTambahan').value = draft.namaBiayaTambahan;
+                        document.getElementById('viewLabelBiayaTambahan').innerText = (draft.namaBiayaTambahan.trim() ? draft.namaBiayaTambahan : 'Biaya Tambahan') + ':';
+                    }
+                    if (draft.biayaTambahan !== undefined) document.getElementById('inputBiayaTambahan').value = draft.biayaTambahan;
+                    if (draft.infoRekening !== undefined) {
+                        document.getElementById('inputInfoRekening').value = draft.infoRekening;
+                        document.getElementById('viewInfoRekening').innerHTML = draft.infoRekening.replace(/\n/g, '<br>');
+                    }
+                    if (draft.jabatanTandatangan !== undefined) {
+                        document.getElementById('inputJabatanTandatangan').value = draft.jabatanTandatangan;
+                        document.getElementById('viewJabatanTandatangan').innerText = draft.jabatanTandatangan;
+                    }
+                    if (draft.namaTandatangan !== undefined) {
+                        document.getElementById('inputNamaTandatangan').value = draft.namaTandatangan;
+                        document.getElementById('viewNamaTandatangan').innerText = draft.namaTandatangan.trim() ? draft.namaTandatangan : '______________________';
+                    }
+                    if (draft.items && Array.isArray(draft.items)) {
+                        items = draft.items;
+                    }
+                    if (draft.logoSrc) {
+                        const previewLogo = document.getElementById('previewLogo');
+                        const defaultLogoPlaceholder = document.getElementById('defaultLogoPlaceholder');
+                        previewLogo.src = draft.logoSrc;
+                        previewLogo.classList.remove('hidden');
+                        defaultLogoPlaceholder.classList.add('hidden');
+                    }
+                } catch(e) {
+                    console.error("Gagal memuat draft:", e);
+                    initAutoInvoiceNumber();
+                }
+            } else {
+                initAutoInvoiceNumber();
+            }
+        }
 
         const inputBindings = [
             { input: 'inputNamaPerusahaan', view: 'viewNamaPerusahaan' },
@@ -418,6 +526,7 @@
                 } else {
                     elView.innerText = elInput.value;
                 }
+                saveDraft();
             });
         });
 
@@ -425,6 +534,7 @@
             const tgl = new Date(e.target.value);
             const options = { year: 'numeric', month: 'long', day: 'numeric' };
             document.getElementById('viewTanggal').innerText = isNaN(tgl) ? e.target.value : tgl.toLocaleDateString('id-ID', options);
+            saveDraft();
         });
 
         document.getElementById('logoInput').addEventListener('change', function(event) {
@@ -438,6 +548,7 @@
                     previewLogo.src = e.target.result;
                     previewLogo.classList.remove('hidden');
                     defaultLogoPlaceholder.classList.add('hidden');
+                    saveDraft();
                 }
                 reader.readAsDataURL(file);
             }
@@ -459,6 +570,7 @@
             document.getElementById('thBerat').style.width = wBerat + '%';
             document.getElementById('thHarga').style.width = wHarga + '%';
             document.getElementById('thSubtotal').style.width = wSubtotal + '%';
+            saveDraft();
         }
 
         function renderTabelItem() {
@@ -498,6 +610,7 @@
             });
 
             hitungTotal();
+            saveDraft();
         }
 
         function tambahBarisItem() {
@@ -522,6 +635,7 @@
                 subtotalEl.innerText = `Rp ${formatRupiah(subtotal)}`;
             }
             hitungTotal();
+            saveDraft();
         }
 
         function hitungTotal() {
@@ -552,6 +666,7 @@
             }
 
             document.getElementById('viewTotalTagihan').innerText = `Rp ${formatRupiah(totalTagihan)}`;
+            saveDraft();
         }
 
         function formatRupiah(angka) {
@@ -566,6 +681,13 @@
             setTimeout(() => {
                 toast.classList.add('translate-y-20', 'opacity-0');
             }, 3000);
+        }
+
+        function resetDraft() {
+            if (confirm("Apakah Anda yakin ingin mereset formulir ini ke kondisi awal?")) {
+                localStorage.removeItem('draft_invoice_ikan');
+                location.reload();
+            }
         }
 
         function simpanKeRiwayat(silent = false) {
@@ -636,6 +758,8 @@
             showToast("Item riwayat berhasil dihapus.");
         }
 
+        // Eksekusi pemuatan draft saat pertama kali dibuka / direfresh
+        loadDraft();
         updateColumnWidths();
         renderTabelItem();
     </script>
