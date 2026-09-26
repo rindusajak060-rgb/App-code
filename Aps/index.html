@@ -203,7 +203,7 @@
                     </div>
                 </div>
 
-                <!-- ==================== STREAMING CHUNK: TAB 2 - DATA SANTRI ==================== -->
+                <!-- ==================== TAB 2: DATA SANTRI ==================== -->
                 <div id="tab-santri" class="tab-content space-y-4">
                     <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-3">
                         <div class="flex justify-between items-center">
@@ -300,7 +300,7 @@
                     </div>
                 </div>
 
-                <!-- ==================== STREAMING CHUNK: TAB 5 - REWARD & KATALOG ==================== -->
+                <!-- ==================== TAB 5: REWARD & KATALOG ==================== -->
                 <div id="tab-reward" class="tab-content space-y-4">
                     <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex justify-between items-center">
                         <div>
@@ -327,7 +327,7 @@
                     </div>
                 </div>
 
-                <!-- ==================== STREAMING CHUNK: TAB 6 - ADMIN & PENGATURAN ==================== -->
+                <!-- ==================== TAB 6: ADMIN & PENGATURAN ==================== -->
                 <div id="tab-admin" class="tab-content space-y-4 admin-only">
                     <!-- Instansi Settings -->
                     <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-3">
@@ -426,9 +426,10 @@
         <div id="modal-reward" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
             <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
                 <div class="flex justify-between items-center border-b pb-3">
-                    <h3 class="font-bold text-slate-800 text-base">Tambah Item Hadiah Katalog</h3>
+                    <h3 id="reward-modal-title" class="font-bold text-slate-800 text-base">Tambah Item Hadiah Katalog</h3>
                     <button onclick="closeRewardModal()" class="text-slate-400 hover:text-slate-600"><i class="fas fa-xmark text-lg"></i></button>
                 </div>
+                <input type="hidden" id="reward-edit-id">
                 <div class="space-y-3">
                     <div>
                         <label class="block text-xs font-semibold text-slate-500 mb-1">Nama Hadiah / Barang</label>
@@ -517,9 +518,10 @@
         <div id="modal-teacher" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
             <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
                 <div class="flex justify-between items-center border-b pb-3">
-                    <h3 class="font-bold text-slate-800 text-base">Tambah Akun Guru & Hak Akses</h3>
+                    <h3 id="teacher-modal-title" class="font-bold text-slate-800 text-base">Tambah Akun Guru & Hak Akses</h3>
                     <button onclick="closeTeacherModal()" class="text-slate-400 hover:text-slate-600"><i class="fas fa-xmark text-lg"></i></button>
                 </div>
+                <input type="hidden" id="teacher-edit-id">
                 <div class="space-y-3">
                     <div>
                         <label class="block text-xs font-semibold text-slate-500 mb-1">Nama Guru</label>
@@ -792,13 +794,86 @@
                                 <span class="block font-bold text-xs text-amber-600">${s.points} Poin</span>
                                 <span class="text-[10px] text-slate-400">Rp ${(s.points * state.settings.pointRate).toLocaleString('id-ID')}</span>
                             </div>
-                            <button onclick="openSantriModal('${s.id}')" class="w-8 h-8 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-600 flex items-center justify-center transition">
+                            <button onclick="openSantriModal('${s.id}')" class="w-8 h-8 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-600 flex items-center justify-center transition" title="Edit">
                                 <i class="fas fa-pen text-xs"></i>
+                            </button>
+                            <button onclick="deleteSantri('${s.id}')" class="w-8 h-8 bg-red-50 hover:bg-red-100 rounded-lg text-red-600 flex items-center justify-center transition" title="Hapus">
+                                <i class="fas fa-trash text-xs"></i>
                             </button>
                         </div>
                     </div>
                 `;
             });
+        }
+
+        function filterSantri() {
+            renderSantriList();
+        }
+
+        function openSantriModal(id = null) {
+            document.getElementById('modal-santri').classList.remove('hidden');
+            if (id) {
+                const s = state.santriList.find(x => x.id === id);
+                document.getElementById('santri-modal-title').innerText = 'Edit Data Santri';
+                document.getElementById('santri-edit-id').value = s.id;
+                document.getElementById('modal-santri-name').value = s.name;
+                document.getElementById('modal-santri-nis').value = s.nis;
+                document.getElementById('modal-santri-class').value = s.class;
+                document.getElementById('modal-santri-hafalan').value = s.hafalan;
+                document.getElementById('modal-santri-photo').value = s.photo;
+            } else {
+                document.getElementById('santri-modal-title').innerText = 'Tambah Santri Baru';
+                document.getElementById('santri-edit-id').value = '';
+                document.getElementById('modal-santri-name').value = '';
+                document.getElementById('modal-santri-nis').value = '';
+                document.getElementById('modal-santri-class').value = '';
+                document.getElementById('modal-santri-hafalan').value = '0';
+                document.getElementById('modal-santri-photo').value = '';
+            }
+        }
+
+        function closeSantriModal() {
+            document.getElementById('modal-santri').classList.add('hidden');
+        }
+
+        function saveSantri() {
+            const id = document.getElementById('santri-edit-id').value;
+            const name = document.getElementById('modal-santri-name').value.trim();
+            const nis = document.getElementById('modal-santri-nis').value.trim();
+            const sClass = document.getElementById('modal-santri-class').value.trim();
+            const hafalan = parseInt(document.getElementById('modal-santri-hafalan').value) || 0;
+            const photo = document.getElementById('modal-santri-photo').value.trim() || 'https://placehold.co/100x100/e2e8f0/1e293b?text=Santri';
+
+            if (!name || !nis) {
+                showNotification('Peringatan', 'Nama dan NIS santri wajib diisi.', 'error');
+                return;
+            }
+
+            if (id) {
+                const s = state.santriList.find(x => x.id === id);
+                s.name = name;
+                s.nis = nis;
+                s.class = sClass;
+                s.hafalan = hafalan;
+                s.photo = photo;
+            } else {
+                state.santriList.push({
+                    id: 's_' + Date.now(),
+                    name, nis, class: sClass, hafalan, points: 50, photo
+                });
+            }
+
+            saveState();
+            closeSantriModal();
+            renderAll();
+            showNotification('Berhasil', 'Data santri berhasil disimpan.', 'success');
+        }
+
+        function deleteSantri(id) {
+            state.santriList = state.santriList.filter(x => x.id !== id);
+            saveState();
+            renderAll();
+            showNotification('Berhasil', 'Data santri berhasil dihapus.', 'success');
         }
 
         function filterSantri() {
@@ -1036,7 +1111,7 @@
 
             const histContainer = document.getElementById('point-history-container');
             histContainer.innerHTML = '';
-            state.pointHistory.forEach(h => {
+            state.pointHistory.forEach((h, index) => {
                 const badgeColor = h.type === 'prestasi' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-red-50 text-red-700 border-red-200';
                 histContainer.innerHTML += `
                     <div class="p-2.5 rounded-xl border ${badgeColor} flex justify-between items-center text-xs">
@@ -1044,10 +1119,194 @@
                             <span class="font-bold">${h.santriName}</span>: ${h.note}
                             <div class="text-[10px] text-slate-500">${h.date}</div>
                         </div>
-                        <span class="font-bold">${h.type === 'prestasi' ? '+' : ''}${h.amount} Poin</span>
+                        <div class="flex items-center space-x-2">
+                            <span class="font-bold">${h.type === 'prestasi' ? '+' : ''}${h.amount} Poin</span>
+                            <button onclick="deletePointHistory(${index})" class="text-red-500 hover:text-red-700 p-1 bg-red-100 hover:bg-red-200 rounded-lg px-2" title="Hapus Riwayat"><i class="fas fa-trash text-xs"></i></button>
+                        </div>
                     </div>
                 `;
             });
+        }
+
+        function submitPointRecord() {
+            const santriId = document.getElementById('point-santri-id').value;
+            const type = document.getElementById('point-type').value;
+            const amount = parseInt(document.getElementById('point-amount').value) || 0;
+            const note = document.getElementById('point-note').value.trim();
+
+            if (!note || amount <= 0) {
+                showNotification('Peringatan', 'Mohon isi keterangan dan jumlah poin dengan benar.', 'error');
+                return;
+            }
+
+            const santri = state.santriList.find(x => x.id === santriId);
+            if (!santri) return;
+
+            const finalAmount = type === 'prestasi' ? amount : -amount;
+            santri.points += finalAmount;
+
+            state.pointHistory.unshift({
+                santriName: santri.name,
+                type,
+                amount: finalAmount,
+                note,
+                date: new Date().toISOString().split('T')[0]
+            });
+
+            saveState();
+            renderAll();
+            showNotification('Berhasil', 'Poin berhasil diperbarui.', 'success');
+            document.getElementById('point-note').value = '';
+        }
+
+        function deletePointHistory(index) {
+            const h = state.pointHistory[index];
+            if (h) {
+                const santri = state.santriList.find(x => x.name === h.santriName);
+                if (santri) {
+                    santri.points -= h.amount; // Revert points
+                }
+                state.pointHistory.splice(index, 1);
+                saveState();
+                renderAll();
+                showNotification('Berhasil', 'Riwayat poin dihapus dan poin santri dikembalikan.', 'success');
+            }
+        }
+
+        /* STREAMING CHUNK: Reward Catalog & Redemptions */
+        function renderRewardCatalog() {
+            const container = document.getElementById('reward-catalog-container');
+            container.innerHTML = '';
+
+            state.rewards.forEach(r => {
+                const lowStockBadge = r.stock <= 3 ? `<span class="bg-red-100 text-red-700 text-[9px] px-1.5 py-0.5 rounded font-bold ml-1">Stok Menipis!</span>` : '';
+                container.innerHTML += `
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col justify-between">
+                        <div>
+                            <img src="${r.img}" class="w-full h-28 object-cover">
+                            <div class="p-3 space-y-1">
+                                <div class="flex justify-between items-start">
+                                    <h4 class="font-bold text-xs text-slate-800 line-clamp-1">${r.name}</h4>
+                                    <div class="flex space-x-1">
+                                        <button onclick="openRewardModal('${r.id}')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-1.5 py-1 rounded-lg text-[10px] font-bold" title="Edit">
+                                            <i class="fas fa-pen"></i>
+                                        </button>
+                                        <button onclick="deleteReward('${r.id}')" class="bg-red-50 hover:bg-red-100 text-red-600 px-1.5 py-1 rounded-lg text-[10px] font-bold" title="Hapus">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="text-xs font-bold text-emerald-700">${r.points} Poin</div>
+                                <div class="text-[10px] text-slate-400">Stok: ${r.stock} item ${lowStockBadge}</div>
+                            </div>
+                        </div>
+                        <div class="p-3 pt-0 flex space-x-1">
+                            <button onclick="restockReward('${r.id}')" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-semibold py-2 px-3 rounded-xl shadow transition" title="Tambah Stok (+5)">
+                                <i class="fas fa-plus mr-1"></i>Stok
+                            </button>
+                            <button onclick="openRedeemModal('${r.id}')" class="flex-1 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold py-2 rounded-xl shadow transition">
+                                Tukar Poin
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            const redeemSantriSelect = document.getElementById('redeem-santri-select');
+            redeemSantriSelect.innerHTML = '';
+            state.santriList.forEach(s => {
+                redeemSantriSelect.innerHTML += `<option value="${s.id}">${s.name} (Poin: ${s.points})</option>`;
+            });
+
+            const redContainer = document.getElementById('redemption-list-container');
+            redContainer.innerHTML = '';
+            state.redemptions.forEach(rd => {
+                const statusBadge = rd.status === 'Approved' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : rd.status === 'Rejected' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-amber-50 text-amber-700 border-amber-200';
+                redContainer.innerHTML += `
+                    <div class="p-3 rounded-xl border ${statusBadge} flex justify-between items-center text-xs">
+                        <div>
+                            <span class="font-bold">${rd.santriName}</span> menukar <b>${rd.rewardName}</b> (${rd.points} Poin)
+                            <div class="text-[10px] text-slate-500">Tanggal: ${rd.date} | Status: <b>${rd.status}</b></div>
+                        </div>
+                        ${rd.status === 'Pending' && state.currentUser.role === 'admin' ? `
+                            <div class="flex space-x-1">
+                                <button onclick="approveRedemption('${rd.id}', true)" class="bg-emerald-600 text-white px-2.5 py-1 rounded-lg text-[10px] font-bold">Setujui</button>
+                                <button onclick="approveRedemption('${rd.id}', false)" class="bg-red-600 text-white px-2.5 py-1 rounded-lg text-[10px] font-bold">Tolak</button>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            });
+        }
+
+        function openRewardModal(id = null) {
+            document.getElementById('modal-reward').classList.remove('hidden');
+            if (id) {
+                const r = state.rewards.find(x => x.id === id);
+                document.getElementById('reward-modal-title').innerText = 'Edit Item Hadiah';
+                document.getElementById('reward-edit-id').value = r.id;
+                document.getElementById('modal-reward-name').value = r.name;
+                document.getElementById('modal-reward-points').value = r.points;
+                document.getElementById('modal-reward-stock').value = r.stock;
+                document.getElementById('modal-reward-img').value = r.img;
+            } else {
+                document.getElementById('reward-modal-title').innerText = 'Tambah Item Hadiah Katalog';
+                document.getElementById('reward-edit-id').value = '';
+                document.getElementById('modal-reward-name').value = '';
+                document.getElementById('modal-reward-points').value = '100';
+                document.getElementById('modal-reward-stock').value = '10';
+                document.getElementById('modal-reward-img').value = '';
+            }
+        }
+        function closeRewardModal() {
+            document.getElementById('modal-reward').classList.add('hidden');
+        }
+
+        function saveRewardItem() {
+            const id = document.getElementById('reward-edit-id').value;
+            const name = document.getElementById('modal-reward-name').value.trim();
+            const points = parseInt(document.getElementById('modal-reward-points').value) || 0;
+            const stock = parseInt(document.getElementById('modal-reward-stock').value) || 0;
+            const img = document.getElementById('modal-reward-img').value.trim() || 'https://placehold.co/200x200?text=Hadiah';
+
+            if (!name || points <= 0) {
+                showNotification('Peringatan', 'Nama hadiah dan poin wajib diisi dengan benar.', 'error');
+                return;
+            }
+
+            if (id) {
+                const r = state.rewards.find(x => x.id === id);
+                r.name = name;
+                r.points = points;
+                r.stock = stock;
+                r.img = img;
+            } else {
+                state.rewards.push({
+                    id: 'r_' + Date.now(),
+                    name, points, stock, img, type: 'item'
+                });
+            }
+
+            saveState();
+            closeRewardModal();
+            renderAll();
+            showNotification('Berhasil', 'Item reward berhasil disimpan.', 'success');
+        }
+
+        function restockReward(rewardId) {
+            const r = state.rewards.find(x => x.id === rewardId);
+            if (!r) return;
+            r.stock += 5;
+            saveState();
+            renderAll();
+            showNotification('Berhasil', `Stok ${r.name} berhasil ditambahkan (+5).`, 'success');
+        }
+
+        function deleteReward(id) {
+            state.rewards = state.rewards.filter(x => x.id !== id);
+            saveState();
+            renderAll();
+            showNotification('Berhasil', 'Item reward berhasil dihapus.', 'success');
         }
 
         function submitPointRecord() {
@@ -1289,20 +1548,44 @@
                             <span class="font-bold">${t.name}</span> (${t.username})
                             <div class="text-[10px] text-slate-500">Hak akses: ${t.permissions.join(', ')}</div>
                         </div>
-                        <button onclick="deleteTeacher('${t.id}')" class="text-red-500 hover:text-red-700 p-1"><i class="fas fa-trash"></i></button>
+                        <div class="flex space-x-1">
+                            <button onclick="openTeacherModal('${t.id}')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-1 rounded-lg" title="Edit"><i class="fas fa-pen"></i></button>
+                            <button onclick="deleteTeacher('${t.id}')" class="text-red-500 hover:text-red-700 p-1 bg-red-50 hover:bg-red-100 rounded-lg px-2 py-1" title="Hapus"><i class="fas fa-trash"></i></button>
+                        </div>
                     </div>
                 `;
             });
         }
 
-        function openTeacherModal() {
+        function openTeacherModal(id = null) {
             document.getElementById('modal-teacher').classList.remove('hidden');
+            if (id) {
+                const t = state.teachers.find(x => x.id === id);
+                document.getElementById('teacher-modal-title').innerText = 'Edit Akun Guru';
+                document.getElementById('teacher-edit-id').value = t.id;
+                document.getElementById('teacher-name').value = t.name;
+                document.getElementById('teacher-username').value = t.username;
+                document.getElementById('teacher-password').value = t.password;
+                document.querySelectorAll('input[name="perm"]').forEach(cb => {
+                    cb.checked = t.permissions.includes(cb.value);
+                });
+            } else {
+                document.getElementById('teacher-modal-title').innerText = 'Tambah Akun Guru & Hak Akses';
+                document.getElementById('teacher-edit-id').value = '';
+                document.getElementById('teacher-name').value = '';
+                document.getElementById('teacher-username').value = '';
+                document.getElementById('teacher-password').value = '';
+                document.querySelectorAll('input[name="perm"]').forEach(cb => {
+                    cb.checked = true;
+                });
+            }
         }
         function closeTeacherModal() {
             document.getElementById('modal-teacher').classList.add('hidden');
         }
 
         function saveTeacher() {
+            const id = document.getElementById('teacher-edit-id').value;
             const name = document.getElementById('teacher-name').value.trim();
             const username = document.getElementById('teacher-username').value.trim();
             const password = document.getElementById('teacher-password').value.trim();
@@ -1313,15 +1596,23 @@
                 return;
             }
 
-            state.teachers.push({
-                id: 't_' + Date.now(),
-                name, username, password, permissions: checkedPerms
-            });
+            if (id) {
+                const t = state.teachers.find(x => x.id === id);
+                t.name = name;
+                t.username = username;
+                t.password = password;
+                t.permissions = checkedPerms;
+            } else {
+                state.teachers.push({
+                    id: 't_' + Date.now(),
+                    name, username, password, permissions: checkedPerms
+                });
+            }
 
             saveState();
             closeTeacherModal();
             renderTeacherList();
-            showNotification('Berhasil', 'Akun guru berhasil ditambahkan.', 'success');
+            showNotification('Berhasil', 'Akun guru berhasil disimpan.', 'success');
         }
 
         function deleteTeacher(id) {
@@ -1437,6 +1728,6 @@
   // Initialize Firebase
   const app = initializeApp(firebaseConfig);
   const analytics = getAnalytics(app);
-</script>
+    </script>
 </body>
-                  </html>
+</html>
