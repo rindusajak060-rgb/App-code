@@ -931,7 +931,7 @@
                     id: 's_' + Date.now(),
                     name, nis, class: sClass, hafalan, points: 50, photo
                 });
-                await addDoc(collection(db, "Santri"), { nama: name, nis: nis, kelas: sClass, jumlahHafalan: hafalan, foto: photo });
+                await addDoc(collection(db, "Santri"), { "Nama Lengkap Santri": name, NIS: nis, Kelas: sClass, "Jumlah Hafalan": hafalan, foto: photo });
             }
 
             saveState();
