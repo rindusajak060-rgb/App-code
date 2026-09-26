@@ -1,1 +1,1419 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pesantren Digital Management System</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #e2e8f0; }
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .mobile-frame {
+            max-width: 480px;
+            margin: 0 auto;
+            min-height: 100vh;
+            background: #f8fafc;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: flex; flex-direction: column; }
+        @media print {
+            body { background: white; }
+            .mobile-frame { max-width: 100%; box-shadow: none; margin: 0; }
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body class="bg-slate-300 text-slate-800 flex justify-center items-center min-h-screen p-0 sm:py-4">
 
+    <div class="mobile-frame w-full overflow-hidden flex flex-col" id="app-container">
+        
+        <!-- ==================== STREAMING CHUNK: SPLASH SCREEN ==================== -->
+        <div id="screen-splash" class="flex flex-col items-center justify-center flex-1 p-6 bg-gradient-to-br from-emerald-800 to-teal-950 text-white text-center">
+            <div class="w-28 h-28 bg-white/10 rounded-full flex items-center justify-center mb-6 shadow-inner border border-white/20 p-2 backdrop-blur-sm">
+                <img id="splash-logo-img" src="https://placehold.co/120x120/065f46/ffffff?text=PD" alt="Logo" class="w-full h-full object-cover rounded-full">
+            </div>
+            <h1 class="text-3xl font-bold tracking-tight mb-2">Pesantren Digital</h1>
+            <p class="text-emerald-200 text-sm mb-10 max-w-xs">Sistem Manajemen Santri, Absensi, Poin, & Reward Terpadu</p>
+            <button onclick="goToLogin()" class="w-full max-w-xs bg-white text-emerald-900 font-semibold py-3.5 px-6 rounded-xl shadow-lg hover:bg-emerald-50 transition transform active:scale-95 flex items-center justify-center space-x-2">
+                <span>Selamat Datang</span>
+                <i class="fas fa-arrow-right text-sm"></i>
+            </button>
+        </div>
+
+        <!-- ==================== STREAMING CHUNK: LOGIN SCREEN ==================== -->
+        <div id="screen-login" class="hidden flex flex-col flex-1 p-6 bg-gradient-to-b from-emerald-800 to-emerald-950 text-white justify-between">
+            <div class="pt-8 text-center">
+                <div class="w-20 h-20 bg-white/10 rounded-2xl mx-auto flex items-center justify-center mb-4 shadow border border-white/20 p-1">
+                    <img id="login-logo-img" src="https://placehold.co/100x100/065f46/ffffff?text=PD" alt="Logo" class="w-full h-full object-cover rounded-xl">
+                </div>
+                <h2 id="login-instansi-name" class="text-xl font-bold mb-1">Pesantren Darul Hikmah</h2>
+                <h3 class="text-lg font-semibold text-emerald-100">Masuk Sistem</h3>
+                <p class="text-emerald-200 text-xs mt-1">Silakan masuk dengan akun terdaftar</p>
+            </div>
+
+            <div class="bg-white text-slate-800 p-6 rounded-3xl shadow-2xl my-auto space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">Username</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400"><i class="fas fa-user"></i></span>
+                        <input type="text" id="login-username" placeholder="Masukkan username" class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">Password</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400"><i class="fas fa-lock"></i></span>
+                        <input type="password" id="login-password" placeholder="Masukkan password" class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                </div>
+                <button onclick="handleLogin()" class="w-full bg-emerald-700 text-white font-semibold py-3.5 rounded-xl shadow-md hover:bg-emerald-800 transition active:scale-95 text-sm">
+                    Masuk Sekarang
+                </button>
+            </div>
+
+            <div class="text-center text-xs text-emerald-300/70 pb-4">
+                Sistem Digital Santri Haamilul Qur'an
+            </div>
+        </div>
+
+        <!-- ==================== STREAMING CHUNK: MAIN APP CONTAINER ==================== -->
+        <div id="screen-main" class="hidden flex flex-col flex-1 bg-slate-100 overflow-hidden">
+            
+            <!-- Facebook Mobile Style Top Header -->
+            <header class="bg-emerald-800 text-white px-4 py-3 shadow-md flex items-center justify-between z-10 sticky top-0">
+                <div class="flex items-center space-x-3">
+                    <div class="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center overflow-hidden border border-white/20">
+                        <img id="header-logo-img" src="https://placehold.co/40x40/065f46/ffffff?text=PD" alt="Logo" class="w-full h-full object-cover">
+                    </div>
+                    <div>
+                        <h3 id="header-instansi-name" class="font-bold text-sm leading-tight">Pesantren Digital</h3>
+                        <span class="text-[10px] text-emerald-200" id="header-user-role">Administrator</span>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button onclick="openNotificationModal()" class="w-9 h-9 bg-emerald-700 hover:bg-emerald-600 rounded-full flex items-center justify-center text-white relative shadow">
+                        <i class="fas fa-bell text-sm"></i>
+                        <span id="notification-badge" class="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-emerald-800 hidden"></span>
+                    </button>
+                    <button onclick="handleLogout()" class="w-9 h-9 bg-emerald-700 hover:bg-emerald-600 rounded-full flex items-center justify-center text-white shadow" title="Keluar">
+                        <i class="fas fa-power-off text-sm"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Facebook Mobile Style Navigation Bar -->
+            <nav class="bg-white border-b border-slate-200 flex justify-around px-1 shadow-sm sticky top-[61px] z-10">
+                <button onclick="switchTab('tab-dashboard')" id="nav-btn-dashboard" class="flex-1 py-3 text-center text-emerald-700 border-b-2 border-emerald-700 font-medium text-xs flex flex-col items-center transition">
+                    <i class="fas fa-house text-base mb-0.5"></i>
+                    <span>Dasbor</span>
+                </button>
+                <button onclick="switchTab('tab-santri')" id="nav-btn-santri" class="flex-1 py-3 text-center text-slate-500 border-b-2 border-transparent font-medium text-xs flex flex-col items-center transition">
+                    <i class="fas fa-users text-base mb-0.5"></i>
+                    <span>Santri</span>
+                </button>
+                <button onclick="switchTab('tab-absensi')" id="nav-btn-absensi" class="flex-1 py-3 text-center text-slate-500 border-b-2 border-transparent font-medium text-xs flex flex-col items-center transition">
+                    <i class="fas fa-clipboard-user text-base mb-0.5"></i>
+                    <span>Absensi</span>
+                </button>
+                <button onclick="switchTab('tab-poin')" id="nav-btn-poin" class="flex-1 py-3 text-center text-slate-500 border-b-2 border-transparent font-medium text-xs flex flex-col items-center transition">
+                    <i class="fas fa-star text-base mb-0.5"></i>
+                    <span>Poin</span>
+                </button>
+                <button onclick="switchTab('tab-reward')" id="nav-btn-reward" class="flex-1 py-3 text-center text-slate-500 border-b-2 border-transparent font-medium text-xs flex flex-col items-center transition">
+                    <i class="fas fa-gift text-base mb-0.5"></i>
+                    <span>Reward & Tukar</span>
+                </button>
+                <button onclick="switchTab('tab-admin')" id="nav-btn-admin" class="flex-1 py-3 text-center text-slate-500 border-b-2 border-transparent font-medium text-xs flex flex-col items-center transition admin-only">
+                    <i class="fas fa-gears text-base mb-0.5"></i>
+                    <span>Admin</span>
+                </button>
+            </nav>
+
+            <!-- Main Scrollable Area -->
+            <main class="flex-1 overflow-y-auto p-4 pb-20 space-y-4">
+                
+                <!-- ==================== TAB 1: DASBOR ==================== -->
+                <div id="tab-dashboard" class="tab-content active space-y-4">
+                    <!-- Real-time Clock & Banner -->
+                    <div class="bg-gradient-to-r from-emerald-800 to-teal-700 text-white p-5 rounded-2xl shadow-md relative overflow-hidden">
+                        <div class="absolute -right-4 -bottom-4 w-32 h-32 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <span class="bg-white/20 text-emerald-100 text-[10px] font-semibold px-2.5 py-1 rounded-full uppercase tracking-wider">Live System</span>
+                                <h2 id="dash-greeting" class="text-xl font-bold mt-2">Selamat Datang, Admin</h2>
+                            </div>
+                            <div class="text-right">
+                                <div id="live-clock" class="text-lg font-mono font-bold">00:00:00</div>
+                                <div id="live-date" class="text-[11px] text-emerald-200">Sabtu, 26 Sep 2026</div>
+                            </div>
+                        </div>
+                        <p class="text-xs text-emerald-100 mt-2">Sistem pemantauan harian santri, absensi, dan penukaran reward aktif.</p>
+                        
+                        <!-- Quick Reward Shortcut -->
+                        <div class="mt-4 pt-3 border-t border-white/20 flex items-center justify-between">
+                            <span class="text-xs text-emerald-100"><i class="fas fa-gift mr-1"></i> Ingin tukar poin reward?</span>
+                            <button onclick="switchTab('tab-reward')" class="bg-white text-emerald-900 text-xs font-bold px-3 py-1.5 rounded-lg shadow hover:bg-emerald-50 transition active:scale-95">
+                                Buka Katalog <i class="fas fa-arrow-right ml-1"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Statistics Grid -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex items-center space-x-3">
+                            <div class="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-xl flex items-center justify-center text-xl font-bold">
+                                <i class="fas fa-user-graduate"></i>
+                            </div>
+                            <div>
+                                <div class="text-2xl font-bold text-slate-800" id="stat-total-santri">0</div>
+                                <div class="text-xs text-slate-500 font-medium">Total Santri</div>
+                            </div>
+                        </div>
+                        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex items-center space-x-3">
+                            <div class="w-12 h-12 bg-amber-100 text-amber-700 rounded-xl flex items-center justify-center text-xl font-bold">
+                                <i class="fas fa-star"></i>
+                            </div>
+                            <div>
+                                <div class="text-2xl font-bold text-slate-800" id="stat-avg-points">0</div>
+                                <div class="text-xs text-slate-500 font-medium">Rata-rata Poin</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Leaderboard Section -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 space-y-3">
+                        <div class="flex justify-between items-center">
+                            <h3 class="font-bold text-sm text-slate-800"><i class="fas fa-trophy text-amber-500 mr-2"></i> Papan Peringkat Santri</h3>
+                            <span class="text-xs text-emerald-600 font-semibold">Poin Tertinggi</span>
+                        </div>
+                        <div id="leaderboard-list" class="space-y-2.5">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==================== STREAMING CHUNK: TAB 2 - DATA SANTRI ==================== -->
+                <div id="tab-santri" class="tab-content space-y-4">
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-3">
+                        <div class="flex justify-between items-center">
+                            <h3 class="font-bold text-sm text-slate-800"><i class="fas fa-users text-emerald-700 mr-2"></i> Manajemen Data Santri</h3>
+                            <button onclick="openSantriModal()" class="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold px-3.5 py-2 rounded-xl shadow transition flex items-center space-x-1.5">
+                                <i class="fas fa-plus text-xs"></i>
+                                <span>Tambah Santri</span>
+                            </button>
+                        </div>
+                        <!-- Search Bar -->
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400"><i class="fas fa-search"></i></span>
+                            <input type="text" id="santri-search-input" oninput="filterSantri()" placeholder="Cari nama santri, NIS, atau kelas..." class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        </div>
+                    </div>
+
+                    <!-- Santri Cards List -->
+                    <div id="santri-container" class="space-y-3">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+                <!-- ==================== STREAMING CHUNK: TAB 3 - ABSENSI ==================== -->
+                <div id="tab-absensi" class="tab-content space-y-4">
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-3">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h3 class="font-bold text-sm text-slate-800"><i class="fas fa-clipboard-user text-emerald-700 mr-2"></i> Pencatatan Absensi Harian</h3>
+                                <p class="text-[11px] text-slate-500">Pilih status kehadiran & sesuaikan poin (bisa tambah/kurang).</p>
+                            </div>
+                            <input type="date" id="absensi-date" onchange="renderAttendanceList()" class="bg-slate-50 border border-slate-200 text-xs px-3 py-2 rounded-xl font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        </div>
+                        <div class="flex space-x-2">
+                            <button onclick="saveAttendance()" class="flex-1 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold py-2.5 rounded-xl shadow transition">
+                                <i class="fas fa-save mr-1"></i> Simpan & Update Poin
+                            </button>
+                            <button onclick="openMonthlyRecapModal()" class="bg-slate-700 hover:bg-slate-800 text-white text-xs font-semibold px-3 py-2.5 rounded-xl shadow transition">
+                                <i class="fas fa-file-pdf mr-1"></i> Rekap PDF Bulanan
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 space-y-3">
+                        <div class="flex justify-between items-center text-xs font-semibold text-slate-500 uppercase tracking-wider border-b pb-2">
+                            <span>Nama Santri</span>
+                            <span>Status & Poin (Bisa Edit)</span>
+                        </div>
+                        <div id="attendance-list-container" class="space-y-3">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==================== STREAMING CHUNK: TAB 4 - POIN & PENILAIAN ==================== -->
+                <div id="tab-poin" class="tab-content space-y-4">
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-3">
+                        <h3 class="font-bold text-sm text-slate-800"><i class="fas fa-star text-amber-500 mr-2"></i> Catat Poin Prestasi / Pelanggaran</h3>
+                        <div class="grid grid-cols-1 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 mb-1">Pilih Santri</label>
+                                <select id="point-santri-id" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                    <!-- Options populated dynamically -->
+                                </select>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-500 mb-1">Jenis Input</label>
+                                    <select id="point-type" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                        <option value="prestasi">Prestasi (+)</option>
+                                        <option value="pelanggaran">Pelanggaran (-)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-500 mb-1">Jumlah Poin</label>
+                                    <input type="number" id="point-amount" value="10" min="1" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 mb-1">Keterangan / Item Penilaian</label>
+                                <input type="text" id="point-note" placeholder="Contoh: Juara 1 Tahfidz / Terlambat Jamaah" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            </div>
+                            <button onclick="submitPointRecord()" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold py-2.5 rounded-xl shadow transition">
+                                Tambahkan Poin
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Riwayat Poin -->
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-3">
+                        <h3 class="font-bold text-sm text-slate-800"><i class="fas fa-history text-slate-500 mr-2"></i> Riwayat Penilaian & Poin</h3>
+                        <div id="point-history-container" class="space-y-2">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==================== STREAMING CHUNK: TAB 5 - REWARD & KATALOG ==================== -->
+                <div id="tab-reward" class="tab-content space-y-4">
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex justify-between items-center">
+                        <div>
+                            <h3 class="font-bold text-sm text-slate-800"><i class="fas fa-gift text-emerald-700 mr-2"></i> Katalog Hadiah & Penukaran Poin</h3>
+                            <p class="text-[11px] text-slate-500">Tukar poin dengan barang atau uang tunai (Kelipatan Rp 1.000)</p>
+                        </div>
+                        <button onclick="openRewardModal()" class="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold px-3.5 py-2 rounded-xl shadow transition admin-only flex items-center space-x-1.5">
+                            <i class="fas fa-plus text-xs"></i>
+                            <span>Tambah Item</span>
+                        </button>
+                    </div>
+
+                    <!-- Reward Grid -->
+                    <div id="reward-catalog-container" class="grid grid-cols-2 gap-3">
+                        <!-- Populated dynamically -->
+                    </div>
+
+                    <!-- Redemption History / Approvals -->
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-3">
+                        <h3 class="font-bold text-sm text-slate-800"><i class="fas fa-ticket text-amber-500 mr-2"></i> Status Penukaran Reward & Validasi</h3>
+                        <div id="redemption-list-container" class="space-y-2.5">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==================== STREAMING CHUNK: TAB 6 - ADMIN & PENGATURAN ==================== -->
+                <div id="tab-admin" class="tab-content space-y-4 admin-only">
+                    <!-- Instansi Settings -->
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-3">
+                        <h3 class="font-bold text-sm text-slate-800"><i class="fas fa-building text-emerald-700 mr-2"></i> Profil Instansi & Logo</h3>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 mb-1">Nama Instansi</label>
+                            <input type="text" id="setting-instansi-name" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 mb-1">Upload Logo Instansi (Resolusi Tinggi)</label>
+                            <input type="file" id="setting-logo-file" accept="image/*" class="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100">
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 mb-1">Poin ke Rupiah (1 Poin = Rp)</label>
+                                <input type="number" id="setting-point-rate" value="100" min="1" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 mb-1">Poin Hadir Absen</label>
+                                <input type="number" id="setting-absen-points" value="25" min="0" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+                            </div>
+                        </div>
+                        <button onclick="saveInstansiSettings()" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold py-2.5 rounded-xl shadow transition">
+                            Simpan Pengaturan
+                        </button>
+                    </div>
+
+                    <!-- Teacher Management & Permissions -->
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-3">
+                        <div class="flex justify-between items-center">
+                            <h3 class="font-bold text-sm text-slate-800"><i class="fas fa-chalkboard-user text-emerald-700 mr-2"></i> Manajemen Guru & Hak Akses</h3>
+                            <button onclick="openTeacherModal()" class="bg-emerald-700 text-white text-xs font-semibold px-3 py-1.5 rounded-xl shadow">Tambah Guru</button>
+                        </div>
+                        <div id="teacher-list-container" class="space-y-2">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Backup, Restore & Activity Logs -->
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-3">
+                        <h3 class="font-bold text-sm text-slate-800"><i class="fas fa-database text-slate-500 mr-2"></i> Cadangan & Pemulihan Data</h3>
+                        <div class="flex space-x-2">
+                            <button onclick="backupData()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold py-2.5 rounded-xl border border-slate-200 transition">
+                                <i class="fas fa-download mr-1"></i> Unduh Cadangan
+                            </button>
+                            <label class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold py-2.5 rounded-xl border border-slate-200 transition text-center cursor-pointer">
+                                <i class="fas fa-upload mr-1"></i> Pulihkan Data
+                                <input type="file" id="restore-file-input" onchange="restoreData(event)" accept=".json" class="hidden">
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+
+        <!-- ==================== STREAMING CHUNK: MODALS ==================== -->
+        <!-- Add/Edit Santri Modal -->
+        <div id="modal-santri" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+            <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+                <div class="flex justify-between items-center border-b pb-3">
+                    <h3 id="santri-modal-title" class="font-bold text-slate-800 text-base">Tambah Santri Baru</h3>
+                    <button onclick="closeSantriModal()" class="text-slate-400 hover:text-slate-600"><i class="fas fa-xmark text-lg"></i></button>
+                </div>
+                <input type="hidden" id="santri-edit-id">
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 mb-1">Nama Lengkap Santri</label>
+                        <input type="text" id="modal-santri-name" placeholder="Nama lengkap" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 mb-1">NIS (Nomor Induk Santri)</label>
+                        <input type="text" id="modal-santri-nis" placeholder="NIS" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 mb-1">Kelas</label>
+                        <input type="text" id="modal-santri-class" placeholder="Contoh: 1 Tsanawiyah" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 mb-1">Jumlah Hafalan Al-Qur'an (Juz)</label>
+                        <input type="number" id="modal-santri-hafalan" value="0" min="0" max="30" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 mb-1">URL Foto Santri (Opsional)</label>
+                        <input type="text" id="modal-santri-photo" placeholder="https://..." class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+                    </div>
+                </div>
+                <div class="flex space-x-2 pt-2">
+                    <button onclick="closeSantriModal()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold py-2.5 rounded-xl">Batal</button>
+                    <button onclick="saveSantri()" class="flex-1 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold py-2.5 rounded-xl shadow">Simpan</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add/Edit Reward Catalog Modal -->
+        <div id="modal-reward" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+            <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+                <div class="flex justify-between items-center border-b pb-3">
+                    <h3 class="font-bold text-slate-800 text-base">Tambah Item Hadiah Katalog</h3>
+                    <button onclick="closeRewardModal()" class="text-slate-400 hover:text-slate-600"><i class="fas fa-xmark text-lg"></i></button>
+                </div>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 mb-1">Nama Hadiah / Barang</label>
+                        <input type="text" id="modal-reward-name" placeholder="Contoh: Tas Sekolah / Tumbler" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 mb-1">Harga Poin</label>
+                        <input type="number" id="modal-reward-points" value="100" min="1" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 mb-1">Stok Barang</label>
+                        <input type="number" id="modal-reward-stock" value="10" min="0" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 mb-1">URL Foto Produk</label>
+                        <input type="text" id="modal-reward-img" placeholder="https://placehold.co/200x200?text=Hadiah" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+                    </div>
+                </div>
+                <div class="flex space-x-2 pt-2">
+                    <button onclick="closeRewardModal()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold py-2.5 rounded-xl">Batal</button>
+                    <button onclick="saveRewardItem()" class="flex-1 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold py-2.5 rounded-xl shadow">Simpan</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Redeem Reward Modal -->
+        <div id="modal-redeem" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+            <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl space-y-4">
+                <div class="flex justify-between items-center border-b pb-3">
+                    <h3 class="font-bold text-slate-800 text-base" id="redeem-modal-title">Tukar Reward</h3>
+                    <button onclick="closeRedeemModal()" class="text-slate-400 hover:text-slate-600"><i class="fas fa-xmark text-lg"></i></button>
+                </div>
+                <input type="hidden" id="redeem-reward-id">
+                <input type="hidden" id="redeem-reward-type" value="item">
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 mb-1">Pilih Santri yang Menukar</label>
+                        <select id="redeem-santri-select" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+                    <div id="redeem-cash-input-wrap" class="hidden">
+                        <label class="block text-xs font-semibold text-slate-500 mb-1">Jumlah Nominal Uang (Kelipatan Rp 1.000, Min Rp 1.000)</label>
+                        <input type="number" id="redeem-cash-nominal" value="10000" step="1000" min="1000" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+                        <p class="text-[10px] text-slate-400 mt-1" id="redeem-cash-cost-info">Dibutuhkan: ... poin</p>
+                    </div>
+                    <div class="bg-amber-50 border border-amber-200 p-3 rounded-xl text-[11px] text-amber-800" id="redeem-info-box">
+                        Penukaran reward melalui guru memerlukan validasi persetujuan (approval) admin.
+                    </div>
+                </div>
+                <div class="flex space-x-2 pt-2">
+                    <button onclick="closeRedeemModal()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold py-2.5 rounded-xl">Batal</button>
+                    <button onclick="processRedeem()" class="flex-1 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold py-2.5 rounded-xl shadow">Ajukan Penukaran</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monthly Attendance Recap PDF Modal -->
+        <div id="modal-monthly-recap" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+            <div class="bg-white w-full max-w-lg rounded-3xl p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+                <div class="flex justify-between items-center border-b pb-3 no-print">
+                    <h3 class="font-bold text-slate-800 text-base">Rekap Absensi Bulanan</h3>
+                    <button onclick="closeMonthlyRecapModal()" class="text-slate-400 hover:text-slate-600"><i class="fas fa-xmark text-lg"></i></button>
+                </div>
+                <div class="flex items-center space-x-2 no-print">
+                    <input type="month" id="recap-month-input" onchange="generateMonthlyRecap()" class="p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+                    <button onclick="window.print()" class="bg-slate-800 text-white text-xs px-4 py-2 rounded-xl shadow"><i class="fas fa-print mr-1"></i> Cetak / Simpan PDF</button>
+                </div>
+                <div id="recap-print-area" class="space-y-3 pt-2">
+                    <div class="text-center pb-2 border-b">
+                        <h2 class="font-bold text-sm" id="recap-instansi-title">Pesantren Digital</h2>
+                        <p class="text-xs text-slate-500">Laporan Rekapitulasi Absensi & Poin Kehadiran Santri</p>
+                        <p class="text-[11px] text-slate-400" id="recap-periode-label">Periode: Maret 2026</p>
+                    </div>
+                    <div id="recap-table-container">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+                <div class="pt-2 no-print">
+                    <button onclick="closeMonthlyRecapModal()" class="w-full bg-slate-200 text-slate-700 text-xs font-semibold py-2.5 rounded-xl">Tutup</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add/Edit Teacher Modal -->
+        <div id="modal-teacher" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+            <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+                <div class="flex justify-between items-center border-b pb-3">
+                    <h3 class="font-bold text-slate-800 text-base">Tambah Akun Guru & Hak Akses</h3>
+                    <button onclick="closeTeacherModal()" class="text-slate-400 hover:text-slate-600"><i class="fas fa-xmark text-lg"></i></button>
+                </div>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 mb-1">Nama Guru</label>
+                        <input type="text" id="teacher-name" placeholder="Nama lengkap" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 mb-1">Username</label>
+                        <input type="text" id="teacher-username" placeholder="Username login" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 mb-1">Password</label>
+                        <input type="password" id="teacher-password" placeholder="Password" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 mb-2">Hak Akses Menu (Ceklis)</label>
+                        <div class="space-y-2 text-xs">
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="perm" value="absensi" checked class="rounded text-emerald-600"><span>Catat Absensi Harian</span></label>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="perm" value="poin" checked class="rounded text-emerald-600"><span>Kelola Poin Prestasi & Pelanggaran</span></label>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="perm" value="santri" checked class="rounded text-emerald-600"><span>Lihat Data Santri</span></label>
+                            <label class="flex items-center space-x-2"><input type="checkbox" name="perm" value="reward" checked class="rounded text-emerald-600"><span>Validasi Penukaran Reward</span></label>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex space-x-2 pt-2">
+                    <button onclick="closeTeacherModal()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold py-2.5 rounded-xl">Batal</button>
+                    <button onclick="saveTeacher()" class="flex-1 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold py-2.5 rounded-xl shadow">Simpan</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Custom Notification Modal (No alert()) -->
+        <div id="modal-notification" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+            <div class="bg-white w-full max-w-xs rounded-3xl p-6 shadow-2xl text-center space-y-4">
+                <div id="notif-icon" class="w-16 h-16 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center mx-auto text-2xl">
+                    <i class="fas fa-check"></i>
+                </div>
+                <h3 id="notif-title" class="font-bold text-slate-800 text-base">Berhasil</h3>
+                <div id="notif-message" class="text-xs text-slate-600 text-left max-h-40 overflow-y-auto">Pesan notifikasi sistem.</div>
+                <button onclick="closeNotificationModal()" class="w-full bg-emerald-700 text-white font-semibold py-2.5 rounded-xl text-xs shadow">OK</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ==================== STREAMING CHUNK: APPLICATION JAVASCRIPT LOGIC ==================== -->
+    <script>
+        /* STREAMING CHUNK: Initializing application state and local storage persistence */
+        let state = {
+            currentUser: null,
+            settings: {
+                instansiName: "Pesantren Darul Hikmah",
+                logoUrl: "https://placehold.co/120x120/065f46/ffffff?text=PDH",
+                pointRate: 100,
+                absenPoints: 25
+            },
+            santriList: [
+                { id: "s1", name: "Ahmad Fauzan", nis: "2026001", class: "1 Tsanawiyah", hafalan: 5, points: 245, photo: "https://placehold.co/100x100/e2e8f0/1e293b?text=AF" },
+                { id: "s2", name: "Muhammad Zidan", nis: "2026002", class: "2 Tsanawiyah", hafalan: 12, points: 410, photo: "https://placehold.co/100x100/e2e8f0/1e293b?text=MZ" },
+                { id: "s3", name: "Fatimah Azzahra", nis: "2026003", class: "3 Tsanawiyah", hafalan: 18, points: 580, photo: "https://placehold.co/100x100/e2e8f0/1e293b?text=FA" },
+                { id: "s4", name: "Siti Aisyah", nis: "2026004", class: "1 Aliyah", hafalan: 8, points: 320, photo: "https://placehold.co/100x100/e2e8f0/1e293b?text=SA" }
+            ],
+            teachers: [
+                { id: "t1", name: "Ust. Hidayat, S.Pd", username: "guru", password: "guru123", permissions: ["absensi", "poin", "santri", "reward"] }
+            ],
+            rewards: [
+                { id: "r1", name: "Uang Tunai Rp 10.000", points: 100, stock: 2, img: "https://placehold.co/200x200/065f46/ffffff?text=Cash+10k", type: "cash", nominal: 10000 },
+                { id: "r2", name: "Uang Tunai Rp 50.000", points: 500, stock: 50, img: "https://placehold.co/200x200/065f46/ffffff?text=Cash+50k", type: "cash", nominal: 50000 },
+                { id: "r3", name: "Tas Punggung Santri", points: 350, stock: 1, img: "https://placehold.co/200x200/065f46/ffffff?text=Tas+Santri", type: "item" },
+                { id: "r4", name: "Al-Quran Terjemah Eksklusif", points: 250, stock: 12, img: "https://placehold.co/200x200/065f46/ffffff?text=Al-Quran", type: "item" }
+            ],
+            redemptions: [
+                { id: "rd1", santriName: "Ahmad Fauzan", rewardName: "Uang Tunai Rp 10.000", points: 100, status: "Pending", date: "2026-03-24" }
+            ],
+            pointHistory: [
+                { santriName: "Muhammad Zidan", type: "prestasi", amount: 50, note: "Juara 1 Lomba Pidato", date: "2026-03-25" },
+                { santriName: "Ahmad Fauzan", type: "pelanggaran", amount: -15, note: "Terlambat Sholat Berjamaah", date: "2026-03-24" }
+            ],
+            attendanceRecords: {},
+            notificationsRead: false,
+            lastActiveAlertCount: 0
+        };
+
+        /* STREAMING CHUNK: LocalStorage save and load */
+        function loadState() {
+            const saved = localStorage.getItem('pesantren_digital_state_v4');
+            if (saved) {
+                try { state = JSON.parse(saved); } catch(e) {}
+            }
+        }
+
+        function saveState() {
+            localStorage.setItem('pesantren_digital_state_v4', JSON.stringify(state));
+            updateNotificationBadge();
+        }
+
+        /* STREAMING CHUNK: Navigation & Screens */
+        function goToLogin() {
+            document.getElementById('screen-splash').classList.add('hidden');
+            document.getElementById('screen-login').classList.remove('hidden');
+            updateBranding();
+        }
+
+        function handleLogin() {
+            const u = document.getElementById('login-username').value.trim();
+            const p = document.getElementById('login-password').value.trim();
+
+            if (u === 'admin' && p === 'admin123') {
+                state.currentUser = { username: 'admin', role: 'admin', name: 'Administrator Utama', permissions: ['all'] };
+                enterMainApp();
+                return;
+            }
+
+            const foundTeacher = state.teachers.find(t => t.username === u && t.password === p);
+            if (foundTeacher) {
+                state.currentUser = { username: foundTeacher.username, role: 'teacher', name: foundTeacher.name, permissions: foundTeacher.permissions };
+                enterMainApp();
+                return;
+            }
+
+            showNotification('Login Gagal', 'Username atau password salah.', 'error');
+        }
+
+        function handleLogout() {
+            state.currentUser = null;
+            document.getElementById('screen-main').classList.add('hidden');
+            document.getElementById('screen-login').classList.remove('hidden');
+        }
+
+        function enterMainApp() {
+            document.getElementById('screen-login').classList.add('hidden');
+            document.getElementById('screen-main').classList.remove('hidden');
+            document.getElementById('header-instansi-name').innerText = state.settings.instansiName;
+            document.getElementById('header-user-role').innerText = state.currentUser.role === 'admin' ? 'Administrator' : `Guru (${state.currentUser.name})`;
+            
+            const adminElements = document.querySelectorAll('.admin-only');
+            adminElements.forEach(el => {
+                el.style.display = state.currentUser.role === 'admin' ? '' : 'none';
+            });
+
+            switchTab('tab-dashboard');
+            renderAll();
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('nav button').forEach(btn => {
+                btn.classList.remove('text-emerald-700', 'border-emerald-700');
+                btn.classList.add('text-slate-500', 'border-transparent');
+            });
+
+            document.getElementById(tabId).classList.add('active');
+            const activeNavBtn = document.getElementById('nav-btn-' + tabId.replace('tab-', ''));
+            if (activeNavBtn) {
+                activeNavBtn.classList.remove('text-slate-500', 'border-transparent');
+                activeNavBtn.classList.add('text-emerald-700', 'border-emerald-700');
+            }
+            renderAll();
+        }
+
+        /* STREAMING CHUNK: Real-time clock initialization */
+        function initClock() {
+            setInterval(() => {
+                const now = new Date();
+                document.getElementById('live-clock').innerText = now.toTimeString().split(' ')[0];
+            }, 1000);
+            const options = { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' };
+            document.getElementById('live-date').innerText = new Date().toLocaleDateString('id-ID', options);
+        }
+
+        /* STREAMING CHUNK: Render all components and UI data */
+        function renderAll() {
+            updateBranding();
+            renderDashboard();
+            renderSantriList();
+            renderAttendanceList();
+            renderPointSelectAndHistory();
+            renderRewardCatalog();
+            renderTeacherList();
+            updateNotificationBadge();
+        }
+
+        function updateBranding() {
+            if (state.settings.logoUrl) {
+                document.getElementById('splash-logo-img').src = state.settings.logoUrl;
+                document.getElementById('login-logo-img').src = state.settings.logoUrl;
+                document.getElementById('header-logo-img').src = state.settings.logoUrl;
+            }
+            document.getElementById('login-instansi-name').innerText = state.settings.instansiName;
+            document.getElementById('setting-instansi-name').value = state.settings.instansiName;
+            document.getElementById('setting-point-rate').value = state.settings.pointRate;
+            document.getElementById('setting-absen-points').value = state.settings.absenPoints;
+        }
+
+        function updateNotificationBadge() {
+            const lowStock = state.rewards.filter(r => r.stock <= 3);
+            const pendingRedemptions = state.currentUser && state.currentUser.role === 'admin' 
+                ? state.redemptions.filter(rd => rd.status === 'Pending') 
+                : [];
+            const totalAlerts = lowStock.length + pendingRedemptions.length;
+            
+            const badge = document.getElementById('notification-badge');
+            if (!badge) return;
+
+            if (totalAlerts > 0) {
+                if (totalAlerts !== state.lastActiveAlertCount) {
+                    state.notificationsRead = false;
+                    state.lastActiveAlertCount = totalAlerts;
+                }
+                if (!state.notificationsRead) {
+                    badge.classList.remove('hidden');
+                } else {
+                    badge.classList.add('hidden');
+                }
+            } else {
+                badge.classList.add('hidden');
+                state.lastActiveAlertCount = 0;
+            }
+        }
+
+        function renderDashboard() {
+            document.getElementById('dash-greeting').innerText = `Selamat Datang, ${state.currentUser.name}`;
+            document.getElementById('stat-total-santri').innerText = state.santriList.length;
+            
+            const totalPts = state.santriList.reduce((acc, s) => acc + s.points, 0);
+            const avgPts = state.santriList.length ? Math.round(totalPts / state.santriList.length) : 0;
+            document.getElementById('stat-avg-points').innerText = avgPts;
+
+            const sorted = [...state.santriList].sort((a,b) => b.points - a.points);
+            const lbContainer = document.getElementById('leaderboard-list');
+            lbContainer.innerHTML = '';
+            sorted.slice(0, 5).forEach((s, idx) => {
+                const rankColor = idx === 0 ? 'bg-amber-100 text-amber-700 border-amber-300' : idx === 1 ? 'bg-slate-100 text-slate-700 border-slate-300' : idx === 2 ? 'bg-orange-100 text-orange-700 border-orange-300' : 'bg-slate-50 text-slate-600 border-slate-200';
+                lbContainer.innerHTML += `
+                    <div class="flex items-center justify-between p-2.5 rounded-xl border ${rankColor}">
+                        <div class="flex items-center space-x-3">
+                            <span class="w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs bg-white shadow-sm">${idx + 1}</span>
+                            <img src="${s.photo}" class="w-8 h-8 rounded-full object-cover">
+                            <div>
+                                <h4 class="font-bold text-xs text-slate-800">${s.name}</h4>
+                                <span class="text-[10px] text-slate-500">${s.class} | Hafalan: ${s.hafalan} Juz</span>
+                            </div>
+                        </div>
+                        <span class="font-bold text-xs text-emerald-700 bg-white px-2.5 py-1 rounded-lg shadow-sm">${s.points} Poin</span>
+                    </div>
+                `;
+            });
+        }
+
+        /* STREAMING CHUNK: Santri Management Functions */
+        function renderSantriList() {
+            const container = document.getElementById('santri-container');
+            const query = (document.getElementById('santri-search-input')?.value || '').toLowerCase();
+            container.innerHTML = '';
+
+            const filtered = state.santriList.filter(s => s.name.toLowerCase().includes(query) || s.nis.toLowerCase().includes(query) || s.class.toLowerCase().includes(query));
+
+            filtered.forEach(s => {
+                container.innerHTML += `
+                    <div class="bg-white p-3.5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <img src="${s.photo}" class="w-10 h-10 rounded-full object-cover border">
+                            <div>
+                                <h4 class="font-bold text-xs text-slate-800">${s.name}</h4>
+                                <p class="text-[10px] text-slate-500">NIS: ${s.nis} | ${s.class}</p>
+                                <span class="inline-block mt-1 bg-emerald-50 text-emerald-700 text-[10px] font-semibold px-2 py-0.5 rounded-md">Hafalan: ${s.hafalan} Juz</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <div class="text-right">
+                                <span class="block font-bold text-xs text-amber-600">${s.points} Poin</span>
+                                <span class="text-[10px] text-slate-400">Rp ${(s.points * state.settings.pointRate).toLocaleString('id-ID')}</span>
+                            </div>
+                            <button onclick="openSantriModal('${s.id}')" class="w-8 h-8 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-600 flex items-center justify-center transition">
+                                <i class="fas fa-pen text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function filterSantri() {
+            renderSantriList();
+        }
+
+        function openSantriModal(id = null) {
+            document.getElementById('modal-santri').classList.remove('hidden');
+            if (id) {
+                const s = state.santriList.find(x => x.id === id);
+                document.getElementById('santri-modal-title').innerText = 'Edit Data Santri';
+                document.getElementById('santri-edit-id').value = s.id;
+                document.getElementById('modal-santri-name').value = s.name;
+                document.getElementById('modal-santri-nis').value = s.nis;
+                document.getElementById('modal-santri-class').value = s.class;
+                document.getElementById('modal-santri-hafalan').value = s.hafalan;
+                document.getElementById('modal-santri-photo').value = s.photo;
+            } else {
+                document.getElementById('santri-modal-title').innerText = 'Tambah Santri Baru';
+                document.getElementById('santri-edit-id').value = '';
+                document.getElementById('modal-santri-name').value = '';
+                document.getElementById('modal-santri-nis').value = '';
+                document.getElementById('modal-santri-class').value = '';
+                document.getElementById('modal-santri-hafalan').value = '0';
+                document.getElementById('modal-santri-photo').value = '';
+            }
+        }
+
+        function closeSantriModal() {
+            document.getElementById('modal-santri').classList.add('hidden');
+        }
+
+        function saveSantri() {
+            const id = document.getElementById('santri-edit-id').value;
+            const name = document.getElementById('modal-santri-name').value.trim();
+            const nis = document.getElementById('modal-santri-nis').value.trim();
+            const sClass = document.getElementById('modal-santri-class').value.trim();
+            const hafalan = parseInt(document.getElementById('modal-santri-hafalan').value) || 0;
+            const photo = document.getElementById('modal-santri-photo').value.trim() || 'https://placehold.co/100x100/e2e8f0/1e293b?text=Santri';
+
+            if (!name || !nis) {
+                showNotification('Peringatan', 'Nama dan NIS santri wajib diisi.', 'error');
+                return;
+            }
+
+            if (id) {
+                const s = state.santriList.find(x => x.id === id);
+                s.name = name;
+                s.nis = nis;
+                s.class = sClass;
+                s.hafalan = hafalan;
+                s.photo = photo;
+            } else {
+                state.santriList.push({
+                    id: 's_' + Date.now(),
+                    name, nis, class: sClass, hafalan, points: 50, photo
+                });
+            }
+
+            saveState();
+            closeSantriModal();
+            renderAll();
+            showNotification('Berhasil', 'Data santri berhasil disimpan.', 'success');
+        }
+
+        /* STREAMING CHUNK: Attendance Module with Add/Subtract Points & PDF Recap */
+        function renderAttendanceList() {
+            const container = document.getElementById('attendance-list-container');
+            container.innerHTML = '';
+
+            const dateInput = document.getElementById('absensi-date');
+            if (!dateInput.value) {
+                dateInput.value = new Date().toISOString().split('T')[0];
+            }
+            const currentDate = dateInput.value;
+
+            if (!state.attendanceRecords[currentDate]) {
+                state.attendanceRecords[currentDate] = {};
+            }
+            const dayRecords = state.attendanceRecords[currentDate];
+
+            state.santriList.forEach(s => {
+                if (!dayRecords[s.id]) {
+                    dayRecords[s.id] = { status: 'Hadir', points: state.settings.absenPoints };
+                }
+                const rec = dayRecords[s.id];
+
+                container.innerHTML += `
+                    <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+                        <div class="flex items-center space-x-2.5">
+                            <img src="${s.photo}" class="w-8 h-8 rounded-full object-cover">
+                            <div>
+                                <h5 class="font-bold text-xs text-slate-800">${s.name}</h5>
+                                <span class="text-[10px] text-slate-500">${s.class}</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <select onchange="updateAttendanceStatus('${s.id}', this.value)" class="p-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none">
+                                <option value="Hadir" ${rec.status === 'Hadir' ? 'selected' : ''}>Hadir</option>
+                                <option value="Izin" ${rec.status === 'Izin' ? 'selected' : ''}>Izin</option>
+                                <option value="Sakit" ${rec.status === 'Sakit' ? 'selected' : ''}>Sakit</option>
+                                <option value="Alfa" ${rec.status === 'Alfa' ? 'selected' : ''}>Alfa (-)</option>
+                            </select>
+                            <input type="number" value="${rec.points}" onchange="updateAttendancePoints('${s.id}', this.value)" class="w-16 p-1.5 bg-white border border-slate-200 rounded-lg text-xs text-center font-bold text-emerald-700 focus:outline-none" title="Poin (Bisa positif/negatif)">
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function updateAttendanceStatus(santriId, status) {
+            const dateInput = document.getElementById('absensi-date').value;
+            if (!state.attendanceRecords[dateInput]) state.attendanceRecords[dateInput] = {};
+            if (!state.attendanceRecords[dateInput][santriId]) state.attendanceRecords[dateInput][santriId] = {};
+            
+            state.attendanceRecords[dateInput][santriId].status = status;
+            if (status === 'Hadir') state.attendanceRecords[dateInput][santriId].points = state.settings.absenPoints;
+            else if (status === 'Alfa') state.attendanceRecords[dateInput][santriId].points = -10;
+            else state.attendanceRecords[dateInput][santriId].points = 0;
+
+            renderAttendanceList();
+        }
+
+        function updateAttendancePoints(santriId, pts) {
+            const dateInput = document.getElementById('absensi-date').value;
+            if (!state.attendanceRecords[dateInput]) state.attendanceRecords[dateInput] = {};
+            if (!state.attendanceRecords[dateInput][santriId]) state.attendanceRecords[dateInput][santriId] = { status: 'Hadir' };
+            
+            state.attendanceRecords[dateInput][santriId].points = parseInt(pts) || 0;
+        }
+
+        function saveAttendance() {
+            const dateInput = document.getElementById('absensi-date').value;
+            const dayRecords = state.attendanceRecords[dateInput];
+            if (!dayRecords) return;
+
+            Object.keys(dayRecords).forEach(santriId => {
+                const rec = dayRecords[santriId];
+                const santri = state.santriList.find(x => x.id === santriId);
+                if (santri) {
+                    if (!rec.appliedPoints) {
+                        santri.points += rec.points;
+                        rec.appliedPoints = rec.points;
+                    } else {
+                        const diff = rec.points - rec.appliedPoints;
+                        santri.points += diff;
+                        rec.appliedPoints = rec.points;
+                    }
+                }
+            });
+
+            saveState();
+            renderAll();
+            showNotification('Berhasil', `Absensi tanggal ${dateInput} berhasil disimpan dan poin diperbarui.`, 'success');
+        }
+
+        function openMonthlyRecapModal() {
+            document.getElementById('modal-monthly-recap').classList.remove('hidden');
+            const now = new Date();
+            const ym = now.toISOString().slice(0, 7);
+            document.getElementById('recap-month-input').value = ym;
+            generateMonthlyRecap();
+        }
+
+        function closeMonthlyRecapModal() {
+            document.getElementById('modal-monthly-recap').classList.add('hidden');
+        }
+
+        function generateMonthlyRecap() {
+            const ym = document.getElementById('recap-month-input').value;
+            document.getElementById('recap-instansi-title').innerText = state.settings.instansiName;
+            document.getElementById('recap-periode-label').innerText = `Periode Bulan: ${ym}`;
+
+            const container = document.getElementById('recap-table-container');
+            let html = `
+                <table class="w-full text-left text-xs border-collapse border border-slate-300">
+                    <thead>
+                        <tr class="bg-slate-100 text-slate-700">
+                            <th class="border border-slate-300 p-2">Nama Santri</th>
+                            <th class="border border-slate-300 p-2 text-center">Hadir</th>
+                            <th class="border border-slate-300 p-2 text-center">Izin</th>
+                            <th class="border border-slate-300 p-2 text-center">Sakit</th>
+                            <th class="border border-slate-300 p-2 text-center">Alfa</th>
+                            <th class="border border-slate-300 p-2 text-right">Total Poin</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            state.santriList.forEach(s => {
+                let hadir = 0, izin = 0, sakit = 0, alfa = 0, totalPts = 0;
+                Object.keys(state.attendanceRecords).forEach(date => {
+                    if (date.startsWith(ym)) {
+                        const rec = state.attendanceRecords[date][s.id];
+                        if (rec) {
+                            if (rec.status === 'Hadir') hadir++;
+                            else if (rec.status === 'Izin') izin++;
+                            else if (rec.status === 'Sakit') sakit++;
+                            else if (rec.status === 'Alfa') alfa++;
+                            totalPts += (rec.points || 0);
+                        }
+                    }
+                });
+
+                html += `
+                    <tr>
+                        <td class="border border-slate-300 p-2 font-medium">${s.name} <span class="text-[10px] text-slate-500 block">${s.class}</span></td>
+                        <td class="border border-slate-300 p-2 text-center text-emerald-700 font-bold">${hadir}</td>
+                        <td class="border border-slate-300 p-2 text-center text-blue-700 font-semibold">${izin}</td>
+                        <td class="border border-slate-300 p-2 text-center text-amber-700 font-semibold">${sakit}</td>
+                        <td class="border border-slate-300 p-2 text-center text-red-700 font-semibold">${alfa}</td>
+                        <td class="border border-slate-300 p-2 text-right font-bold">${totalPts}</td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                    </tbody>
+                </table>
+                <div class="mt-4 flex justify-between text-[11px] text-slate-500">
+                    <span>Dicetak dari: Pesantren Digital Management System</span>
+                    <span>Tanggal Cetak: ${new Date().toLocaleDateString('id-ID')}</span>
+                </div>
+            `;
+            container.innerHTML = html;
+        }
+
+        /* STREAMING CHUNK: Points & Grading Module */
+        function renderPointSelectAndHistory() {
+            const select = document.getElementById('point-santri-id');
+            select.innerHTML = '';
+            state.santriList.forEach(s => {
+                select.innerHTML += `<option value="${s.id}">${s.name} (${s.class}) - Poin: ${s.points}</option>`;
+            });
+
+            const histContainer = document.getElementById('point-history-container');
+            histContainer.innerHTML = '';
+            state.pointHistory.forEach(h => {
+                const badgeColor = h.type === 'prestasi' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-red-50 text-red-700 border-red-200';
+                histContainer.innerHTML += `
+                    <div class="p-2.5 rounded-xl border ${badgeColor} flex justify-between items-center text-xs">
+                        <div>
+                            <span class="font-bold">${h.santriName}</span>: ${h.note}
+                            <div class="text-[10px] text-slate-500">${h.date}</div>
+                        </div>
+                        <span class="font-bold">${h.type === 'prestasi' ? '+' : ''}${h.amount} Poin</span>
+                    </div>
+                `;
+            });
+        }
+
+        function submitPointRecord() {
+            const santriId = document.getElementById('point-santri-id').value;
+            const type = document.getElementById('point-type').value;
+            const amount = parseInt(document.getElementById('point-amount').value) || 0;
+            const note = document.getElementById('point-note').value.trim();
+
+            if (!note || amount <= 0) {
+                showNotification('Peringatan', 'Mohon isi keterangan dan jumlah poin dengan benar.', 'error');
+                return;
+            }
+
+            const santri = state.santriList.find(x => x.id === santriId);
+            if (!santri) return;
+
+            const finalAmount = type === 'prestasi' ? amount : -amount;
+            santri.points += finalAmount;
+
+            state.pointHistory.unshift({
+                santriName: santri.name,
+                type,
+                amount: finalAmount,
+                note,
+                date: new Date().toISOString().split('T')[0]
+            });
+
+            saveState();
+            renderAll();
+            showNotification('Berhasil', 'Poin berhasil diperbarui.', 'success');
+            document.getElementById('point-note').value = '';
+        }
+
+        /* STREAMING CHUNK: Reward Catalog & Redemptions */
+        function renderRewardCatalog() {
+            const container = document.getElementById('reward-catalog-container');
+            container.innerHTML = '';
+
+            state.rewards.forEach(r => {
+                const lowStockBadge = r.stock <= 3 ? `<span class="bg-red-100 text-red-700 text-[9px] px-1.5 py-0.5 rounded font-bold ml-1">Stok Menipis!</span>` : '';
+                container.innerHTML += `
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col justify-between">
+                        <div>
+                            <img src="${r.img}" class="w-full h-28 object-cover">
+                            <div class="p-3 space-y-1">
+                                <div class="flex justify-between items-start">
+                                    <h4 class="font-bold text-xs text-slate-800 line-clamp-1">${r.name}</h4>
+                                    <button onclick="restockReward('${r.id}')" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-2 py-1 rounded-lg text-[10px] font-bold flex items-center space-x-1 transition shadow-sm" title="Tambah Stok (+5)">
+                                        <i class="fas fa-plus text-[9px]"></i><span>Stok</span>
+                                    </button>
+                                </div>
+                                <div class="text-xs font-bold text-emerald-700">${r.points} Poin</div>
+                                <div class="text-[10px] text-slate-400">Stok: ${r.stock} item ${lowStockBadge}</div>
+                            </div>
+                        </div>
+                        <div class="p-3 pt-0">
+                            <button onclick="openRedeemModal('${r.id}')" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold py-2 rounded-xl shadow transition">
+                                Tukar Poin
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            const redeemSantriSelect = document.getElementById('redeem-santri-select');
+            redeemSantriSelect.innerHTML = '';
+            state.santriList.forEach(s => {
+                redeemSantriSelect.innerHTML += `<option value="${s.id}">${s.name} (Poin: ${s.points})</option>`;
+            });
+
+            const redContainer = document.getElementById('redemption-list-container');
+            redContainer.innerHTML = '';
+            state.redemptions.forEach(rd => {
+                const statusBadge = rd.status === 'Approved' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : rd.status === 'Rejected' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-amber-50 text-amber-700 border-amber-200';
+                redContainer.innerHTML += `
+                    <div class="p-3 rounded-xl border ${statusBadge} flex justify-between items-center text-xs">
+                        <div>
+                            <span class="font-bold">${rd.santriName}</span> menukar <b>${rd.rewardName}</b> (${rd.points} Poin)
+                            <div class="text-[10px] text-slate-500">Tanggal: ${rd.date} | Status: <b>${rd.status}</b></div>
+                        </div>
+                        ${rd.status === 'Pending' && state.currentUser.role === 'admin' ? `
+                            <div class="flex space-x-1">
+                                <button onclick="approveRedemption('${rd.id}', true)" class="bg-emerald-600 text-white px-2.5 py-1 rounded-lg text-[10px] font-bold">Setujui</button>
+                                <button onclick="approveRedemption('${rd.id}', false)" class="bg-red-600 text-white px-2.5 py-1 rounded-lg text-[10px] font-bold">Tolak</button>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            });
+        }
+
+        function openRewardModal() {
+            document.getElementById('modal-reward').classList.remove('hidden');
+        }
+        function closeRewardModal() {
+            document.getElementById('modal-reward').classList.add('hidden');
+        }
+
+        function saveRewardItem() {
+            const name = document.getElementById('modal-reward-name').value.trim();
+            const points = parseInt(document.getElementById('modal-reward-points').value) || 0;
+            const stock = parseInt(document.getElementById('modal-reward-stock').value) || 0;
+            const img = document.getElementById('modal-reward-img').value.trim() || 'https://placehold.co/200x200?text=Hadiah';
+
+            if (!name || points <= 0) {
+                showNotification('Peringatan', 'Nama hadiah dan poin wajib diisi dengan benar.', 'error');
+                return;
+            }
+
+            state.rewards.push({
+                id: 'r_' + Date.now(),
+                name, points, stock, img, type: 'item'
+            });
+
+            saveState();
+            closeRewardModal();
+            renderAll();
+            showNotification('Berhasil', 'Item reward berhasil ditambahkan ke katalog.', 'success');
+        }
+
+        function restockReward(rewardId) {
+            const r = state.rewards.find(x => x.id === rewardId);
+            if (!r) return;
+            r.stock += 5;
+            saveState();
+            renderAll();
+            showNotification('Berhasil', `Stok ${r.name} berhasil ditambahkan (+5).`, 'success');
+        }
+
+        let selectedRewardForRedeem = null;
+        function openRedeemModal(rewardId) {
+            selectedRewardForRedeem = state.rewards.find(x => x.id === rewardId);
+            if (!selectedRewardForRedeem) return;
+
+            document.getElementById('redeem-reward-id').value = rewardId;
+            document.getElementById('redeem-modal-title').innerText = `Tukar: ${selectedRewardForRedeem.name}`;
+            
+            const cashWrap = document.getElementById('redeem-cash-input-wrap');
+            if (selectedRewardForRedeem.type === 'cash') {
+                cashWrap.classList.remove('hidden');
+                document.getElementById('redeem-reward-type').value = 'cash';
+            } else {
+                cashWrap.classList.add('hidden');
+                document.getElementById('redeem-reward-type').value = 'item';
+            }
+
+            document.getElementById('modal-redeem').classList.remove('hidden');
+        }
+
+        function closeRedeemModal() {
+            document.getElementById('modal-redeem').classList.add('hidden');
+        }
+
+        function processRedeem() {
+            const santriId = document.getElementById('redeem-santri-select').value;
+            const santri = state.santriList.find(x => x.id === santriId);
+            if (!santri) return;
+
+            let pointsNeeded = selectedRewardForRedeem.points;
+            let rewardDisplayName = selectedRewardForRedeem.name;
+
+            if (selectedRewardForRedeem.type === 'cash') {
+                const nominal = parseInt(document.getElementById('redeem-cash-nominal').value) || 0;
+                if (nominal < 1000 || nominal % 1000 !== 0) {
+                    showNotification('Peringatan', 'Penukaran uang minimal Rp 1.000 dan harus kelipatan seribu.', 'error');
+                    return;
+                }
+                pointsNeeded = Math.ceil(nominal / state.settings.pointRate);
+                rewardDisplayName = `Uang Tunai Rp ${nominal.toLocaleString('id-ID')}`;
+            }
+
+            if (santri.points < pointsNeeded) {
+                showNotification('Poin Tidak Cukup', `Santri ${santri.name} memiliki ${santri.points} poin, sedangkan yang dibutuhkan adalah ${pointsNeeded} poin.`, 'error');
+                return;
+            }
+
+            const requiresApproval = state.currentUser.role === 'teacher';
+            
+            santri.points -= pointsNeeded;
+            if (selectedRewardForRedeem.type === 'item') {
+                selectedRewardForRedeem.stock = Math.max(0, selectedRewardForRedeem.stock - 1);
+            }
+
+            state.redemptions.unshift({
+                id: 'rd_' + Date.now(),
+                santriName: santri.name,
+                rewardName: rewardDisplayName,
+                points: pointsNeeded,
+                status: requiresApproval ? 'Pending' : 'Approved',
+                date: new Date().toISOString().split('T')[0]
+            });
+
+            saveState();
+            closeRedeemModal();
+            renderAll();
+            showNotification('Berhasil', requiresApproval ? 'Pengajuan penukaran reward dikirim untuk validasi admin.' : 'Penukaran reward berhasil diproses.', 'success');
+        }
+
+        function approveRedemption(rdId, isApproved) {
+            const rd = state.redemptions.find(x => x.id === rdId);
+            if (!rd) return;
+            rd.status = isApproved ? 'Approved' : 'Rejected';
+            saveState();
+            renderAll();
+            showNotification('Validasi Selesai', `Penukaran reward status: ${rd.status}`, 'success');
+        }
+
+        /* STREAMING CHUNK: Admin Settings, Teachers & Backup */
+        function saveInstansiSettings() {
+            state.settings.instansiName = document.getElementById('setting-instansi-name').value.trim() || state.settings.instansiName;
+            state.settings.pointRate = parseInt(document.getElementById('setting-point-rate').value) || 100;
+            state.settings.absenPoints = parseInt(document.getElementById('setting-absen-points').value) || 25;
+
+            const logoFile = document.getElementById('setting-logo-file').files[0];
+            if (logoFile) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    state.settings.logoUrl = e.target.result;
+                    saveState();
+                    enterMainApp();
+                    showNotification('Berhasil', 'Pengaturan dan logo instansi berhasil diperbarui.', 'success');
+                };
+                reader.readAsDataURL(logoFile);
+            } else {
+                saveState();
+                enterMainApp();
+                showNotification('Berhasil', 'Pengaturan instansi berhasil disimpan.', 'success');
+            }
+        }
+
+        function renderTeacherList() {
+            const container = document.getElementById('teacher-list-container');
+            if (!container) return;
+            container.innerHTML = '';
+            state.teachers.forEach(t => {
+                container.innerHTML += `
+                    <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 flex justify-between items-center text-xs">
+                        <div>
+                            <span class="font-bold">${t.name}</span> (${t.username})
+                            <div class="text-[10px] text-slate-500">Hak akses: ${t.permissions.join(', ')}</div>
+                        </div>
+                        <button onclick="deleteTeacher('${t.id}')" class="text-red-500 hover:text-red-700 p-1"><i class="fas fa-trash"></i></button>
+                    </div>
+                `;
+            });
+        }
+
+        function openTeacherModal() {
+            document.getElementById('modal-teacher').classList.remove('hidden');
+        }
+        function closeTeacherModal() {
+            document.getElementById('modal-teacher').classList.add('hidden');
+        }
+
+        function saveTeacher() {
+            const name = document.getElementById('teacher-name').value.trim();
+            const username = document.getElementById('teacher-username').value.trim();
+            const password = document.getElementById('teacher-password').value.trim();
+            const checkedPerms = Array.from(document.querySelectorAll('input[name="perm"]:checked')).map(el => el.value);
+
+            if (!name || !username || !password) {
+                showNotification('Peringatan', 'Semua kolom guru wajib diisi.', 'error');
+                return;
+            }
+
+            state.teachers.push({
+                id: 't_' + Date.now(),
+                name, username, password, permissions: checkedPerms
+            });
+
+            saveState();
+            closeTeacherModal();
+            renderTeacherList();
+            showNotification('Berhasil', 'Akun guru berhasil ditambahkan.', 'success');
+        }
+
+        function deleteTeacher(id) {
+            state.teachers = state.teachers.filter(x => x.id !== id);
+            saveState();
+            renderTeacherList();
+            showNotification('Berhasil', 'Akun guru dihapus.', 'success');
+        }
+
+        function backupData() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state, null, 2));
+            const dlAnchor = document.createElement('a');
+            dlAnchor.setAttribute("href", dataStr);
+            dlAnchor.setAttribute("download", "pesantren_digital_backup.json");
+            document.body.appendChild(dlAnchor);
+            dlAnchor.click();
+            dlAnchor.remove();
+        }
+
+        function restoreData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    state = JSON.parse(e.target.result);
+                    saveState();
+                    enterMainApp();
+                    showNotification('Berhasil', 'Data aplikasi berhasil dipulihkan.', 'success');
+                } catch(err) {
+                    showNotification('Gagal', 'File cadangan tidak valid.', 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        /* STREAMING CHUNK: Notification Modal & Badge Handlers */
+        function showNotification(title, message, type = 'success') {
+            const modal = document.getElementById('modal-notification');
+            document.getElementById('notif-title').innerText = title;
+            document.getElementById('notif-message').innerHTML = message;
+            const icon = document.getElementById('notif-icon');
+            if (type === 'error') {
+                icon.className = 'w-16 h-16 bg-red-100 text-red-700 rounded-full flex items-center justify-center mx-auto text-2xl';
+                icon.innerHTML = '<i class="fas fa-triangle-exclamation"></i>';
+            } else {
+                icon.className = 'w-16 h-16 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center mx-auto text-2xl';
+                icon.innerHTML = '<i class="fas fa-check"></i>';
+            }
+            modal.classList.remove('hidden');
+        }
+
+        function closeNotificationModal() {
+            document.getElementById('modal-notification').classList.add('hidden');
+        }
+
+        function openNotificationModal() {
+            state.notificationsRead = true;
+            updateNotificationBadge();
+
+            const lowStock = state.rewards.filter(r => r.stock <= 3);
+            const pendingRedemptions = state.currentUser && state.currentUser.role === 'admin' 
+                ? state.redemptions.filter(rd => rd.status === 'Pending') 
+                : [];
+
+            let msg = '';
+            if (lowStock.length === 0 && pendingRedemptions.length === 0) {
+                msg = 'Tidak ada pemberitahuan terbaru saat ini. Semua stok barang aman dan tidak ada pengajuan pending.';
+            } else {
+                if (lowStock.length > 0) {
+                    msg += '<b class="text-red-600">Peringatan Stok Menipis (<= 3):</b><br>';
+                    lowStock.forEach(r => {
+                        msg += `&bull; ${r.name} (Sisa: ${r.stock})<br>`;
+                    });
+                    msg += '<br>';
+                }
+                if (pendingRedemptions.length > 0) {
+                    msg += '<b class="text-amber-600">Pengajuan Penukaran Reward (Pending):</b><br>';
+                    pendingRedemptions.forEach(rd => {
+                        msg += `&bull; ${rd.santriName} menukar ${rd.rewardName} (${rd.points} Poin)<br>`;
+                    });
+                }
+            }
+
+            showNotification('Pusat Pemberitahuan', msg, 'success');
+        }
+
+        window.onload = function() {
+            loadState();
+            initClock();
+            updateNotificationBadge();
+        };
+    </script>
+</body>
+</html>
