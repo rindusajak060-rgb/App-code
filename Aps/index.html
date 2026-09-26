@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sistem Manajemen Santri</title>
+    <title>Sistem Digital Poin Santri</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Alpine.js -->
@@ -12,7 +12,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts: Inter -->
+    <!-- Google Fonts: Plus Jakarta Sans -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- jsPDF untuk Ekspor PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -41,7 +41,7 @@
 
 <div class="mobile-container" x-cloak>
 
-    <!-- 1. SPLASH SCREEN DENGAN ANIMASI PROFESIONAL -->
+    <!-- 1. SPLASH SCREEN -->
     <div x-show="showSplash" 
          x-transition:leave="transition ease-in-out duration-700"
          x-transition:leave-start="opacity-100 transform scale-100"
@@ -58,8 +58,8 @@
                 </template>
             </div>
         </div>
-        <h1 class="text-2xl font-extrabold tracking-tight text-center mb-1 text-white" x-text="instansi.nama || 'USAHA JAHIT ABAH'"></h1>
-        <p class="text-indigo-300 text-xs font-medium tracking-wide text-center mb-8 uppercase">Sistem Manajemen Santri & Reward Terpadu</p>
+        <h1 class="text-2xl font-extrabold tracking-tight text-center mb-1 text-white" x-text="instansi.nama || 'Sistem Digital Poin Santri'"></h1>
+        <p class="text-indigo-300 text-xs font-medium tracking-wide text-center mb-8 uppercase">Manajemen Prestasi & Reward Santri</p>
         <div class="w-36 h-1 bg-white/10 rounded-full overflow-hidden">
             <div class="h-full bg-gradient-to-r from-indigo-400 to-blue-400 animate-pulse w-full rounded-full"></div>
         </div>
@@ -77,7 +77,7 @@
                         <i class="fa-solid fa-mosque text-3xl text-indigo-600"></i>
                     </template>
                 </div>
-                <h2 class="text-xl font-bold text-slate-900 tracking-tight" x-text="instansi.nama || 'Pondok Pesantren / Instansi'"></h2>
+                <h2 class="text-xl font-bold text-slate-900 tracking-tight" x-text="instansi.nama || 'Pondok Pesantren'"></h2>
                 <p class="text-xs text-slate-500 mt-1">Silakan masuk menggunakan akun resmi Anda</p>
             </div>
 
@@ -105,11 +105,11 @@
         </div>
     </template>
 
-    <!-- 3. HALAMAN UTAMA APLIKASI (SETELAH LOGIN) -->
+    <!-- 3. HALAMAN UTAMA APLIKASI -->
     <template x-if="isLoggedIn">
         <div class="flex-1 flex flex-col pb-20">
             
-            <!-- HEADER ALA FACEBOOK SELULER / MODERN -->
+            <!-- HEADER -->
             <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-100 px-4 py-3 flex items-center justify-between shadow-xs">
                 <div class="flex items-center space-x-2.5">
                     <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center font-bold text-sm shadow-sm border border-slate-200 overflow-hidden">
@@ -121,26 +121,24 @@
                         </template>
                     </div>
                     <div>
-                        <h1 class="text-xs font-bold text-slate-900 leading-tight tracking-tight" x-text="instansi.nama || 'USAHA JAHIT ABAH'"></h1>
+                        <h1 class="text-xs font-bold text-slate-900 leading-tight tracking-tight" x-text="instansi.nama || 'Poin Santri'"></h1>
                         <span class="text-[10px] text-indigo-600 font-semibold uppercase tracking-wider" x-text="currentUser.role"></span>
                     </div>
                 </div>
                 <div class="flex items-center space-x-2">
-                    <!-- Tombol Notifikasi -->
                     <button @click="openNotificationModal()" class="relative p-2.5 text-slate-600 hover:bg-slate-100 rounded-full transition">
                         <i class="fa-solid fa-bell text-sm"></i>
                         <template x-if="unreadNotificationCount > 0">
                             <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-white animate-pulse"></span>
                         </template>
                     </button>
-                    <!-- Tombol Logout -->
                     <button @click="logout()" class="p-2.5 text-rose-600 hover:bg-rose-50 rounded-full transition" title="Keluar">
                         <i class="fa-solid fa-power-off text-sm"></i>
                     </button>
                 </div>
             </header>
 
-            <!-- NAVIGASI UTAMA ALA FACEBOOK SELULER (TAB BAR ATAS) -->
+            <!-- NAVIGASI TAB ATAS -->
             <nav class="bg-white border-b border-slate-100 flex justify-around sticky top-[57px] z-30 shadow-xs">
                 <template x-for="tab in availableTabs">
                     <button @click="activeTab = tab.id" 
@@ -152,12 +150,11 @@
                 </template>
             </nav>
 
-            <!-- KONTEN UTAMA BERDASARKAN TAB -->
+            <!-- KONTEN UTAMA -->
             <main class="flex-1 p-4 space-y-4">
 
                 <!-- TAB 1: DASBOR & LEADERBOARD -->
                 <div x-show="activeTab === 'dashboard'" class="space-y-4">
-                    <!-- Jam & Tanggal Realtime -->
                     <div class="bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-950 rounded-3xl p-5 text-white shadow-xl shadow-indigo-900/10 flex justify-between items-center relative overflow-hidden">
                         <div class="absolute -right-6 -bottom-6 w-32 h-32 bg-white/5 rounded-full blur-2xl"></div>
                         <div class="relative z-10">
@@ -170,9 +167,8 @@
                         </div>
                     </div>
 
-                    <!-- Statistik Singkat -->
                     <div class="grid grid-cols-2 gap-3">
-                        <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm shadow-slate-100 flex items-center space-x-3">
+                        <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center space-x-3">
                             <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
                                 <i class="fa-solid fa-users text-sm"></i>
                             </div>
@@ -181,7 +177,7 @@
                                 <h3 class="text-lg font-extrabold text-slate-800 mt-0.5" x-text="santriList.length"></h3>
                             </div>
                         </div>
-                        <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm shadow-slate-100 flex items-center space-x-3">
+                        <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center space-x-3">
                             <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
                                 <i class="fa-solid fa-gift text-sm"></i>
                             </div>
@@ -192,8 +188,7 @@
                         </div>
                     </div>
 
-                    <!-- Leaderboard -->
-                    <div class="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm shadow-slate-100">
+                    <div class="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm">
                         <div class="flex items-center justify-between mb-4">
                             <h3 class="text-xs font-bold text-slate-800 flex items-center uppercase tracking-wider">
                                 <i class="fa-solid fa-trophy text-amber-500 mr-2 text-sm"></i> Papan Peringkat Santri
@@ -202,7 +197,7 @@
                         </div>
                         <div class="space-y-2.5">
                             <template x-for="(s, index) in sortedSantriLeaderboard" :key="s.id">
-                                <div class="flex items-center justify-between p-3 bg-slate-50/70 rounded-2xl border border-slate-100/80 transition hover:bg-slate-50">
+                                <div class="flex items-center justify-between p-3 bg-slate-50/70 rounded-2xl border border-slate-100/80">
                                     <div class="flex items-center space-x-3">
                                         <div class="w-7 h-7 rounded-xl flex items-center justify-center text-xs font-extrabold shadow-xs"
                                              :class="index === 0 ? 'bg-amber-400 text-white' : (index === 1 ? 'bg-slate-300 text-white' : (index === 2 ? 'bg-amber-700 text-white' : 'bg-slate-200 text-slate-600'))"
@@ -231,17 +226,15 @@
                         </button>
                     </div>
 
-                    <!-- Search Bar -->
                     <div class="relative">
                         <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400"><i class="fa-solid fa-search text-xs"></i></span>
                         <input type="text" x-model="santriSearch" placeholder="Cari nama santri..." 
                                class="w-full pl-10 pr-4 py-2.5 text-xs bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-xs">
                     </div>
 
-                    <!-- Daftar Santri -->
                     <div class="space-y-2.5">
                         <template x-for="s in filteredSantri" :key="s.id">
-                            <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-xs flex justify-between items-center transition hover:border-indigo-100">
+                            <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-xs flex justify-between items-center">
                                 <div>
                                     <h4 class="text-xs font-bold text-slate-800" x-text="s.nama"></h4>
                                     <p class="text-[10px] text-slate-400 mt-0.5" x-text="'Hafalan: ' + (s.hafalan || 'Belum ada data')"></p>
@@ -274,15 +267,13 @@
                         </button>
                     </div>
 
-                    <!-- Input Item Penilaian & Jenis Poin -->
                     <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
                         <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Pengaturan Item Penilaian Poin</h4>
                         <div class="grid grid-cols-3 gap-2">
-                            <input type="text" x-model="newPointItem.nama" placeholder="Nama Kategori" class="px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500">
-                            <input type="number" x-model="newPointItem.poin" placeholder="Jumlah Poin" class="px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                            <input type="text" x-model="newPointItem.nama" placeholder="Nama Kategori" class="px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
+                            <input type="number" x-model="newPointItem.poin" placeholder="Jumlah Poin" class="px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
                             <button @click="savePointItem()" class="bg-indigo-600 text-white rounded-xl text-xs font-bold py-2 hover:bg-indigo-700 transition">Simpan</button>
                         </div>
-                        <!-- Daftar Item Penilaian -->
                         <div class="space-y-1.5 mt-2">
                             <template x-for="item in pointItems" :key="item.id">
                                 <div class="flex justify-between items-center bg-slate-50 px-3 py-2 rounded-xl border border-slate-100 text-xs">
@@ -293,7 +284,6 @@
                         </div>
                     </div>
 
-                    <!-- Absensi Harian Santri -->
                     <div class="space-y-2.5">
                         <template x-for="s in santriList" :key="s.id">
                             <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-xs flex items-center justify-between">
@@ -302,7 +292,7 @@
                                     <span class="text-[10px] text-slate-400 font-medium" x-text="'Poin saat ini: ' + s.poin"></span>
                                 </div>
                                 <div class="flex items-center space-x-1.5">
-                                    <select @change="processAbsensi(s.id, $event.target.value)" class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500 font-semibold text-slate-700">
+                                    <select @change="processAbsensi(s.id, $event.target.value)" class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus:outline-none font-semibold text-slate-700">
                                         <option value="">Pilih Status</option>
                                         <option value="Hadir">Hadir (+25)</option>
                                         <option value="Izin">Izin (0)</option>
@@ -329,29 +319,27 @@
                         </template>
                     </div>
 
-                    <!-- Konversi Poin ke Uang Tunai -->
                     <div class="bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-amber-500/10 p-4 rounded-3xl border border-amber-200/80 shadow-xs space-y-3">
                         <h4 class="text-xs font-bold text-amber-900 flex items-center uppercase tracking-wider">
                             <i class="fa-solid fa-money-bill-wave mr-1.5 text-amber-600"></i> Konversi Poin ke Uang Tunai (1 Poin = Rp 1)
                         </h4>
                         <div class="grid grid-cols-2 gap-2">
-                            <select x-model="cashExchange.santriId" class="text-xs bg-white border border-amber-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-1 focus:ring-amber-500 font-semibold text-slate-700">
+                            <select x-model="cashExchange.santriId" class="text-xs bg-white border border-amber-200 rounded-xl px-3 py-2 focus:outline-none font-semibold text-slate-700">
                                 <option value="">Pilih Santri</option>
                                 <template x-for="s in santriList" :key="s.id">
                                     <option :value="s.id" x-text="s.nama + ' (' + s.poin + ' Poin)'"></option>
                                 </template>
                             </select>
-                            <input type="number" x-model="cashExchange.nominal" step="1000" min="1000" placeholder="Nominal (Min. 1.000)" class="text-xs bg-white border border-amber-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-1 focus:ring-amber-500 font-semibold text-slate-700">
+                            <input type="number" x-model="cashExchange.nominal" step="1000" min="1000" placeholder="Nominal (Min. 1.000)" class="text-xs bg-white border border-amber-200 rounded-xl px-3 py-2 focus:outline-none font-semibold text-slate-700">
                         </div>
                         <button @click="processCashExchange()" class="w-full py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold shadow-sm shadow-amber-200 transition">
                             Tukar Poin ke Uang Tunai
                         </button>
                     </div>
 
-                    <!-- Katalog Barang ala Shopee -->
                     <div class="grid grid-cols-2 gap-3">
                         <template x-for="r in rewardList" :key="r.id">
-                            <div class="bg-white rounded-2xl border border-slate-100 shadow-xs overflow-hidden flex flex-col justify-between transition hover:border-indigo-100">
+                            <div class="bg-white rounded-2xl border border-slate-100 shadow-xs overflow-hidden flex flex-col justify-between">
                                 <div>
                                     <div class="w-full h-32 bg-slate-100 relative overflow-hidden">
                                         <template x-if="r.foto">
@@ -362,7 +350,6 @@
                                                 <i class="fa-solid fa-gift text-2xl"></i>
                                             </div>
                                         </template>
-                                        <!-- Indikator Stok Menipis -->
                                         <template x-if="r.stok <= 2">
                                             <span class="absolute top-2 right-2 bg-rose-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-sm">Stok Menipis</span>
                                         </template>
@@ -393,33 +380,31 @@
                 <div x-show="activeTab === 'settings' && currentUser.role === 'admin'" class="space-y-4">
                     <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Panel Admin & Pengaturan</h3>
 
-                    <!-- Profil Instansi & Upload Logo Resolusi Tinggi -->
                     <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
                         <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Profil Instansi & Logo</h4>
                         <div>
                             <label class="block text-[10px] font-bold text-slate-600 mb-1">Nama Instansi / Pondok Pesantren</label>
-                            <input type="text" x-model="instansi.nama" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                            <input type="text" x-model="instansi.nama" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
                         </div>
                         <div>
                             <label class="block text-[10px] font-bold text-slate-600 mb-1">Upload Logo (Background Putih)</label>
-                            <input type="file" @change="uploadLogo($event)" accept="image/*" class="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                            <input type="file" @change="uploadLogo($event)" accept="image/*" class="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700">
                         </div>
                         <button @click="saveInstansi()" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-md shadow-indigo-100 transition">Simpan Perubahan</button>
                     </div>
 
-                    <!-- Manajemen Staf / Guru & Hak Akses -->
                     <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
                         <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Tambah Akun Guru & Hak Akses</h4>
-                        <input type="text" x-model="newGuru.username" placeholder="Username Guru" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500">
-                        <input type="password" x-model="newGuru.password" placeholder="Password Guru" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                        <input type="text" x-model="newGuru.username" placeholder="Username Guru" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
+                        <input type="password" x-model="newGuru.password" placeholder="Password Guru" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
                         
                         <div class="space-y-1.5 pt-1">
                             <span class="block text-[10px] font-bold text-slate-600">Hak Akses Guru:</span>
-                            <label class="flex items-center text-xs space-x-2 text-slate-700 font-medium"><input type="checkbox" x-model="newGuru.permissions.absensi" class="rounded text-indigo-600 focus:ring-indigo-500"><span>Catat Absensi Harian</span></label>
-                            <label class="flex items-center text-xs space-x-2 text-slate-700 font-medium"><input type="checkbox" x-model="newGuru.permissions.poin" class="rounded text-indigo-600 focus:ring-indigo-500"><span>Kelola Poin Prestasi & Pelanggaran</span></label>
-                            <label class="flex items-center text-xs space-x-2 text-slate-700 font-medium"><input type="checkbox" x-model="newGuru.permissions.santri" class="rounded text-indigo-600 focus:ring-indigo-500"><span>Lihat Data Santri</span></label>
-                            <label class="flex items-center text-xs space-x-2 text-slate-700 font-medium"><input type="checkbox" x-model="newGuru.permissions.laporan" class="rounded text-indigo-600 focus:ring-indigo-500"><span>Akses Laporan Bulanan</span></label>
-                            <label class="flex items-center text-xs space-x-2 text-slate-700 font-medium"><input type="checkbox" x-model="newGuru.permissions.reward" class="rounded text-indigo-600 focus:ring-indigo-500"><span>Validasi Penukaran Reward</span></label>
+                            <label class="flex items-center text-xs space-x-2 text-slate-700 font-medium"><input type="checkbox" x-model="newGuru.permissions.absensi" class="rounded text-indigo-600"><span>Catat Absensi Harian</span></label>
+                            <label class="flex items-center text-xs space-x-2 text-slate-700 font-medium"><input type="checkbox" x-model="newGuru.permissions.poin" class="rounded text-indigo-600"><span>Kelola Poin Prestasi & Pelanggaran</span></label>
+                            <label class="flex items-center text-xs space-x-2 text-slate-700 font-medium"><input type="checkbox" x-model="newGuru.permissions.santri" class="rounded text-indigo-600"><span>Lihat Data Santri</span></label>
+                            <label class="flex items-center text-xs space-x-2 text-slate-700 font-medium"><input type="checkbox" x-model="newGuru.permissions.laporan" class="rounded text-indigo-600"><span>Akses Laporan Bulanan</span></label>
+                            <label class="flex items-center text-xs space-x-2 text-slate-700 font-medium"><input type="checkbox" x-model="newGuru.permissions.reward" class="rounded text-indigo-600"><span>Validasi Penukaran Reward</span></label>
                         </div>
                         <button @click="saveGuru()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-100 transition">Tambah Akun Guru</button>
                     </div>
@@ -427,7 +412,7 @@
 
             </main>
 
-            <!-- NAVIGASI BAWAH (MOBILE TAB BAR) -->
+            <!-- NAVIGASI BAWAH -->
             <nav class="fixed bottom-0 left-0 right-0 max-w-[480px] mx-auto bg-white/95 backdrop-blur-md border-t border-slate-100 flex justify-around py-2 z-40 shadow-lg">
                 <template x-for="tab in availableTabs">
                     <button @click="activeTab = tab.id" 
@@ -442,7 +427,7 @@
         </div>
     </template>
 
-    <!-- MODAL NOTIFIKASI & VALIDASI -->
+    <!-- MODAL NOTIFIKASI -->
     <div x-show="isNotificationModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
         <div class="bg-white w-full max-w-sm rounded-3xl p-5 space-y-4 shadow-2xl">
             <div class="flex justify-between items-center">
@@ -468,22 +453,22 @@
         </div>
     </div>
 
-    <!-- MODAL TAMBAH/EDIT SANTRI -->
+    <!-- MODAL SANTRI -->
     <div x-show="isSantriModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
         <div class="bg-white w-full max-w-sm rounded-3xl p-5 space-y-4 shadow-2xl">
             <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider" x-text="santriForm.id ? 'Edit Santri' : 'Tambah Santri Baru'"></h3>
             <div class="space-y-3">
                 <div>
                     <label class="block text-[10px] font-bold text-slate-600 mb-1">Nama Lengkap Santri</label>
-                    <input type="text" x-model="santriForm.nama" placeholder="Nama santri" class="w-full px-3 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                    <input type="text" x-model="santriForm.nama" placeholder="Nama santri" class="w-full px-3 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
                 </div>
                 <div>
                     <label class="block text-[10px] font-bold text-slate-600 mb-1">Jumlah Hafalan Al-Qur'an</label>
-                    <input type="text" x-model="santriForm.hafalan" placeholder="Contoh: 3 Juz / Surah Al-Baqarah" class="w-full px-3 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                    <input type="text" x-model="santriForm.hafalan" placeholder="Contoh: 3 Juz / Surah Al-Baqarah" class="w-full px-3 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
                 </div>
                 <div>
                     <label class="block text-[10px] font-bold text-slate-600 mb-1">Poin Awal</label>
-                    <input type="number" x-model="santriForm.poin" placeholder="0" class="w-full px-3 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                    <input type="number" x-model="santriForm.poin" placeholder="0" class="w-full px-3 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
                 </div>
             </div>
             <div class="flex space-x-2 pt-2">
@@ -493,22 +478,22 @@
         </div>
     </div>
 
-    <!-- MODAL TAMBAH/EDIT REWARD -->
+    <!-- MODAL REWARD -->
     <div x-show="isRewardModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
         <div class="bg-white w-full max-w-sm rounded-3xl p-5 space-y-4 shadow-2xl">
             <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider" x-text="rewardForm.id ? 'Edit Hadiah' : 'Tambah Hadiah Baru'"></h3>
             <div class="space-y-3">
                 <div>
                     <label class="block text-[10px] font-bold text-slate-600 mb-1">Nama Hadiah</label>
-                    <input type="text" x-model="rewardForm.nama" placeholder="Nama hadiah" class="w-full px-3 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                    <input type="text" x-model="rewardForm.nama" placeholder="Nama hadiah" class="w-full px-3 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
                 </div>
                 <div>
                     <label class="block text-[10px] font-bold text-slate-600 mb-1">Jumlah Poin</label>
-                    <input type="number" x-model="rewardForm.poin" placeholder="Poin diperlukan" class="w-full px-3 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                    <input type="number" x-model="rewardForm.poin" placeholder="Poin diperlukan" class="w-full px-3 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
                 </div>
                 <div>
                     <label class="block text-[10px] font-bold text-slate-600 mb-1">Stok Barang</label>
-                    <input type="number" x-model="rewardForm.stok" placeholder="Jumlah stok" class="w-full px-3 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                    <input type="number" x-model="rewardForm.stok" placeholder="Jumlah stok" class="w-full px-3 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
                 </div>
                 <div>
                     <label class="block text-[10px] font-bold text-slate-600 mb-1">Foto Hadiah (Upload)</label>
@@ -541,7 +526,7 @@
             loginForm: { username: '', password: '' },
             currentUser: { username: '', role: 'admin', permissions: {} },
             
-            instansi: { nama: 'USAHA JAHIT ABAH', logo: '' },
+            instansi: { nama: 'Sistem Digital Poin Santri', logo: '' },
             
             santriList: [],
             santriSearch: '',
@@ -843,7 +828,7 @@
                     body: rows,
                     startY: 20,
                 });
-                doc.save("rekap-santri-usaha-jahit-abah.pdf");
+                doc.save("rekap-poin-santri.pdf");
             }
         }
     }
