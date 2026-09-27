@@ -141,13 +141,13 @@
             </header>
 
             <!-- NAVIGASI TAB ATAS -->
-            <nav class="bg-white border-b border-slate-100 flex justify-around sticky top-[57px] z-30 shadow-xs px-2">
+            <nav class="bg-white border-b border-slate-100 flex justify-around sticky top-[57px] z-30 shadow-xs px-1 overflow-x-auto">
                 <template x-for="tab in availableTabs" :key="tab.id">
                     <button @click="setActiveTab(tab.id)" 
                             :class="activeTab === tab.id ? 'text-emerald-600 border-b-2 border-emerald-600 bg-emerald-50/40' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50/50'"
-                            class="flex-1 py-3 text-center transition flex flex-col items-center justify-center">
+                            class="flex-1 min-w-[55px] py-3 text-center transition flex flex-col items-center justify-center shrink-0">
                         <i :class="tab.icon" class="text-base mb-1"></i>
-                        <span class="text-[10px] font-bold tracking-tight" x-text="tab.label"></span>
+                        <span class="text-[9px] font-bold tracking-tight" x-text="tab.label"></span>
                     </button>
                 </template>
             </nav>
@@ -461,9 +461,59 @@
                     </div>
                 </div>
 
-                <!-- TAB 5: PENGATURAN ADMIN -->
+                <!-- TAB 5: MANAJEMEN PENGGUNA / GURU (BARU) -->
+                <div x-show="activeTab === 'users' && currentUser.role === 'admin'" class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Manajemen Pengguna & Guru</h3>
+                            <p class="text-[10px] text-slate-400">Daftar akun pengajar yang terdaftar di sistem</p>
+                        </div>
+                    </div>
+
+                    <!-- Form Tambah Guru -->
+                    <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
+                        <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Tambah Akun Guru & Hak Akses</h4>
+                        <input type="text" x-model="newGuru.username" placeholder="Username Guru" class="w-full px-3 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
+                        <input type="password" x-model="newGuru.password" placeholder="Password Guru" class="w-full px-3 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
+                        
+                        <div class="space-y-1.5 pt-1">
+                            <span class="block text-[10px] font-bold text-slate-600">Hak Akses Guru:</span>
+                            <label class="flex items-center text-xs space-x-2 text-slate-700 font-medium"><input type="checkbox" x-model="newGuru.permissions.absensi" class="rounded text-emerald-600"><span>Catat Absensi Harian</span></label>
+                            <label class="flex items-center text-xs space-x-2 text-slate-700 font-medium"><input type="checkbox" x-model="newGuru.permissions.poin" class="rounded text-emerald-600"><span>Kelola Poin Prestasi & Pelanggaran</span></label>
+                            <label class="flex items-center text-xs space-x-2 text-slate-700 font-medium"><input type="checkbox" x-model="newGuru.permissions.santri" class="rounded text-emerald-600"><span>Lihat Data Santri</span></label>
+                            <label class="flex items-center text-xs space-x-2 text-slate-700 font-medium"><input type="checkbox" x-model="newGuru.permissions.laporan" class="rounded text-emerald-600"><span>Akses Laporan Bulanan</span></label>
+                            <label class="flex items-center text-xs space-x-2 text-slate-700 font-medium"><input type="checkbox" x-model="newGuru.permissions.reward" class="rounded text-emerald-600"><span>Validasi Penukaran Reward</span></label>
+                        </div>
+                        <button @click="saveGuru()" class="w-full py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold shadow-md shadow-teal-100 transition">Tambah Akun Guru</button>
+                    </div>
+
+                    <!-- List Daftar Guru -->
+                    <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
+                        <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Daftar Akun Guru Terdaftar</h4>
+                        <div class="space-y-2">
+                            <template x-for="teacher in teachersList" :key="teacher.id">
+                                <div class="flex justify-between items-center bg-slate-50 p-3 rounded-2xl border border-slate-100 text-xs">
+                                    <div>
+                                        <h5 class="font-bold text-slate-800 flex items-center">
+                                            <i class="fa-solid fa-chalkboard-user text-emerald-600 mr-1.5"></i> <span x-text="teacher.username"></span>
+                                        </h5>
+                                        <p class="text-[10px] text-slate-400 mt-0.5">Role: Pengajar / Guru</p>
+                                    </div>
+                                    <button @click="deleteTeacher(teacher.id)" class="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl text-[10px] font-bold transition flex items-center shadow-xs">
+                                        <i class="fa-solid fa-trash mr-1"></i> Hapus
+                                    </button>
+                                </div>
+                            </template>
+                            <template x-if="teachersList.length === 0">
+                                <p class="text-xs text-slate-400 text-center py-4 font-medium">Belum ada akun guru tambahan.</p>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 6: PENGATURAN ADMIN -->
                 <div x-show="activeTab === 'settings' && currentUser.role === 'admin'" class="space-y-4">
-                    <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Panel Admin & Pengaturan</h3>
+                    <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Panel Admin & Pengaturan Sistem</h3>
 
                     <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
                         <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Profil Instansi & Logo</h4>
@@ -530,22 +580,6 @@
                             </div>
                         </div>
                         <button @click="saveAttendanceConfig()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-100 transition">Simpan Bobot Kehadiran</button>
-                    </div>
-
-                    <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
-                        <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Tambah Akun Guru & Hak Akses</h4>
-                        <input type="text" x-model="newGuru.username" placeholder="Username Guru" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
-                        <input type="password" x-model="newGuru.password" placeholder="Password Guru" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
-                        
-                        <div class="space-y-1.5 pt-1">
-                            <span class="block text-[10px] font-bold text-slate-600">Hak Akses Guru:</span>
-                            <label class="flex items-center text-xs space-x-2 text-slate-700 font-medium"><input type="checkbox" x-model="newGuru.permissions.absensi" class="rounded text-emerald-600"><span>Catat Absensi Harian</span></label>
-                            <label class="flex items-center text-xs space-x-2 text-slate-700 font-medium"><input type="checkbox" x-model="newGuru.permissions.poin" class="rounded text-emerald-600"><span>Kelola Poin Prestasi & Pelanggaran</span></label>
-                            <label class="flex items-center text-xs space-x-2 text-slate-700 font-medium"><input type="checkbox" x-model="newGuru.permissions.santri" class="rounded text-emerald-600"><span>Lihat Data Santri</span></label>
-                            <label class="flex items-center text-xs space-x-2 text-slate-700 font-medium"><input type="checkbox" x-model="newGuru.permissions.laporan" class="rounded text-emerald-600"><span>Akses Laporan Bulanan</span></label>
-                            <label class="flex items-center text-xs space-x-2 text-slate-700 font-medium"><input type="checkbox" x-model="newGuru.permissions.reward" class="rounded text-emerald-600"><span>Validasi Penukaran Reward</span></label>
-                        </div>
-                        <button @click="saveGuru()" class="w-full py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold shadow-md shadow-teal-100 transition">Tambah Akun Guru</button>
                     </div>
                 </div>
 
@@ -998,6 +1032,7 @@
                 }
                 tabs.push({ id: 'reward', label: 'Reward', icon: 'fa-solid fa-gift' });
                 if (this.currentUser.role === 'admin') {
+                    tabs.push({ id: 'users', label: 'Pengguna', icon: 'fa-solid fa-user-gear' });
                     tabs.push({ id: 'settings', label: 'Pengaturan', icon: 'fa-solid fa-gear' });
                 }
                 return tabs;
@@ -1345,15 +1380,44 @@
                     return;
                 }
                 showLoading('Menambahkan akun guru...');
-                await supabaseClient.from('teachers').insert([{
+                let res = await supabaseClient.from('teachers').insert([{
                     username: this.newGuru.username,
                     password: this.newGuru.password,
                     permissions: this.newGuru.permissions
                 }]);
                 hideLoading();
+                if (res.error) {
+                    this.showToast('Gagal menambah akun: ' + res.error.message, 'error');
+                    return;
+                }
                 this.showToast('Akun guru berhasil ditambahkan!');
                 this.newGuru = { username: '', password: '', permissions: { absensi: true, poin: true, santri: true, laporan: false, reward: false } };
                 this.loadInitialData();
+            },
+
+            async deleteTeacher(id) {
+                Swal.fire({
+                    title: 'Hapus Akun Guru?',
+                    text: 'Akun pengajar ini akan dihapus dari sistem.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#ef4444',
+                    cancelButtonColor: '#64748b',
+                    confirmButtonText: 'Ya, Hapus',
+                    cancelButtonText: 'Batal'
+                }).then(async (result) => {
+                    if (result.isConfirmed) {
+                        showLoading('Menghapus akun...');
+                        let res = await supabaseClient.from('teachers').delete().eq('id', id);
+                        hideLoading();
+                        if (res.error) {
+                            this.showToast('Gagal menghapus akun: ' + res.error.message, 'error');
+                            return;
+                        }
+                        this.showToast('Akun guru berhasil dihapus.');
+                        this.loadInitialData();
+                    }
+                });
             },
 
             async openExchangeModal(reward) {
