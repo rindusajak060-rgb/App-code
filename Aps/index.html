@@ -367,6 +367,35 @@
                             </div>
                         </template>
                     </div>
+
+                    <!-- RIWAYAT ABSENSI / KOREKSI SALAH INPUT -->
+                    <div class="bg-white rounded-3xl p-4 border border-slate-100 shadow-sm space-y-3 mt-4">
+                        <div class="flex justify-between items-center">
+                            <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center">
+                                <i class="fa-solid fa-clock-rotate-left mr-2 text-emerald-600"></i> Riwayat Log & Koreksi Kesalahan
+                            </h4>
+                            <span class="text-[10px] text-slate-400 font-medium">Hapus jika salah input</span>
+                        </div>
+                        <div class="space-y-2 max-h-60 overflow-y-auto">
+                            <template x-for="log in attendanceLogsList" :key="log.id">
+                                <div class="flex justify-between items-center bg-slate-50/80 p-3 rounded-2xl border border-slate-100 text-xs">
+                                    <div>
+                                        <h5 class="font-bold text-slate-800" x-text="log.santri_nama"></h5>
+                                        <p class="text-[10px] text-slate-500 mt-0.5">
+                                            Status: <span class="font-semibold text-emerald-600" x-text="log.status"></span> | Poin: <span class="font-semibold" x-text="log.poin"></span>
+                                        </p>
+                                        <span class="text-[9px] text-slate-400" x-text="log.tanggal"></span>
+                                    </div>
+                                    <button @click="deleteAttendanceLog(log)" class="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl text-[10px] font-bold transition flex items-center shadow-xs" title="Hapus/Koreksi Log">
+                                        <i class="fa-solid fa-trash mr-1"></i> Hapus
+                                    </button>
+                                </div>
+                            </template>
+                            <template x-if="attendanceLogsList.length === 0">
+                                <p class="text-xs text-slate-400 text-center py-4 font-medium">Belum ada riwayat absensi atau poin hari ini.</p>
+                            </template>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- TAB 4: KATALOG REWARD & PENUKARAN -->
@@ -1092,6 +1121,20 @@
                 await supabaseClient.from('attendance_logs').insert([{ santri_nama: santri.nama, status: labelStatus, poin: poinAdd, tanggal: new Date().toLocaleDateString() }]);
                 this.showToast(`Absensi "${labelStatus}" dicatat untuk ${santri.nama}.`);
                 this.loadInitialData();
+            },
+
+            // Fungsi untuk menghapus log absensi yang salah input dan mengembalikan poin santri
+            async deleteAttendanceLog(log) {
+                if (confirm(`Hapus log absensi "${log.status}" untuk ${log.santri_nama}? Poin santri akan dikoreksi otomatis.`)) {
+                    let santri = this.santriList.find(s => s.nama === log.santri_nama);
+                    if (santri) {
+                        let correctedPoin = (santri.poin || 0) - (log.poin || 0);
+                        await supabaseClient.from('santri').update({ poin: correctedPoin }).eq('id', santri.id);
+                    }
+                    await supabaseClient.from('attendance_logs').delete().eq('id', log.id);
+                    this.showToast('Log absensi berhasil dikoreksi/dihapus.');
+                    this.loadInitialData();
+                }
             },
 
             async savePointItem() {
