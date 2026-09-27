@@ -878,6 +878,9 @@
                     if (instansiRes.data) this.instansi = instansiRes.data;
                 } catch (err) {
                     console.error('Network / Supabase Connection Error:', err);
+                    alert('Error pada data: ' + err.message);
+}
+
                 }
             },
 
