@@ -15,6 +15,8 @@
     <!-- jsPDF & AutoTable -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <!-- html2canvas untuk Download Kartu -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <!-- Supabase JS Client v2 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -536,71 +538,78 @@
 
     <!-- MODAL KARTU PENCAPAIAN SANTRI -->
     <div x-show="isCardModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-3 overflow-y-auto">
-        <div class="bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-700 w-full max-w-sm rounded-3xl p-4 text-white shadow-2xl relative overflow-hidden border-4 border-white/20">
-            
-            <div class="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full blur-2xl pointer-events-none"></div>
-
-            <div class="flex items-center space-x-2.5 pb-3 border-b border-white/20">
-                <div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center p-1 shadow-md shrink-0">
-                    <template x-if="instansi.logo">
-                        <img :src="instansi.logo" alt="Logo" class="w-full h-full object-cover rounded-xl">
-                    </template>
-                    <template x-if="!instansi.logo">
-                        <i class="fa-solid fa-mosque text-emerald-600 text-lg"></i>
-                    </template>
-                </div>
-                <div>
-                    <h2 class="text-xs font-extrabold tracking-wide uppercase" x-text="instansi.nama || 'YAYASAN HAAMILUL QUR\'AN'"></h2>
-                    <p class="text-[9px] text-emerald-100 font-medium leading-tight" x-text="cardSettings.headerText"></p>
-                </div>
-            </div>
-
-            <div class="py-3 text-center">
-                <h3 class="text-base font-extrabold italic tracking-wide text-amber-300 drop-shadow-sm" x-text="'\"' + cardSettings.subHeader + '\"'"></h3>
-                <h1 class="text-2xl font-black uppercase tracking-wider mt-1 text-white drop-shadow-md" x-text="cardSettings.mainTitle"></h1>
+        <div class="w-full max-w-sm space-y-3">
+            <!-- Elemen yang akan di-download sebagai gambar -->
+            <div id="captureCard" class="bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-700 w-full rounded-3xl p-4 text-white shadow-2xl relative overflow-hidden border-4 border-white/20">
                 
-                <div class="inline-block my-2 bg-gradient-to-r from-amber-400 to-yellow-300 text-slate-900 px-6 py-2 rounded-xl shadow-lg border-2 border-white/40 transform hover:scale-105 transition">
-                    <span class="text-xl font-black uppercase tracking-widest" x-text="activeCardSantri.hafalan || 'JUZ -'"></span>
-                </div>
-                
-                <p class="text-[11px] font-semibold text-emerald-100" x-text="currentDate"></p>
-            </div>
+                <div class="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full blur-2xl pointer-events-none"></div>
 
-            <div class="bg-white text-slate-900 rounded-2xl p-3.5 shadow-xl space-y-3 relative">
-                <div class="flex items-center space-x-3">
-                    <div class="w-24 h-28 bg-slate-100 rounded-xl overflow-hidden shadow-md border-2 border-emerald-500 shrink-0">
-                        <template x-if="activeCardSantri.foto">
-                            <img :src="activeCardSantri.foto" alt="Foto Santri" class="w-full h-full object-cover">
+                <div class="flex items-center space-x-2.5 pb-3 border-b border-white/20">
+                    <div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center p-1 shadow-md shrink-0">
+                        <template x-if="instansi.logo">
+                            <img :src="instansi.logo" alt="Logo" class="w-full h-full object-cover rounded-xl">
                         </template>
-                        <template x-if="!activeCardSantri.foto">
-                            <div class="w-full h-full flex items-center justify-center text-slate-400 bg-slate-50">
-                                <i class="fa-solid fa-user text-2xl"></i>
+                        <template x-if="!instansi.logo">
+                            <i class="fa-solid fa-mosque text-emerald-600 text-lg"></i>
+                        </template>
+                    </div>
+                    <div>
+                        <h2 class="text-xs font-extrabold tracking-wide uppercase" x-text="instansi.nama || 'YAYASAN HAAMILUL QUR\'AN'"></h2>
+                        <p class="text-[9px] text-emerald-100 font-medium leading-tight" x-text="cardSettings.headerText"></p>
+                    </div>
+                </div>
+
+                <div class="py-3 text-center">
+                    <h3 class="text-base font-extrabold italic tracking-wide text-amber-300 drop-shadow-sm" x-text="'\"' + cardSettings.subHeader + '\"'"></h3>
+                    <h1 class="text-2xl font-black uppercase tracking-wider mt-1 text-white drop-shadow-md" x-text="cardSettings.mainTitle"></h1>
+                    
+                    <div class="inline-block my-2 bg-gradient-to-r from-amber-400 to-yellow-300 text-slate-900 px-6 py-2 rounded-xl shadow-lg border-2 border-white/40">
+                        <span class="text-xl font-black uppercase tracking-widest" x-text="activeCardSantri.hafalan || 'JUZ -'"></span>
+                    </div>
+                    
+                    <p class="text-[11px] font-semibold text-emerald-100" x-text="currentDate"></p>
+                </div>
+
+                <div class="bg-white text-slate-900 rounded-2xl p-3.5 shadow-xl space-y-3 relative">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-24 h-28 bg-slate-100 rounded-xl overflow-hidden shadow-md border-2 border-emerald-500 shrink-0">
+                            <template x-if="activeCardSantri.foto">
+                                <img :src="activeCardSantri.foto" alt="Foto Santri" class="w-full h-full object-cover">
+                            </template>
+                            <template x-if="!activeCardSantri.foto">
+                                <div class="w-full h-full flex items-center justify-center text-slate-400 bg-slate-50">
+                                    <i class="fa-solid fa-user text-2xl"></i>
+                                </div>
+                            </template>
+                        </div>
+                        <div class="flex-1 space-y-1.5">
+                            <div class="bg-amber-300 text-slate-900 px-3 py-1.5 rounded-lg shadow-xs font-black text-sm uppercase tracking-wide line-clamp-1" x-text="activeCardSantri.nama"></div>
+                            <div class="text-[11px] font-bold text-slate-700 bg-slate-50 px-2.5 py-1 rounded-md border border-slate-100">
+                                <span class="text-slate-400">Umur :</span> <span x-text="(activeCardSantri.umur || '-') + ' Tahun'"></span>
                             </div>
-                        </template>
-                    </div>
-                    <div class="flex-1 space-y-1.5">
-                        <div class="bg-amber-300 text-slate-900 px-3 py-1.5 rounded-lg shadow-xs font-black text-sm uppercase tracking-wide line-clamp-1" x-text="activeCardSantri.nama"></div>
-                        <div class="text-[11px] font-bold text-slate-700 bg-slate-50 px-2.5 py-1 rounded-md border border-slate-100">
-                            <span class="text-slate-400">Umur :</span> <span x-text="(activeCardSantri.umur || '-') + ' Tahun'"></span>
-                        </div>
-                        <div class="text-[11px] font-bold text-slate-700 bg-slate-50 px-2.5 py-1 rounded-md border border-slate-100">
-                            <span class="text-slate-400">Asal :</span> <span x-text="activeCardSantri.alamat || 'Desa / Alamat belum diisi'"></span>
+                            <div class="text-[11px] font-bold text-slate-700 bg-slate-50 px-2.5 py-1 rounded-md border border-slate-100">
+                                <span class="text-slate-400">Asal :</span> <span x-text="activeCardSantri.alamat || 'Desa / Alamat belum diisi'"></span>
+                            </div>
                         </div>
                     </div>
                 </div>
+
+                <div class="mt-4 pt-2.5 border-t border-white/20 flex justify-between items-center text-[9px] font-bold text-emerald-100">
+                    <div class="flex items-center space-x-1"><i class="fa-brands fa-facebook text-white"></i> <span x-text="cardSettings.footerText"></span></div>
+                    <div class="flex items-center space-x-1"><i class="fa-brands fa-instagram text-white"></i> <span x-text="instansi.nama"></span></div>
+                </div>
+
             </div>
 
-            <div class="mt-4 pt-2.5 border-t border-white/20 flex justify-between items-center text-[9px] font-bold text-emerald-100">
-                <div class="flex items-center space-x-1"><i class="fa-brands fa-facebook text-white"></i> <span x-text="cardSettings.footerText"></span></div>
-                <div class="flex items-center space-x-1"><i class="fa-brands fa-instagram text-white"></i> <span x-text="instansi.nama"></span></div>
-            </div>
-
-            <div class="mt-4 flex space-x-2">
-                <button @click="isCardModalOpen = false" class="w-full py-2.5 bg-white text-emerald-900 rounded-xl text-xs font-extrabold shadow-lg hover:bg-emerald-50 transition">
-                    Tutup Kartu
+            <!-- Tombol Aksi Download & Tutup -->
+            <div class="flex space-x-2">
+                <button @click="isCardModalOpen = false" class="flex-1 py-2.5 bg-slate-200 text-slate-700 rounded-xl text-xs font-extrabold shadow-sm hover:bg-slate-300 transition">
+                    Tutup
+                </button>
+                <button @click="downloadCardImage()" class="flex-1 py-2.5 bg-emerald-600 text-white rounded-xl text-xs font-extrabold shadow-lg hover:bg-emerald-700 transition flex items-center justify-center space-x-1.5">
+                    <i class="fa-solid fa-download"></i> <span>Download Kartu</span>
                 </button>
             </div>
-
         </div>
     </div>
 
@@ -951,7 +960,6 @@
             },
 
             async saveSantri() {
-                // Validasi input wajib terisi
                 if (!this.santriForm.nama || this.santriForm.nama.trim() === '') {
                     this.showToast('Nama lengkap santri wajib diisi!');
                     return;
@@ -998,6 +1006,23 @@
             openCardModal(s) {
                 this.activeCardSantri = s;
                 this.isCardModalOpen = true;
+            },
+
+            // Fungsi Download Kartu Pencapaian Menjadi Gambar PNG
+            downloadCardImage() {
+                const cardElement = document.getElementById('captureCard');
+                this.showToast('Menyiapkan gambar kartu...');
+                
+                html2canvas(cardElement, { scale: 3, useCORS: true }).then(canvas => {
+                    const link = document.createElement('a');
+                    link.download = `Kartu-Pencapaian-${this.activeCardSantri.nama.replace(/\s+/g, '_')}.png`;
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                    this.showToast('Kartu berhasil di-download!');
+                }).catch(err => {
+                    console.error('Gagal mendownload kartu:', err);
+                    this.showToast('Gagal mengunduh kartu pencapaian.');
+                });
             },
 
             async deleteSantri(id) {
