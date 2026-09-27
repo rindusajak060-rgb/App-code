@@ -39,7 +39,7 @@
 
 <div class="mobile-container" x-cloak>
 
-    <!-- 1. SPLASH SCREEN (Nuansa Hijau Pesantren) -->
+    <!-- 1. SPLASH SCREEN (Menampilkan Nama & Logo Instansi) -->
     <div x-show="showSplash" 
          x-transition:leave="transition ease-in-out duration-700"
          x-transition:leave-start="opacity-100 transform scale-100"
@@ -49,7 +49,7 @@
             <div class="absolute -inset-3 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full blur-xl opacity-50 animate-pulse"></div>
             <div class="relative w-28 h-28 bg-white rounded-full flex items-center justify-center border-4 border-white/80 shadow-2xl overflow-hidden animate-bounce">
                 <template x-if="instansi.logo">
-                    <img :src="instansi.logo" alt="Logo" class="w-full h-full object-cover bg-white">
+                    <img :src="instansi.logo" alt="Logo Instansi" class="w-full h-full object-cover bg-white">
                 </template>
                 <template x-if="!instansi.logo">
                     <i class="fa-solid fa-graduation-cap text-4xl text-emerald-600"></i>
@@ -63,20 +63,20 @@
         </div>
     </div>
 
-    <!-- 2. HALAMAN LOGIN -->
+    <!-- 2. HALAMAN LOGIN (Menampilkan Logo, Nama Instansi, & Pengaturan Subjudul) -->
     <template x-if="!isLoggedIn">
         <div class="flex-1 flex flex-col justify-center px-6 py-12 bg-gradient-to-b from-emerald-50/50 via-white to-white">
             <div class="text-center mb-8">
                 <div class="w-24 h-24 mx-auto mb-4 bg-white rounded-3xl flex items-center justify-center shadow-xl shadow-emerald-100 border border-slate-100 overflow-hidden">
                     <template x-if="instansi.logo">
-                        <img :src="instansi.logo" alt="Logo" class="w-full h-full object-cover bg-white">
+                        <img :src="instansi.logo" alt="Logo Instansi" class="w-full h-full object-cover bg-white">
                     </template>
                     <template x-if="!instansi.logo">
                         <i class="fa-solid fa-mosque text-3xl text-emerald-600"></i>
                     </template>
                 </div>
                 <h2 class="text-xl font-bold text-slate-900 tracking-tight" x-text="instansi.nama || 'Pondok Pesantren'"></h2>
-                <p class="text-xs text-slate-500 mt-1">Silakan masuk menggunakan akun resmi Anda</p>
+                <p class="text-xs text-slate-500 mt-1" x-text="loginSettings.subtitle || 'Silakan masuk menggunakan akun resmi Anda'"></p>
             </div>
 
             <form @submit.prevent="handleLogin" class="space-y-4 bg-white p-7 rounded-3xl shadow-xl shadow-slate-100 border border-slate-100/80">
@@ -265,7 +265,7 @@
                     <div class="flex justify-between items-center">
                         <div>
                             <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Modul Absensi & Poin</h3>
-                            <p class="text-[10px] text-slate-400">Kehadiran otomatis bernilai 25 poin</p>
+                            <p class="text-[10px] text-slate-400">Poin otomatis sesuai pengaturan admin</p>
                         </div>
                         <button @click="exportAbsensiPDF()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-100 transition flex items-center">
                             <i class="fa-solid fa-file-pdf mr-1.5 text-[10px]"></i> Rekap PDF
@@ -294,25 +294,46 @@
 
                     <div class="space-y-2.5">
                         <template x-for="s in santriList" :key="s.id">
-                            <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-xs flex items-center justify-between">
-                                <div>
-                                    <h4 class="text-xs font-bold text-slate-800" x-text="s.nama"></h4>
-                                    <div class="flex items-center space-x-1.5 mt-0.5">
-                                        <span class="text-[10px] bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded font-bold" x-text="s.kelompok || 'Tanpa Kelompok'"></span>
-                                        <span class="text-[10px] text-slate-400 font-medium" x-text="'Poin: ' + s.poin"></span>
+                            <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-xs space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h4 class="text-xs font-bold text-slate-800" x-text="s.nama"></h4>
+                                        <div class="flex items-center space-x-1.5 mt-0.5">
+                                            <span class="text-[10px] bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded font-bold" x-text="s.kelompok || 'Tanpa Kelompok'"></span>
+                                            <span class="text-[10px] text-emerald-600 font-bold" x-text="'Poin: ' + s.poin"></span>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center space-x-1.5">
+                                        <select @change="processAbsensi(s.id, $event.target.value); $event.target.value='';" class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus:outline-none font-semibold text-slate-700">
+                                            <option value="">Pilih Status / Poin</option>
+                                            <option value="Hadir" x-text="'Hadir (' + (attendanceConfig.hadir >= 0 ? '+' + attendanceConfig.hadir : attendanceConfig.hadir) + ')'"></option>
+                                            <option value="Izin" x-text="'Izin (' + (attendanceConfig.izin >= 0 ? '+' + attendanceConfig.izin : attendanceConfig.izin) + ')'"></option>
+                                            <option value="Sakit" x-text="'Sakit (' + (attendanceConfig.sakit >= 0 ? '+' + attendanceConfig.sakit : attendanceConfig.sakit) + ')'"></option>
+                                            <option value="Alpa" x-text="'Alpa (' + (attendanceConfig.alpa >= 0 ? '+' + attendanceConfig.alpa : attendanceConfig.alpa) + ')'"></option>
+                                            <template x-for="pi in pointItems" :key="pi.id">
+                                                <option :value="pi.id" x-text="pi.nama + ' (' + (pi.poin > 0 ? '+' + pi.poin : pi.poin) + ')'"></option>
+                                            </template>
+                                        </select>
                                     </div>
                                 </div>
-                                <div class="flex items-center space-x-1.5">
-                                    <select @change="processAbsensi(s.id, $event.target.value); $event.target.value='';" class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus:outline-none font-semibold text-slate-700">
-                                        <option value="">Pilih Status / Poin</option>
-                                        <option value="Hadir">Hadir (+25 Poin)</option>
-                                        <option value="Izin">Izin (0 Poin)</option>
-                                        <option value="Sakit">Sakit (0 Poin)</option>
-                                        <option value="Alpa">Alpa (-10 Poin)</option>
-                                        <template x-for="pi in pointItems" :key="pi.id">
-                                            <option :value="pi.id" x-text="pi.nama + ' (' + (pi.poin > 0 ? '+' + pi.poin : pi.poin) + ')'"></option>
-                                        </template>
-                                    </select>
+                                <!-- TAMPILAN STATUS KEHADIRAN (REKAP INDIVIDU) -->
+                                <div class="grid grid-cols-4 gap-1 pt-2 border-t border-slate-100 text-center">
+                                    <div class="bg-emerald-50 text-emerald-800 py-1 px-1 rounded-lg">
+                                        <span class="block text-[9px] font-semibold text-emerald-600 uppercase">Hadir</span>
+                                        <span class="text-xs font-extrabold" x-text="getAttendanceStats(s.nama).hadir"></span>
+                                    </div>
+                                    <div class="bg-amber-50 text-amber-800 py-1 px-1 rounded-lg">
+                                        <span class="block text-[9px] font-semibold text-amber-600 uppercase">Izin</span>
+                                        <span class="text-xs font-extrabold" x-text="getAttendanceStats(s.nama).izin"></span>
+                                    </div>
+                                    <div class="bg-blue-50 text-blue-800 py-1 px-1 rounded-lg">
+                                        <span class="block text-[9px] font-semibold text-blue-600 uppercase">Sakit</span>
+                                        <span class="text-xs font-extrabold" x-text="getAttendanceStats(s.nama).sakit"></span>
+                                    </div>
+                                    <div class="bg-rose-50 text-rose-800 py-1 px-1 rounded-lg">
+                                        <span class="block text-[9px] font-semibold text-rose-600 uppercase">Alpa</span>
+                                        <span class="text-xs font-extrabold" x-text="getAttendanceStats(s.nama).alpa"></span>
+                                    </div>
                                 </div>
                             </div>
                         </template>
@@ -409,6 +430,40 @@
                             <input type="file" @change="uploadLogo($event)" accept="image/*" class="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700">
                         </div>
                         <button @click="saveInstansi()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-100 transition">Simpan Perubahan</button>
+                    </div>
+
+                    <!-- PENGATURAN TAMPILAN MENU LOGIN -->
+                    <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
+                        <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Pengaturan Tampilan Menu Login</h4>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-600 mb-1">Subjudul / Pesan Halaman Login</label>
+                            <input type="text" x-model="loginSettings.subtitle" placeholder="Contoh: Silakan masuk menggunakan akun resmi Anda" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
+                        </div>
+                        <button @click="saveLoginSettings()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-100 transition">Simpan Pengaturan Login</button>
+                    </div>
+
+                    <!-- PENGATURAN BOBOT POIN KEHADIRAN -->
+                    <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
+                        <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Pengaturan Bobot Poin Kehadiran</h4>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-600 mb-1">Poin Hadir</label>
+                                <input type="number" x-model="attendanceConfig.hadir" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-600 mb-1">Poin Izin</label>
+                                <input type="number" x-model="attendanceConfig.izin" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-600 mb-1">Poin Sakit</label>
+                                <input type="number" x-model="attendanceConfig.sakit" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-600 mb-1">Poin Alpa</label>
+                                <input type="number" x-model="attendanceConfig.alpa" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
+                            </div>
+                        </div>
+                        <button @click="saveAttendanceConfig()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-100 transition">Simpan Bobot Poin Kehadiran</button>
                     </div>
 
                     <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
@@ -522,13 +577,13 @@
 <!-- SUPABASE & APP LOGIC -->
 <script>
     const SUPABASE_URL = 'https://spdxllweqvidceuoyvml.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_WXK59k6bZF1Knp5B6Edgwg_-nsQiKcw';
+    const SUPABASE_KEY = 'sb_publishable_WXK59k6bZF1Knp5B6Edgwg_-nsQiKcw.';
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     window.supabaseClient = supabaseClient;
 
     function appState() {
         return {
-            showSplash: false,
+            showSplash: true, // Tampilkan splash screen saat awal buka aplikasi
             isLoggedIn: localStorage.getItem('isLoggedIn') === 'true',
             activeTab: localStorage.getItem('activeTab') || 'dashboard',
             currentTime: '',
@@ -538,6 +593,8 @@
             currentUser: JSON.parse(localStorage.getItem('currentUser') || '{"username":"","role":"admin","permissions":{}}'),
             
             instansi: { nama: 'Pondok Pesantren', logo: '' },
+            attendanceConfig: JSON.parse(localStorage.getItem('attendanceConfig') || '{"hadir":25,"izin":0,"sakit":0,"alpa":-10}'),
+            loginSettings: JSON.parse(localStorage.getItem('loginSettings') || '{"subtitle":"Silakan masuk menggunakan akun resmi Anda"}'),
             
             santriList: [],
             santriSearch: '',
@@ -551,6 +608,8 @@
             pointItems: [],
             newPointItem: { id: null, nama: '', poin: 0 },
 
+            attendanceLogsList: [],
+
             cashExchange: { santriId: '', nominal: 1000 },
             
             notifications: [],
@@ -563,6 +622,11 @@
             initApp() {
                 this.updateClock();
                 setInterval(() => this.updateClock(), 1000);
+
+                // Sembunyikan splash screen setelah 2 detik
+                setTimeout(() => {
+                    this.showSplash = false;
+                }, 2000);
 
                 this.loadInitialData();
                 this.setupRealtimeSync();
@@ -579,6 +643,16 @@
                 localStorage.setItem('activeTab', tabId);
             },
 
+            saveAttendanceConfig() {
+                localStorage.setItem('attendanceConfig', JSON.stringify(this.attendanceConfig));
+                alert('Pengaturan bobot poin kehadiran berhasil disimpan!');
+            },
+
+            saveLoginSettings() {
+                localStorage.setItem('loginSettings', JSON.stringify(this.loginSettings));
+                alert('Pengaturan tampilan login berhasil disimpan!');
+            },
+
             async loadInitialData() {
                 try {
                     let santriRes = await supabaseClient.from('santri').select('*');
@@ -589,6 +663,9 @@
 
                     let pointRes = await supabaseClient.from('point_items').select('*');
                     if (pointRes.data) this.pointItems = pointRes.data;
+
+                    let logRes = await supabaseClient.from('attendance_logs').select('*');
+                    if (logRes.data) this.attendanceLogsList = logRes.data;
 
                     let teacherRes = await supabaseClient.from('teachers').select('*');
                     if (teacherRes.data) this.teachersList = teacherRes.data;
@@ -613,6 +690,15 @@
                         this.loadInitialData();
                     })
                     .subscribe();
+            },
+
+            getAttendanceStats(nama) {
+                let logs = this.attendanceLogsList.filter(l => l.santri_nama === nama);
+                let hadir = logs.filter(l => l.status && l.status.toLowerCase().includes('hadir')).length;
+                let izin = logs.filter(l => l.status && l.status.toLowerCase().includes('izin')).length;
+                let sakit = logs.filter(l => l.status && l.status.toLowerCase().includes('sakit')).length;
+                let alpa = logs.filter(l => l.status && l.status.toLowerCase().includes('alpa')).length;
+                return { hadir, izin, sakit, alpa };
             },
 
             async handleLogin() {
@@ -723,14 +809,17 @@
                 let labelStatus = '';
 
                 if (statusOrItemId === 'Hadir') {
-                    poinAdd = 25;
-                    labelStatus = 'Hadir (+25)';
+                    poinAdd = parseInt(this.attendanceConfig.hadir) || 0;
+                    labelStatus = `Hadir (${poinAdd >= 0 ? '+' + poinAdd : poinAdd})`;
                 } else if (statusOrItemId === 'Alpa') {
-                    poinAdd = -10;
-                    labelStatus = 'Alpa (-10)';
-                } else if (statusOrItemId === 'Izin' || statusOrItemId === 'Sakit') {
-                    poinAdd = 0;
-                    labelStatus = statusOrItemId;
+                    poinAdd = parseInt(this.attendanceConfig.alpa) || 0;
+                    labelStatus = `Alpa (${poinAdd >= 0 ? '+' + poinAdd : poinAdd})`;
+                } else if (statusOrItemId === 'Izin') {
+                    poinAdd = parseInt(this.attendanceConfig.izin) || 0;
+                    labelStatus = `Izin (${poinAdd >= 0 ? '+' + poinAdd : poinAdd})`;
+                } else if (statusOrItemId === 'Sakit') {
+                    poinAdd = parseInt(this.attendanceConfig.sakit) || 0;
+                    labelStatus = `Sakit (${poinAdd >= 0 ? '+' + poinAdd : poinAdd})`;
                 } else {
                     let pointItem = this.pointItems.find(pi => pi.id == statusOrItemId);
                     if (pointItem) {
@@ -923,18 +1012,21 @@
             exportAbsensiPDF() {
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF();
-                doc.text(`Rekapitulasi Santri & Poin - ${this.instansi.nama || 'Pondok Pesantren'}`, 14, 15);
-                let rows = this.santriList.map((s, index) => [index + 1, s.nama, s.kelompok || '-', s.hafalan || '-', s.poin]);
+                doc.text(`Rekapitulasi Absensi & Poin - ${this.instansi.nama || 'Pondok Pesantren'}`, 14, 15);
+                let rows = this.santriList.map((s, index) => {
+                    let stats = this.getAttendanceStats(s.nama);
+                    return [index + 1, s.nama, s.kelompok || '-', stats.hadir, stats.izin, stats.sakit, stats.alpa, s.poin];
+                });
                 doc.autoTable({
-                    head: [['No', 'Nama Santri', 'Kelompok', 'Hafalan', 'Total Poin']],
+                    head: [['No', 'Nama Santri', 'Kelompok', 'Hadir', 'Izin', 'Sakit', 'Alpa', 'Total Poin']],
                     body: rows,
                     startY: 20,
                 });
-                doc.save("rekap-poin-santri.pdf");
+                doc.save("rekap-absensi-poin-santri.pdf");
             }
         }
     }
 </script>
 
 </body>
-                            </html>
+                                </html>
