@@ -39,7 +39,7 @@
 
 <div class="mobile-container" x-cloak>
 
-    <!-- 1. SPLASH SCREEN DENGAN ANIMASI PERKENALAN -->
+    <!-- 1. SPLASH SCREEN -->
     <div x-show="showSplash" 
          x-transition:leave="transition ease-in-out duration-700"
          x-transition:leave-start="opacity-100 transform scale-100"
@@ -253,6 +253,9 @@
                                     </button>
                                 </div>
                             </div>
+                        </template>
+                        <template x-if="filteredSantri.length === 0">
+                            <p class="text-xs text-slate-400 text-center py-6 font-medium bg-white rounded-2xl border border-slate-100">Belum ada data santri.</p>
                         </template>
                     </div>
                 </div>
@@ -573,31 +576,37 @@
             },
 
             async loadInitialData() {
-                let santriRes = await supabaseClient.from('santri').select('*');
-                if (santriRes.data) this.santriList = santriRes.data;
+                try {
+                    let santriRes = await supabaseClient.from('santri').select('*');
+                    if (santriRes.error) console.error('Error load santri:', santriRes.error);
+                    if (santriRes.data) this.santriList = santriRes.data;
 
-                let rewardRes = await supabaseClient.from('rewards').select('*');
-                if (rewardRes.data) this.rewardList = rewardRes.data;
+                    let rewardRes = await supabaseClient.from('rewards').select('*');
+                    if (rewardRes.data) this.rewardList = rewardRes.data;
 
-                let pointRes = await supabaseClient.from('point_items').select('*');
-                if (pointRes.data) this.pointItems = pointRes.data;
+                    let pointRes = await supabaseClient.from('point_items').select('*');
+                    if (pointRes.data) this.pointItems = pointRes.data;
 
-                let teacherRes = await supabaseClient.from('teachers').select('*');
-                if (teacherRes.data) this.teachersList = teacherRes.data;
+                    let teacherRes = await supabaseClient.from('teachers').select('*');
+                    if (teacherRes.data) this.teachersList = teacherRes.data;
 
-                let notifRes = await supabaseClient.from('notifications').select('*');
-                if (notifRes.data) {
-                    this.notifications = notifRes.data;
-                    this.unreadNotificationCount = this.notifications.filter(n => !n.validated).length;
+                    let notifRes = await supabaseClient.from('notifications').select('*');
+                    if (notifRes.data) {
+                        this.notifications = notifRes.data;
+                        this.unreadNotificationCount = this.notifications.filter(n => !n.validated).length;
+                    }
+
+                    let instansiRes = await supabaseClient.from('instansi').select('*').eq('id', 'profile').maybeSingle();
+                    if (instansiRes.data) this.instansi = instansiRes.data;
+                } catch (err) {
+                    console.error('Network / Supabase Connection Error:', err);
                 }
-
-                let instansiRes = await supabaseClient.from('instansi').select('*').eq('id', 'profile').single();
-                if (instansiRes.data) this.instansi = instansiRes.data;
             },
 
             setupRealtimeSync() {
                 supabaseClient.channel('public-db')
-                    .on('postgres_changes', { event: '*', schema: 'public' }, () => {
+                    .on('postgres_changes', { event: '*', schema: 'public' }, (payload) => {
+                        console.log('Realtime change received:', payload);
                         this.loadInitialData();
                     })
                     .subscribe();
@@ -657,11 +666,20 @@
                     hafalan: this.santriForm.hafalan,
                     poin: parseInt(this.santriForm.poin) || 0
                 };
+                
+                let res;
                 if (this.santriForm.id) {
-                    await supabaseClient.from('santri').update(payload).eq('id', this.santriForm.id);
+                    res = await supabaseClient.from('santri').update(payload).eq('id', this.santriForm.id);
                 } else {
-                    await supabaseClient.from('santri').insert([payload]);
+                    res = await supabaseClient.from('santri').insert([payload]);
                 }
+
+                if (res.error) {
+                    console.error('Gagal menyimpan santri:', res.error);
+                    alert('Gagal menyimpan data santri: ' + res.error.message);
+                    return;
+                }
+
                 this.isSantriModalOpen = false;
                 this.loadInitialData();
             },
@@ -678,7 +696,8 @@
 
             async deleteSantri(id) {
                 if (confirm('Hapus data santri ini?')) {
-                    await supabaseClient.from('santri').delete().eq('id', id);
+                    let res = await supabaseClient.from('santri').delete().eq('id', id);
+                    if (res.error) console.error('Gagal menghapus santri:', res.error);
                     this.loadInitialData();
                 }
             },
@@ -906,4 +925,4 @@
 </script>
 
 </body>
-</html>
+                                                </html>
