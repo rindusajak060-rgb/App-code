@@ -536,15 +536,20 @@
         </div>
     </template>
 
-    <!-- MODAL KARTU PENCAPAIAN SANTRI -->
+    <!-- MODAL KARTU PENCAPAIAN SANTRI (DENGAN BACKGROUND ISLAMI & FONT NAMA DINAMIS) -->
     <div x-show="isCardModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-3 overflow-y-auto">
         <div class="w-full max-w-sm space-y-3">
             <!-- Elemen yang akan di-download sebagai gambar -->
-            <div id="captureCard" class="bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-700 w-full rounded-3xl p-4 text-white shadow-2xl relative overflow-hidden border-4 border-white/20">
+            <div id="captureCard" class="bg-gradient-to-br from-emerald-600 via-emerald-700 to-teal-900 w-full rounded-3xl p-4 text-white shadow-2xl relative overflow-hidden border-4 border-white/20">
                 
-                <div class="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full blur-2xl pointer-events-none"></div>
+                <!-- Pattern / Background Ornamen Islami Geometris -->
+                <div class="absolute inset-0 opacity-10 pointer-events-none" style="background-image: url('data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'60\' height=\'60\' viewBox=\'0 0 60 60\'><path fill=\'%23ffffff\' d=\'M30 0l10 20h20l-15 15 5 20-20-10-20 10 5-20-15-15h20z\'/></svg>'); background-repeat: repeat;"></div>
+                
+                <!-- Efek Cahaya / Blur Estetik -->
+                <div class="absolute -top-10 -right-10 w-44 h-44 bg-amber-400/20 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="absolute -bottom-10 -left-10 w-44 h-44 bg-teal-400/20 rounded-full blur-3xl pointer-events-none"></div>
 
-                <div class="flex items-center space-x-2.5 pb-3 border-b border-white/20">
+                <div class="flex items-center space-x-2.5 pb-3 border-b border-white/20 relative z-10">
                     <div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center p-1 shadow-md shrink-0">
                         <template x-if="instansi.logo">
                             <img :src="instansi.logo" alt="Logo" class="w-full h-full object-cover rounded-xl">
@@ -559,7 +564,7 @@
                     </div>
                 </div>
 
-                <div class="py-3 text-center">
+                <div class="py-3 text-center relative z-10">
                     <h3 class="text-base font-extrabold italic tracking-wide text-amber-300 drop-shadow-sm" x-text="'\"' + cardSettings.subHeader + '\"'"></h3>
                     <h1 class="text-2xl font-black uppercase tracking-wider mt-1 text-white drop-shadow-md" x-text="cardSettings.mainTitle"></h1>
                     
@@ -570,7 +575,7 @@
                     <p class="text-[11px] font-semibold text-emerald-100" x-text="currentDate"></p>
                 </div>
 
-                <div class="bg-white text-slate-900 rounded-2xl p-3.5 shadow-xl space-y-3 relative">
+                <div class="bg-white text-slate-900 rounded-2xl p-3.5 shadow-xl space-y-3 relative z-10">
                     <div class="flex items-center space-x-3">
                         <div class="w-24 h-28 bg-slate-100 rounded-xl overflow-hidden shadow-md border-2 border-emerald-500 shrink-0">
                             <template x-if="activeCardSantri.foto">
@@ -582,8 +587,12 @@
                                 </div>
                             </template>
                         </div>
-                        <div class="flex-1 space-y-1.5">
-                            <div class="bg-amber-300 text-slate-900 px-3 py-1.5 rounded-lg shadow-xs font-black text-sm uppercase tracking-wide line-clamp-1" x-text="activeCardSantri.nama"></div>
+                        <div class="flex-1 space-y-1.5 overflow-hidden">
+                            <!-- NAMA SANTRI DENGAN UKURAN FONT DINAMIS BERDASARKAN PANJANG HURUF -->
+                            <div class="bg-amber-300 text-slate-900 px-3 py-1.5 rounded-lg shadow-xs font-black uppercase tracking-wide truncate" 
+                                 :style="activeCardSantri.nama && activeCardSantri.nama.length > 20 ? 'font-size: 10px;' : (activeCardSantri.nama && activeCardSantri.nama.length > 14 ? 'font-size: 12px;' : 'font-size: 14px;')" 
+                                 x-text="activeCardSantri.nama"></div>
+
                             <div class="text-[11px] font-bold text-slate-700 bg-slate-50 px-2.5 py-1 rounded-md border border-slate-100">
                                 <span class="text-slate-400">Umur :</span> <span x-text="(activeCardSantri.umur || '-') + ' Tahun'"></span>
                             </div>
@@ -594,7 +603,7 @@
                     </div>
                 </div>
 
-                <div class="mt-4 pt-2.5 border-t border-white/20 flex justify-between items-center text-[9px] font-bold text-emerald-100">
+                <div class="mt-4 pt-2.5 border-t border-white/20 flex justify-between items-center text-[9px] font-bold text-emerald-100 relative z-10">
                     <div class="flex items-center space-x-1"><i class="fa-brands fa-facebook text-white"></i> <span x-text="cardSettings.footerText"></span></div>
                     <div class="flex items-center space-x-1"><i class="fa-brands fa-instagram text-white"></i> <span x-text="instansi.nama"></span></div>
                 </div>
