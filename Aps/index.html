@@ -461,7 +461,7 @@
                     </div>
                 </div>
 
-                <!-- TAB 5: MANAJEMEN PENGGUNA / GURU (BARU) -->
+                <!-- TAB 5: MANAJEMEN PENGGUNA / GURU -->
                 <div x-show="activeTab === 'users' && currentUser.role === 'admin'" class="space-y-4">
                     <div class="flex justify-between items-center">
                         <div>
@@ -591,7 +591,6 @@
     <!-- MODAL KARTU PENCAPAIAN SANTRI -->
     <div x-show="isCardModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-3 overflow-y-auto">
         <div class="w-full max-w-sm space-y-3">
-            <!-- Elemen yang akan di-download sebagai gambar -->
             <div id="captureCard" class="bg-gradient-to-br from-emerald-600 via-emerald-700 to-teal-900 w-full rounded-3xl p-4 text-white shadow-2xl relative overflow-hidden border-4 border-white/20">
                 
                 <div class="absolute inset-0 opacity-10 pointer-events-none" style="background-image: url('data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'60\' height=\'60\' viewBox=\'0 0 60 60\'><path fill=\'%23ffffff\' d=\'M30 0l10 20h20l-15 15 5 20-20-10-20 10 5-20-15-15h20z\'/></svg>'); background-repeat: repeat;"></div>
@@ -659,7 +658,6 @@
 
             </div>
 
-            <!-- Tombol Aksi Download & Tutup -->
             <div class="flex space-x-2">
                 <button @click="isCardModalOpen = false" class="flex-1 py-2.5 bg-slate-200 text-slate-700 rounded-xl text-xs font-extrabold shadow-sm hover:bg-slate-300 transition">
                     Tutup
@@ -778,7 +776,6 @@
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     window.supabaseClient = supabaseClient;
 
-    // Fungsi Global Loader dengan SweetAlert2
     function showLoading(message = 'Memproses data...') {
         Swal.fire({
             title: message,
@@ -793,7 +790,6 @@
         Swal.close();
     }
 
-    // Fungsi Utilitas Kompresi Foto
     function compressImage(file, maxWidth = 800, quality = 0.8) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
@@ -844,7 +840,9 @@
             loginForm: { username: '', password: '' },
             currentUser: JSON.parse(localStorage.getItem('currentUser') || '{"username":"","role":"admin","permissions":{}}'),
             
-            instansi: { nama: 'Pondok Pesantren', logo: '' },
+            // PERBAIKAN: Load instansi awal langsung dari localStorage agar splash screen tidak kosong
+            instansi: JSON.parse(localStorage.getItem('cachedInstansi') || '{"nama":"Pondok Pesantren","logo":""}'),
+            
             cardSettings: JSON.parse(localStorage.getItem('cardSettings') || JSON.stringify({
                 headerText: 'YAYASAN HAAMILUL QUR\'AN KEC. PAGUAT KAB. POHUWATO',
                 subHeader: 'Mulia Bersama Al-Qur\'an Mencetak Satu Desa Satu Hafiz',
@@ -954,7 +952,11 @@
                     }
 
                     let instansiRes = await supabaseClient.from('instansi').select('*').eq('id', 'profile').maybeSingle();
-                    if (instansiRes.data) this.instansi = instansiRes.data;
+                    if (instansiRes.data) {
+                        this.instansi = instansiRes.data;
+                        // Simpan ke cache lokal agar splash screen langsung dapat logo terbaru
+                        localStorage.setItem('cachedInstansi', JSON.stringify(this.instansi));
+                    }
                 } catch (err) {
                     console.error('Network / Supabase Connection Error:', err);
                 }
@@ -1076,7 +1078,6 @@
 
                 hideLoading();
                 if (res.error) {
-                    console.error('Gagal menyimpan santri:', res.error);
                     this.showToast('Gagal menyimpan data santri: ' + res.error.message, 'error');
                     return;
                 }
@@ -1114,7 +1115,6 @@
                     this.showToast('Kartu berhasil di-download!');
                 }).catch(err => {
                     hideLoading();
-                    console.error('Gagal mendownload kartu:', err);
                     this.showToast('Gagal mengunduh kartu pencapaian.', 'error');
                 });
             },
@@ -1134,7 +1134,6 @@
                         showLoading('Menghapus data...');
                         let res = await supabaseClient.from('santri').delete().eq('id', id);
                         hideLoading();
-                        if (res.error) console.error('Gagal menghapus santri:', res.error);
                         this.showToast('Data santri berhasil dihapus.');
                         this.loadInitialData();
                     }
@@ -1156,7 +1155,6 @@
                         reader.readAsDataURL(compressed);
                     } catch (err) {
                         hideLoading();
-                        console.error(err);
                         this.showToast('Gagal memproses foto.', 'error');
                     }
                 }
@@ -1335,7 +1333,6 @@
                         reader.readAsDataURL(compressed);
                     } catch (err) {
                         hideLoading();
-                        console.error(err);
                         this.showToast('Gagal memproses foto.', 'error');
                     }
                 }
@@ -1350,13 +1347,14 @@
                         const reader = new FileReader();
                         reader.onload = (e) => { 
                             this.instansi.logo = e.target.result; 
+                            // Langsung simpan ke localStorage agar instan berubah
+                            localStorage.setItem('cachedInstansi', JSON.stringify(this.instansi));
                             hideLoading();
                             this.showToast('Logo berhasil dimuat!');
                         };
                         reader.readAsDataURL(compressed);
                     } catch (err) {
                         hideLoading();
-                        console.error(err);
                         this.showToast('Gagal memproses logo.', 'error');
                     }
                 }
@@ -1364,12 +1362,19 @@
 
             async saveInstansi() {
                 showLoading('Menyimpan profil instansi...');
-                await supabaseClient.from('instansi').upsert({
+                // Simpan juga ke localStorage agar instan saat refresh/splash screen
+                localStorage.setItem('cachedInstansi', JSON.stringify(this.instansi));
+                
+                let res = await supabaseClient.from('instansi').upsert({
                     id: 'profile',
                     nama: this.instansi.nama,
                     logo: this.instansi.logo
                 });
                 hideLoading();
+                if (res.error) {
+                    this.showToast('Gagal simpan ke database: ' + res.error.message, 'error');
+                    return;
+                }
                 this.showToast('Profil instansi berhasil disimpan!');
                 this.loadInitialData();
             },
