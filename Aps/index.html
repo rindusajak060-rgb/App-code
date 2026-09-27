@@ -421,7 +421,7 @@
 
                     <div class="grid grid-cols-3 gap-2">
                         <template x-for="r in rewardList" :key="r.id">
-                            <div class="bg-white rounded-2xl border border-slate-100 shadow-xs overflow-hidden flex flex-col justify-between">
+                            <div class="bg-white rounded-2xl border border-slate-100 shadow-xs overflow-hidden flex flex-col justify-between" :class="r.stok <= 2 ? 'ring-2 ring-rose-400' : ''">
                                 <div>
                                     <div class="w-full h-24 bg-slate-100 relative overflow-hidden">
                                         <template x-if="r.foto">
@@ -433,14 +433,14 @@
                                             </div>
                                         </template>
                                         <template x-if="r.stok <= 2">
-                                            <span class="absolute top-1 right-1 bg-rose-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full shadow-sm">Tipis</span>
+                                            <span class="absolute top-1 right-1 bg-rose-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full shadow-sm animate-pulse">Stok Menipis!</span>
                                         </template>
                                     </div>
                                     <div class="p-2">
                                         <h4 class="text-[11px] font-bold text-slate-800 line-clamp-1" x-text="r.nama"></h4>
                                         <p class="text-[10px] text-emerald-600 font-extrabold mt-0.5" x-text="r.poin + ' Poin'"></p>
                                         <div class="flex items-center justify-between mt-1">
-                                            <span class="text-[9px] text-slate-400 font-medium" x-text="'Stok: ' + r.stok"></span>
+                                            <span class="text-[9px] font-medium" :class="r.stok <= 2 ? 'text-rose-600 font-bold' : 'text-slate-400'" x-text="'Stok: ' + r.stok"></span>
                                             <button @click="incrementStock(r)" class="w-5 h-5 bg-slate-100 hover:bg-emerald-50 text-emerald-600 rounded-md text-[10px] font-bold flex items-center justify-center shadow-xs" title="Tambah Stok (+1)">+</button>
                                         </div>
                                     </div>
@@ -461,12 +461,12 @@
                     </div>
                 </div>
 
-                <!-- TAB BARU: HALAMAN VALIDASI PENUKARAN REWARD -->
+                <!-- TAB: HALAMAN VALIDASI PENUKARAN REWARD -->
                 <div x-show="activeTab === 'validasi' && currentUser.role === 'admin'" class="space-y-4">
                     <div class="flex justify-between items-center">
                         <div>
                             <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Daftar Pengajuan Validasi</h3>
-                            <p class="text-[10px] text-slate-400">Daftar santri yang mengajukan penukaran reward</p>
+                            <p class="text-[10px] text-slate-400">Poin & stok belum berkurang sebelum divalidasi</p>
                         </div>
                     </div>
 
@@ -748,9 +748,22 @@
                     <div class="p-3 bg-slate-50 rounded-2xl border border-slate-100 text-xs space-y-1">
                         <p class="font-semibold text-slate-800" x-text="notif.pesan"></p>
                         <span class="text-[10px] text-slate-400" x-text="notif.waktu"></span>
-                        <template x-if="notif.tipe === 'approval' && currentUser.role === 'admin' && !notif.validated">
-                            <div class="pt-2 flex space-x-2">
-                                <button @click="approveRedemption(notif)" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[10px] font-bold shadow-xs">Validasi / Setujui</button>
+                        
+                        <!-- Jika notifikasi berupa approval penukaran, klik akan langsung dialihkan ke Halaman Validasi -->
+                        <template x-if="notif.tipe === 'approval' && currentUser.role === 'admin'">
+                            <div class="pt-2">
+                                <button @click="goToValidasiMenu()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[10px] font-bold shadow-xs transition flex items-center">
+                                    <i class="fa-solid fa-circle-check mr-1"></i> Buka Halaman Validasi
+                                </button>
+                            </div>
+                        </template>
+
+                        <!-- Jika notifikasi berupa stok menipis, klik akan mengarahkan ke menu reward -->
+                        <template x-if="notif.tipe === 'stok_menipis'">
+                            <div class="pt-2">
+                                <button @click="goToRewardMenu()" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-[10px] font-bold shadow-xs transition flex items-center">
+                                    <i class="fa-solid fa-gift mr-1"></i> Kelola / Tambah Stok Reward
+                                </button>
                             </div>
                         </template>
                     </div>
@@ -1015,7 +1028,6 @@
                     let notifRes = await supabaseClient.from('notifications').select('*');
                     if (notifRes.data) {
                         this.notifications = notifRes.data;
-                        this.unreadNotificationCount = this.notifications.filter(n => !n.validated).length;
                     }
 
                     let instansiRes = await supabaseClient.from('instansi').select('*').eq('id', 'profile').maybeSingle();
@@ -1023,9 +1035,29 @@
                         this.instansi = instansiRes.data;
                         localStorage.setItem('cachedInstansi', JSON.stringify(this.instansi));
                     }
+
+                    this.checkLowStockNotifications();
+
                 } catch (err) {
                     console.error('Network / Supabase Connection Error:', err);
                 }
+            },
+
+            checkLowStockNotifications() {
+                this.notifications = this.notifications.filter(n => n.tipe !== 'stok_menipis');
+
+                let lowStockItems = this.rewardList.filter(r => r.stok <= 2);
+                lowStockItems.forEach(item => {
+                    this.notifications.unshift({
+                        id: 'stock_' + item.id,
+                        pesan: `Peringatan: Stok item "${item.nama}" menipis (Sisa: ${item.stok}).`,
+                        tipe: 'stok_menipis',
+                        validated: false,
+                        waktu: 'Baru saja'
+                    });
+                });
+
+                this.unreadNotificationCount = this.notifications.filter(n => !n.validated).length;
             },
 
             setupRealtimeSync() {
@@ -1100,7 +1132,7 @@
                 }
                 tabs.push({ id: 'reward', label: 'Reward', icon: 'fa-solid fa-gift' });
                 if (this.currentUser.role === 'admin') {
-                    tabs.push({ id: 'validasi', label: 'Validasi', icon: 'fa-solid fa-circle-check' }); // Tab Validasi Baru
+                    tabs.push({ id: 'validasi', label: 'Validasi', icon: 'fa-solid fa-circle-check' });
                     tabs.push({ id: 'users', label: 'Pengguna', icon: 'fa-solid fa-user-gear' });
                     tabs.push({ id: 'settings', label: 'Pengaturan', icon: 'fa-solid fa-gear' });
                 }
@@ -1502,7 +1534,7 @@
                 });
 
                 const { value: selectedSantriId } = await Swal.fire({
-                    title: 'Tukar Poin dengan Reward',
+                    title: 'Ajukan Penukaran Reward',
                     text: `Pilih Nama Santri untuk menukar "${reward.nama}" (${reward.poin} Poin):`,
                     input: 'select',
                     inputOptions: santriOptions,
@@ -1510,7 +1542,7 @@
                     showCancelButton: true,
                     confirmButtonColor: '#10b981',
                     cancelButtonColor: '#64748b',
-                    confirmButtonText: 'Tukar Sekarang',
+                    confirmButtonText: 'Ajukan Penukaran',
                     cancelButtonText: 'Batal',
                     inputValidator: (value) => {
                         if (!value) {
@@ -1533,23 +1565,20 @@
                     return;
                 }
 
-                showLoading('Memproses penukaran poin...');
+                showLoading('Mengirim pengajuan penukaran...');
                 
-                let newSantriPoin = santri.poin - reward.poin;
-                let newRewardStok = reward.stok - 1;
-
-                await supabaseClient.from('santri').update({ poin: newSantriPoin }).eq('id', santri.id);
-                await supabaseClient.from('rewards').update({ stok: newRewardStok }).eq('id', reward.id);
-
                 await supabaseClient.from('notifications').insert([{
-                    pesan: `Santri ${santri.nama} menukar reward ${reward.nama} (${reward.poin} poin). Sisa poin: ${newSantriPoin}.`,
+                    pesan: `Santri ${santri.nama} mengajukan penukaran reward ${reward.nama} (${reward.poin} poin). Menunggu validasi admin.`,
                     tipe: 'approval',
                     validated: false,
+                    santri_id: santri.id,
+                    reward_id: reward.id,
+                    poin_tukar: reward.poin,
                     waktu: new Date().toLocaleString()
                 }]);
 
                 hideLoading();
-                this.showToast(`Penukaran berhasil! Poin ${santri.nama} dikurangi ${reward.poin}.`);
+                this.showToast(`Pengajuan berhasil dikirim! Menunggu validasi admin (Poin belum dipotong).`);
                 this.loadInitialData();
             },
 
@@ -1587,11 +1616,36 @@
                 this.isNotificationModalOpen = false;
             },
 
+            goToRewardMenu() {
+                this.isNotificationModalOpen = false;
+                this.setActiveTab('reward');
+            },
+
+            goToValidasiMenu() {
+                this.isNotificationModalOpen = false;
+                this.setActiveTab('validasi');
+            },
+
             async approveRedemption(notif) {
-                showLoading('Memvalidasi...');
+                showLoading('Memvalidasi penukaran & memotong poin...');
+
                 await supabaseClient.from('notifications').update({ validated: true }).eq('id', notif.id);
+
+                if (notif.santri_id && notif.reward_id) {
+                    let santri = this.santriList.find(s => s.id == notif.santri_id);
+                    let reward = this.rewardList.find(r => r.id == notif.reward_id);
+
+                    if (santri && reward) {
+                        let newSantriPoin = Math.max(0, (santri.poin || 0) - (notif.poin_tukar || reward.poin));
+                        let newRewardStok = Math.max(0, (reward.stok || 0) - 1);
+
+                        await supabaseClient.from('santri').update({ poin: newSantriPoin }).eq('id', santri.id);
+                        await supabaseClient.from('rewards').update({ stok: newRewardStok }).eq('id', reward.id);
+                    }
+                }
+
                 hideLoading();
-                this.showToast('Penukaran berhasil divalidasi.');
+                this.showToast('Penukaran berhasil divalidasi! Poin & stok telah dikurangi.');
                 this.loadInitialData();
             },
 
