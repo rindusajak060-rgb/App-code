@@ -462,19 +462,19 @@
                     <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
                         <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Pengaturan Teks Kartu Pencapaian / Tasmi'</h4>
                         <div>
-                            <label class="block text-[10px] font-bold text-slate-600 mb-1">Teks Header Utama (Contoh: Mulia Bersama Al-Qur'an)</label>
+                            <label class="block text-[10px] font-bold text-slate-600 mb-1">Teks Header Utama</label>
                             <input type="text" x-model="cardSettings.headerText" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
                         </div>
                         <div>
-                            <label class="block text-[10px] font-bold text-slate-600 mb-1">Teks Subheader / Slogan (Contoh: Mencetak Satu Desa Satu Hafiz)</label>
+                            <label class="block text-[10px] font-bold text-slate-600 mb-1">Teks Subheader / Slogan</label>
                             <input type="text" x-model="cardSettings.subHeader" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
                         </div>
                         <div>
-                            <label class="block text-[10px] font-bold text-slate-600 mb-1">Judul Kegiatan (Contoh: Tasmi' Hafalan Qur'an)</label>
+                            <label class="block text-[10px] font-bold text-slate-600 mb-1">Judul Kegiatan</label>
                             <input type="text" x-model="cardSettings.mainTitle" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
                         </div>
                         <div>
-                            <label class="block text-[10px] font-bold text-slate-600 mb-1">Teks Footer Bawah (Contoh: YAYASAN HAAMILUL QUR'AN)</label>
+                            <label class="block text-[10px] font-bold text-slate-600 mb-1">Teks Footer Bawah</label>
                             <input type="text" x-model="cardSettings.footerText" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
                         </div>
                         <button @click="saveCardSettings()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-100 transition">Simpan Pengaturan Kartu</button>
@@ -540,7 +540,6 @@
             
             <div class="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full blur-2xl pointer-events-none"></div>
 
-            <!-- Top Header Logo & Instansi -->
             <div class="flex items-center space-x-2.5 pb-3 border-b border-white/20">
                 <div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center p-1 shadow-md shrink-0">
                     <template x-if="instansi.logo">
@@ -556,7 +555,6 @@
                 </div>
             </div>
 
-            <!-- Main Title & Slogan -->
             <div class="py-3 text-center">
                 <h3 class="text-base font-extrabold italic tracking-wide text-amber-300 drop-shadow-sm" x-text="'\"' + cardSettings.subHeader + '\"'"></h3>
                 <h1 class="text-2xl font-black uppercase tracking-wider mt-1 text-white drop-shadow-md" x-text="cardSettings.mainTitle"></h1>
@@ -568,7 +566,6 @@
                 <p class="text-[11px] font-semibold text-emerald-100" x-text="currentDate"></p>
             </div>
 
-            <!-- Content Area (Foto & Identitas) -->
             <div class="bg-white text-slate-900 rounded-2xl p-3.5 shadow-xl space-y-3 relative">
                 <div class="flex items-center space-x-3">
                     <div class="w-24 h-28 bg-slate-100 rounded-xl overflow-hidden shadow-md border-2 border-emerald-500 shrink-0">
@@ -593,13 +590,11 @@
                 </div>
             </div>
 
-            <!-- Footer Sosial Media / Yayasan -->
             <div class="mt-4 pt-2.5 border-t border-white/20 flex justify-between items-center text-[9px] font-bold text-emerald-100">
                 <div class="flex items-center space-x-1"><i class="fa-brands fa-facebook text-white"></i> <span x-text="cardSettings.footerText"></span></div>
                 <div class="flex items-center space-x-1"><i class="fa-brands fa-instagram text-white"></i> <span x-text="instansi.nama"></span></div>
             </div>
 
-            <!-- Tombol Tutup -->
             <div class="mt-4 flex space-x-2">
                 <button @click="isCardModalOpen = false" class="w-full py-2.5 bg-white text-emerald-900 rounded-xl text-xs font-extrabold shadow-lg hover:bg-emerald-50 transition">
                     Tutup Kartu
@@ -712,8 +707,8 @@
 <!-- SUPABASE & APP LOGIC -->
 <script>
     const SUPABASE_URL = 'https://spdxllweqvidceuoyvml.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_WXK59k6bZF1Knp5B6Edgwg_-nsQiKcw';
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY;
+    const SUPABASE_KEY = 'sb_publishable_WXK59k6bZF1Knp5B6Edgwg_-nsQiKcw.';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     window.supabaseClient = supabaseClient;
 
     // Fungsi Utilitas Kompresi Foto
@@ -878,9 +873,6 @@
                     if (instansiRes.data) this.instansi = instansiRes.data;
                 } catch (err) {
                     console.error('Network / Supabase Connection Error:', err);
-                    alert('Error pada data: ' + err.message);
-}
-
                 }
             },
 
@@ -959,8 +951,14 @@
             },
 
             async saveSantri() {
+                // Validasi input wajib terisi
+                if (!this.santriForm.nama || this.santriForm.nama.trim() === '') {
+                    this.showToast('Nama lengkap santri wajib diisi!');
+                    return;
+                }
+
                 let payload = {
-                    nama: this.santriForm.nama,
+                    nama: this.santriForm.nama.trim(),
                     kelompok: this.santriForm.kelompok,
                     hafalan: this.santriForm.hafalan,
                     umur: parseInt(this.santriForm.umur) || 0,
