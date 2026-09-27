@@ -1,0 +1,13 @@
+{
+  "background_color": "#ffffff",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "Sistem Digital Poin Santri",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "Sidipos",
+  "start_url": "/",
+  "theme_color": "#00ba02",
+  "id": "Sidipo Santri",
+  "description": "Sistem penilaian santri dengan poin"
+}
