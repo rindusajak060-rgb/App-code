@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Sistem Digital Poin Santri</title>
-    <link rel="manifest" href="manifest.json">
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Alpine.js -->
@@ -280,18 +279,19 @@
                     </div>
                 </div>
 
-                <!-- TAB 3: ABSENSI & POIN -->
+                <!-- TAB 3: ABSENSI & POIN (TAMPILAN RINGKAS) -->
                 <div x-show="activeTab === 'absensi'" class="space-y-4">
                     <div class="flex justify-between items-center">
                         <div>
-                            <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Modul Absensi & Poin</h3>
-                            <p class="text-[10px] text-slate-400">Poin otomatis sesuai pengaturan admin</p>
+                            <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Modul Absensi & Poin Ringkas</h3>
+                            <p class="text-[10px] text-slate-400">Input cepat absensi & poin khusus santri</p>
                         </div>
                         <button @click="exportAbsensiPDF()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-100 transition flex items-center">
                             <i class="fa-solid fa-file-pdf mr-1.5 text-[10px]"></i> Rekap PDF
                         </button>
                     </div>
 
+                    <!-- PENGATURAN KATEGORI POIN -->
                     <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
                         <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Pengaturan Item Penilaian Poin</h4>
                         <div class="grid grid-cols-3 gap-2">
@@ -299,9 +299,9 @@
                             <input type="number" x-model="newPointItem.poin" placeholder="Jumlah Poin" class="px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
                             <button @click="savePointItem()" class="bg-emerald-600 text-white rounded-xl text-xs font-bold py-2 hover:bg-emerald-700 transition">Simpan</button>
                         </div>
-                        <div class="space-y-1.5 mt-2 max-h-40 overflow-y-auto">
+                        <div class="space-y-1.5 mt-2 max-h-32 overflow-y-auto">
                             <template x-for="item in pointItems" :key="item.id">
-                                <div class="flex justify-between items-center bg-slate-50 px-3 py-2 rounded-xl border border-slate-100 text-xs">
+                                <div class="flex justify-between items-center bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-100 text-xs">
                                     <span class="font-semibold text-slate-700" x-text="item.nama + ' (' + (item.poin > 0 ? '+' + item.poin : item.poin) + ' Poin)'"></span>
                                     <div class="flex space-x-1">
                                         <button @click="editPointItem(item)" class="text-emerald-500 hover:text-emerald-700 p-1"><i class="fa-solid fa-pen text-[10px]"></i></button>
@@ -312,47 +312,58 @@
                         </div>
                     </div>
 
+                    <!-- DAFTAR SANTRI ABSENSI RINGKAS -->
                     <div class="space-y-2.5">
                         <template x-for="s in santriList" :key="s.id">
-                            <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-xs space-y-3">
+                            <div class="bg-white p-3.5 rounded-2xl border border-slate-100 shadow-xs space-y-2.5">
                                 <div class="flex items-center justify-between">
                                     <div>
                                         <h4 class="text-xs font-bold text-slate-800" x-text="s.nama"></h4>
                                         <div class="flex items-center space-x-1.5 mt-0.5">
-                                            <span class="text-[10px] bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded font-bold" x-text="s.kelompok || 'Tanpa Kelompok'"></span>
-                                            <span class="text-[10px] text-emerald-600 font-bold" x-text="'Poin: ' + s.poin"></span>
+                                            <span class="text-[9px] bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded font-bold" x-text="s.kelompok || 'Tanpa Kelompok'"></span>
+                                            <span class="text-[9px] text-emerald-600 font-bold" x-text="'Poin: ' + s.poin"></span>
                                         </div>
                                     </div>
-                                    <div class="flex items-center space-x-1.5">
-                                        <select @change="processAbsensi(s.id, $event.target.value); $event.target.value='';" class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus:outline-none font-semibold text-slate-700">
-                                            <option value="">Pilih Status / Poin</option>
-                                            <option value="Hadir" x-text="'Hadir (' + (attendanceConfig.hadir >= 0 ? '+' + attendanceConfig.hadir : attendanceConfig.hadir) + ')'"></option>
-                                            <option value="Izin" x-text="'Izin (' + (attendanceConfig.izin >= 0 ? '+' + attendanceConfig.izin : attendanceConfig.izin) + ')'"></option>
-                                            <option value="Sakit" x-text="'Sakit (' + (attendanceConfig.sakit >= 0 ? '+' + attendanceConfig.sakit : attendanceConfig.sakit) + ')'"></option>
-                                            <option value="Alpa" x-text="'Alpa (' + (attendanceConfig.alpa >= 0 ? '+' + attendanceConfig.alpa : attendanceConfig.alpa) + ')'"></option>
-                                            <template x-for="pi in pointItems" :key="pi.id">
-                                                <option :value="pi.id" x-text="pi.nama + ' (' + (pi.poin > 0 ? '+' + pi.poin : pi.poin) + ')'"></option>
-                                            </template>
-                                        </select>
+                                    <!-- Ringkasan Kehadiran Sederhana di Samping -->
+                                    <div class="flex space-x-1 text-center">
+                                        <div class="bg-emerald-50 text-emerald-800 py-0.5 px-2 rounded-md">
+                                            <span class="block text-[8px] font-semibold uppercase text-emerald-600">Hadir</span>
+                                            <span class="text-[10px] font-extrabold" x-text="getAttendanceStats(s.nama).hadir"></span>
+                                        </div>
+                                        <div class="bg-amber-50 text-amber-800 py-0.5 px-2 rounded-md">
+                                            <span class="block text-[8px] font-semibold uppercase text-amber-600">Izin</span>
+                                            <span class="text-[10px] font-extrabold" x-text="getAttendanceStats(s.nama).izin"></span>
+                                        </div>
+                                        <div class="bg-blue-50 text-blue-800 py-0.5 px-2 rounded-md">
+                                            <span class="block text-[8px] font-semibold uppercase text-blue-600">Sakit</span>
+                                            <span class="text-[10px] font-extrabold" x-text="getAttendanceStats(s.nama).sakit"></span>
+                                        </div>
+                                        <div class="bg-rose-50 text-rose-800 py-0.5 px-2 rounded-md">
+                                            <span class="block text-[8px] font-semibold uppercase text-rose-600">Alpa</span>
+                                            <span class="text-[10px] font-extrabold" x-text="getAttendanceStats(s.nama).alpa"></span>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="grid grid-cols-4 gap-1 pt-2 border-t border-slate-100 text-center">
-                                    <div class="bg-emerald-50 text-emerald-800 py-1 px-1 rounded-lg">
-                                        <span class="block text-[9px] font-semibold text-emerald-600 uppercase">Hadir</span>
-                                        <span class="text-xs font-extrabold" x-text="getAttendanceStats(s.nama).hadir"></span>
-                                    </div>
-                                    <div class="bg-amber-50 text-amber-800 py-1 px-1 rounded-lg">
-                                        <span class="block text-[9px] font-semibold text-amber-600 uppercase">Izin</span>
-                                        <span class="text-xs font-extrabold" x-text="getAttendanceStats(s.nama).izin"></span>
-                                    </div>
-                                    <div class="bg-blue-50 text-blue-800 py-1 px-1 rounded-lg">
-                                        <span class="block text-[9px] font-semibold text-blue-600 uppercase">Sakit</span>
-                                        <span class="text-xs font-extrabold" x-text="getAttendanceStats(s.nama).sakit"></span>
-                                    </div>
-                                    <div class="bg-rose-50 text-rose-800 py-1 px-1 rounded-lg">
-                                        <span class="block text-[9px] font-semibold text-rose-600 uppercase">Alpa</span>
-                                        <span class="text-xs font-extrabold" x-text="getAttendanceStats(s.nama).alpa"></span>
-                                    </div>
+
+                                <!-- Input Dropdown & Tombol Aksi yang Dipersimpel -->
+                                <div class="flex items-center space-x-2 pt-1 border-t border-slate-100">
+                                    <select x-model="selectedAction[s.id]" class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 focus:outline-none font-semibold text-slate-700 flex-1">
+                                        <option value="">Pilih Status / Poin</option>
+                                        <option value="Hadir" x-text="'Hadir (' + (attendanceConfig.hadir >= 0 ? '+' + attendanceConfig.hadir : attendanceConfig.hadir) + ')'"></option>
+                                        <option value="Izin" x-text="'Izin (' + (attendanceConfig.izin >= 0 ? '+' + attendanceConfig.izin : attendanceConfig.izin) + ')'"></option>
+                                        <option value="Sakit" x-text="'Sakit (' + (attendanceConfig.sakit >= 0 ? '+' + attendanceConfig.sakit : attendanceConfig.sakit) + ')'"></option>
+                                        <option value="Alpa" x-text="'Alpa (' + (attendanceConfig.alpa >= 0 ? '+' + attendanceConfig.alpa : attendanceConfig.alpa) + ')'"></option>
+                                        <template x-for="pi in pointItems" :key="pi.id">
+                                            <option :value="pi.id" x-text="pi.nama + ' (' + (pi.poin > 0 ? '+' + pi.poin : pi.poin) + ')'"></option>
+                                        </template>
+                                    </select>
+
+                                    <input type="text" x-model="pointNotes[s.id]" placeholder="Catatan (opsional)..." 
+                                           class="w-32 px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
+
+                                    <button @click="processAbsensiWithNote(s.id)" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-xs shrink-0">
+                                        Simpan
+                                    </button>
                                 </div>
                             </div>
                         </template>
@@ -362,7 +373,7 @@
                     <div class="bg-white rounded-3xl p-4 border border-slate-100 shadow-sm space-y-3 mt-4">
                         <div class="flex justify-between items-center">
                             <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center">
-                                <i class="fa-solid fa-clock-rotate-left mr-2 text-emerald-600"></i> Riwayat Log & Koreksi Kesalahan
+                                <i class="fa-solid fa-clock-rotate-left mr-2 text-emerald-600"></i> Riwayat Log & Catatan Poin
                             </h4>
                             <span class="text-[10px] text-slate-400 font-medium">Hapus jika salah input</span>
                         </div>
@@ -374,7 +385,10 @@
                                         <p class="text-[10px] text-slate-500 mt-0.5">
                                             Status: <span class="font-semibold text-emerald-600" x-text="log.status"></span> | Poin: <span class="font-semibold" x-text="log.poin"></span>
                                         </p>
-                                        <span class="text-[9px] text-slate-400" x-text="log.tanggal"></span>
+                                        <template x-if="log.catatan">
+                                            <p class="text-[10px] text-amber-700 italic mt-1 bg-amber-50 px-2 py-0.5 rounded border border-amber-100" x-text="'Catatan: ' + log.catatan"></p>
+                                        </template>
+                                        <span class="text-[9px] text-slate-400 block mt-1" x-text="log.tanggal"></span>
                                     </div>
                                     <button @click="deleteAttendanceLog(log)" class="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl text-[10px] font-bold transition flex items-center shadow-xs" title="Hapus/Koreksi Log">
                                         <i class="fa-solid fa-trash mr-1"></i> Hapus
@@ -471,7 +485,6 @@
                         </div>
                     </div>
 
-                    <!-- PENGATURAN / DAFTAR MENUNGGU -->
                     <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
                         <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Pengajuan Menunggu Persetujuan</h4>
                         <div class="space-y-2.5">
@@ -500,7 +513,6 @@
                         </div>
                     </div>
 
-                    <!-- RIWAYAT VALIDASI (DISETUJUI / DITOLAK) -->
                     <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
                         <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Riwayat Validasi (Disetujui / Ditolak)</h4>
                         <div class="space-y-2.5">
@@ -541,7 +553,6 @@
                         </div>
                     </div>
 
-                    <!-- Form Tambah Guru -->
                     <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
                         <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Tambah Akun Guru & Hak Akses</h4>
                         <input type="text" x-model="newGuru.username" placeholder="Username Guru" class="w-full px-3 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
@@ -558,7 +569,6 @@
                         <button @click="saveGuru()" class="w-full py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold shadow-md shadow-teal-100 transition">Tambah Akun Guru</button>
                     </div>
 
-                    <!-- List Daftar Guru -->
                     <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
                         <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Daftar Akun Guru Terdaftar</h4>
                         <div class="space-y-2">
@@ -586,7 +596,6 @@
                 <div x-show="activeTab === 'settings' && currentUser.role === 'admin'" class="space-y-4">
                     <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Panel Admin & Pengaturan Sistem</h3>
 
-                    <!-- PENGATURAN INSTANSI & LOGO -->
                     <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
                         <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Profil Instansi & Logo</h4>
                         <div>
@@ -628,7 +637,6 @@
                         <button @click="saveInstansi()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-100 transition mt-2">Simpan Perubahan</button>
                     </div>
 
-                    <!-- PENGATURAN TEKS KARTU PENCAPAIAN -->
                     <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
                         <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Pengaturan Teks Kartu Pencapaian / Tasmi'</h4>
                         <div>
@@ -979,6 +987,8 @@
             newPointItem: { id: null, nama: '', poin: 0 },
 
             attendanceLogsList: [],
+            selectedAction: {},
+            pointNotes: {},
 
             cashExchange: { santriId: '', nominal: 1000 },
             
@@ -1290,8 +1300,13 @@
                 }
             },
 
-            async processAbsensi(santriId, statusOrItemId) {
-                if (!statusOrItemId) return;
+            async processAbsensiWithNote(santriId) {
+                let statusOrItemId = this.selectedAction[santriId];
+                if (!statusOrItemId) {
+                    this.showToast('Pilih status atau kategori poin terlebih dahulu!', 'warning');
+                    return;
+                }
+                let catatan = this.pointNotes[santriId] || '';
                 let santri = this.santriList.find(s => s.id === santriId);
                 if (!santri) return;
 
@@ -1321,9 +1336,20 @@
                 showLoading('Mencatat absensi & poin...');
                 let newPoin = (santri.poin || 0) + poinAdd;
                 await supabaseClient.from('santri').update({ poin: newPoin }).eq('id', santriId);
-                await supabaseClient.from('attendance_logs').insert([{ santri_nama: santri.nama, status: labelStatus, poin: poinAdd, tanggal: new Date().toLocaleDateString() }]);
+                await supabaseClient.from('attendance_logs').insert([{ 
+                    santri_nama: santri.nama, 
+                    status: labelStatus, 
+                    poin: poinAdd, 
+                    catatan: catatan,
+                    tanggal: new Date().toLocaleDateString() 
+                }]);
+                
+                // Reset form input setelah diproses
+                this.selectedAction[santriId] = '';
+                this.pointNotes[santriId] = '';
+
                 hideLoading();
-                this.showToast(`Absensi "${labelStatus}" dicatat untuk ${santri.nama}.`);
+                this.showToast(`Absensi / Poin berhasil dicatat untuk ${santri.nama}.`);
                 this.loadInitialData();
             },
 
@@ -1610,7 +1636,7 @@
                 }]);
 
                 hideLoading();
-                this.showToast(`Pengajuan berhasil dikirim! Menunggu validasi admin (Poin belum dipotong).`);
+                this.showToast(`Pengajuan berhasil dikirim! Menunggu validasi admin.`);
                 this.loadInitialData();
             },
 
