@@ -318,7 +318,13 @@
                             <div class="bg-white p-3.5 rounded-2xl border border-slate-100 shadow-xs space-y-2.5">
                                 <div class="flex items-center justify-between">
                                     <div>
-                                        <h4 class="text-xs font-bold text-slate-800" x-text="s.nama"></h4>
+                                        <div class="flex items-center space-x-2">
+                                            <h4 class="text-xs font-bold text-slate-800" x-text="s.nama"></h4>
+                                            <!-- Tombol Cepat Poin Bebas dengan Catatan -->
+                                            <button @click="openCustomPointModal(s)" class="px-2 py-0.5 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-md text-[9px] font-bold transition flex items-center border border-amber-200 shadow-xs" title="Beri Poin Bebas / Cuma-cuma">
+                                                <i class="fa-solid fa-bolt text-[8px] mr-1 text-amber-500"></i> + Poin Bebas
+                                            </button>
+                                        </div>
                                         <div class="flex items-center space-x-1.5 mt-0.5">
                                             <span class="text-[9px] bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded font-bold" x-text="s.kelompok || 'Tanpa Kelompok'"></span>
                                             <span class="text-[9px] text-emerald-600 font-bold" x-text="'Poin: ' + s.poin"></span>
@@ -1297,6 +1303,60 @@
                         hideLoading();
                         this.showToast('Gagal memproses foto.', 'error');
                     }
+                }
+            },
+
+            async openCustomPointModal(santri) {
+                const { value: formValues } = await Swal.fire({
+                    title: `Beri Poin Bebas (${santri.nama})`,
+                    html: `
+                        <div style="text-align: left; margin-bottom: 10px;">
+                            <label style="font-size: 12px; font-weight: bold; color: #475569; display: block; margin-bottom: 4px;">Jumlah Poin (bisa plus/minus, misal: 5 atau -5)</label>
+                            swal-input1 id="swal-input-poin" class="swal2-input" type="number" placeholder="Contoh: 10" style="margin: 0; width: 100%; font-size: 14px;" />
+                        </div>
+                        <div style="text-align: left;">
+                            <label style="font-size: 12px; font-weight: bold; color: #475569; display: block; margin-bottom: 4px;">Catatan / Alasan (Wajib)</label>
+                            <input id="swal-input-catatan" class="swal2-input" placeholder="Contoh: Menjawab soal / Membersihkan wudu" style="margin: 0; width: 100%; font-size: 14px;" />
+                        </div>
+                    `,
+                    focusConfirm: false,
+                    showCancelButton: true,
+                    confirmButtonColor: '#10b981',
+                    cancelButtonColor: '#64748b',
+                    confirmButtonText: 'Simpan Poin',
+                    cancelButtonText: 'Batal',
+                    preConfirm: () => {
+                        const poin = document.getElementById('swal-input-poin').value;
+                        const catatan = document.getElementById('swal-input-catatan').value;
+                        if (!poin || poin === '0') {
+                            Swal.showValidationMessage('Jumlah poin wajib diisi dan tidak boleh 0!');
+                            return false;
+                        }
+                        if (!catatan.trim()) {
+                            Swal.showValidationMessage('Catatan / alasan wajib diisi!');
+                            return false;
+                        }
+                        return { poin: parseInt(poin), catatan: catatan.trim() };
+                    }
+                });
+
+                if (formValues) {
+                    showLoading('Menyimpan poin bebas...');
+                    let newPoin = (santri.poin || 0) + formValues.poin;
+                    let labelStatus = `Poin Bebas (${formValues.poin >= 0 ? '+' + formValues.poin : formValues.poin})`;
+
+                    await supabaseClient.from('santri').update({ poin: newPoin }).eq('id', santri.id);
+                    await supabaseClient.from('attendance_logs').insert([{ 
+                        santri_nama: santri.nama, 
+                        status: labelStatus, 
+                        poin: formValues.poin, 
+                        catatan: formValues.catatan,
+                        tanggal: new Date().toLocaleDateString() 
+                    }]);
+
+                    hideLoading();
+                    this.showToast(`Berhasil menambahkan poin untuk ${santri.nama}!`);
+                    this.loadInitialData();
                 }
             },
 
