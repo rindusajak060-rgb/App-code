@@ -803,12 +803,18 @@
                                 </div>
                             </template>
                         </div>
-                        <div class="flex-1 space-y-1.5 overflow-hidden">
-                            <div class="bg-amber-300 text-slate-900 px-3 py-1.5 rounded-lg shadow-xs font-black uppercase tracking-wide truncate" x-text="activeCardSantri.nama"></div>
-                            <div class="text-[11px] font-bold text-slate-700 bg-slate-50 px-2.5 py-1 rounded-md border border-slate-100">
+                        <div class="flex-1 space-y-1.5 min-w-0">
+                            <!-- PERBAIKAN: Kotak Nama Responsif Otomatis Mengencil Menurut Panjang Karakter -->
+                            <div class="bg-amber-300 text-slate-900 px-3 py-1.5 rounded-lg shadow-xs font-black uppercase tracking-wide flex items-center justify-start min-h-[36px] w-full overflow-hidden">
+                                <span class="block w-full break-words leading-tight" 
+                                      :class="getCardNameFontSize()" 
+                                      x-text="activeCardSantri.nama || 'NAMA SANTRI'">
+                                </span>
+                            </div>
+                            <div class="text-[11px] font-bold text-slate-700 bg-slate-50 px-2.5 py-1 rounded-md border border-slate-100 truncate">
                                 <span class="text-slate-400">Umur :</span> <span x-text="(activeCardSantri.umur || '-') + ' Tahun'"></span>
                             </div>
-                            <div class="text-[11px] font-bold text-slate-700 bg-slate-50 px-2.5 py-1 rounded-md border border-slate-100">
+                            <div class="text-[11px] font-bold text-slate-700 bg-slate-50 px-2.5 py-1 rounded-md border border-slate-100 truncate">
                                 <span class="text-slate-400">Asal :</span> <span x-text="activeCardSantri.alamat || 'Alamat belum diisi'"></span>
                             </div>
                         </div>
@@ -1043,6 +1049,17 @@
                 setTimeout(() => { this.showSplash = false; }, 1800);
                 this.loadInitialData();
                 this.setupRealtimeSync();
+            },
+
+            // METHOD TAMBAHAN: Menghitung ukuran huruf nama santri pada kartu secara fleksibel
+            getCardNameFontSize() {
+                const name = (this.activeCardSantri.nama || '').trim();
+                const len = name.length;
+                if (len <= 14) return 'text-xs';
+                if (len <= 20) return 'text-[11px]';
+                if (len <= 28) return 'text-[10px]';
+                if (len <= 36) return 'text-[9px]';
+                return 'text-[8px]';
             },
 
             showToast(message, icon = 'success') {
