@@ -9,5 +9,15 @@
   "start_url": "/",
   "theme_color": "#00ba02",
   "id": "Sidipo Santri",
+  "icons": [
+    {
+      "src": "https://raw.githubusercontent.com/rindusajak060-rgb/app-code/main/Aps/20260927_225614_0000.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+
+
   "description": "Sistem penilaian santri dengan poin"
 }
