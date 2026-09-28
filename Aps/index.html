@@ -43,7 +43,7 @@
 
 <div class="mobile-container" x-cloak>
 
-    <!-- 1. SPLASH SCREEN DENGAN LOGO INSTANSI -->
+    <!-- 1. SPLASH SCREEN -->
     <div x-show="showSplash" 
          x-transition:leave="transition ease-in-out duration-700"
          x-transition:leave-start="opacity-100 transform scale-100"
@@ -53,7 +53,7 @@
             <div class="absolute -inset-3 bg-gradient-to-r from-emerald-400 to-teal-400 rounded-full blur-xl opacity-30 animate-pulse"></div>
             <div class="relative w-28 h-28 bg-white rounded-full flex items-center justify-center border-4 border-emerald-500/20 shadow-2xl overflow-hidden animate-bounce">
                 <template x-if="instansi.logo">
-                    <img :src="instansi.logo" alt="Logo Instansi" class="w-full h-full object-cover bg-white">
+                    <img :src="instansi.logo" alt="Logo" class="w-full h-full object-cover bg-white">
                 </template>
                 <template x-if="!instansi.logo">
                     <i class="fa-solid fa-graduation-cap text-4xl text-emerald-600"></i>
@@ -73,14 +73,14 @@
             <div class="text-center mb-8">
                 <div class="w-24 h-24 mx-auto mb-4 bg-white rounded-3xl flex items-center justify-center shadow-xl shadow-emerald-100 border border-slate-100 overflow-hidden">
                     <template x-if="instansi.logo">
-                        <img :src="instansi.logo" alt="Logo Instansi" class="w-full h-full object-cover bg-white">
+                        <img :src="instansi.logo" alt="Logo" class="w-full h-full object-cover bg-white">
                     </template>
                     <template x-if="!instansi.logo">
                         <i class="fa-solid fa-mosque text-3xl text-emerald-600"></i>
                     </template>
                 </div>
                 <h2 class="text-xl font-bold text-slate-900 tracking-tight" x-text="instansi.nama || 'Pondok Pesantren'"></h2>
-                <p class="text-xs text-slate-500 mt-1" x-text="loginSettings.subtitle || 'Silakan masuk menggunakan akun resmi Anda'"></p>
+                <p class="text-xs text-slate-500 mt-1">Silakan masuk menggunakan akun resmi Anda</p>
             </div>
 
             <form @submit.prevent="handleLogin" class="space-y-4 bg-white p-7 rounded-3xl shadow-xl shadow-slate-100 border border-slate-100/80">
@@ -100,7 +100,7 @@
                                class="w-full pl-10 pr-4 py-3 text-xs bg-slate-50/80 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition">
                     </div>
                 </div>
-                <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold rounded-xl text-xs shadow-lg shadow-emerald-200 transition transform active:scale-98">
+                <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold rounded-xl text-xs shadow-lg shadow-emerald-200 transition">
                     Masuk ke Sistem <i class="fa-solid fa-arrow-right ml-1.5"></i>
                 </button>
             </form>
@@ -157,7 +157,7 @@
 
                 <!-- TAB 1: DASBOR & LEADERBOARD -->
                 <div x-show="activeTab === 'dashboard'" class="space-y-4">
-                    <div class="bg-gradient-to-br from-emerald-900 via-slate-900 to-teal-950 rounded-3xl p-5 text-white shadow-xl shadow-emerald-900/10 flex justify-between items-center relative overflow-hidden">
+                    <div class="bg-gradient-to-br from-emerald-900 via-slate-900 to-teal-950 rounded-3xl p-5 text-white shadow-xl flex justify-between items-center relative overflow-hidden">
                         <div class="absolute -right-6 -bottom-6 w-32 h-32 bg-white/5 rounded-full blur-2xl"></div>
                         <div class="relative z-10">
                             <p class="text-[11px] text-emerald-300 font-medium tracking-wide uppercase mb-0.5">Waktu Real-Time (Supabase)</p>
@@ -222,11 +222,11 @@
                     </div>
                 </div>
 
-                <!-- TAB 2: DATA SANTRI (POSISI STABIL TERKUNCI BERDASARKAN CREATED_AT) -->
+                <!-- TAB 2: DATA SANTRI -->
                 <div x-show="activeTab === 'santri'" class="space-y-4">
                     <div class="flex justify-between items-center">
                         <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Manajemen Data Santri</h3>
-                        <button @click="openSantriModal()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-100 transition flex items-center">
+                        <button @click="openSantriModal()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md transition flex items-center">
                             <i class="fa-solid fa-plus mr-1.5 text-[10px]"></i> Tambah Santri
                         </button>
                     </div>
@@ -272,7 +272,7 @@
                                     </div>
                                 </div>
                                 <div class="flex items-center space-x-1">
-                                    <button @click="openCardModal(s)" class="p-2 bg-teal-50 text-teal-600 hover:bg-teal-100 rounded-xl transition" title="Lihat Kartu Pencapaian">
+                                    <button @click="openCardModal(s)" class="p-2 bg-teal-50 text-teal-600 hover:bg-teal-100 rounded-xl transition" title="Lihat Kartu">
                                         <i class="fa-solid fa-id-card text-xs"></i>
                                     </button>
                                     <button @click="editSantri(s)" class="p-2 text-emerald-600 hover:bg-emerald-50 rounded-xl transition" title="Edit">
@@ -290,63 +290,16 @@
                     </div>
                 </div>
 
-                <!-- TAB 3: ABSENSI & POIN -->
+                <!-- TAB 3: ABSENSI -->
                 <div x-show="activeTab === 'absensi'" class="space-y-4">
                     <div class="flex justify-between items-center">
                         <div>
-                            <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Modul Absensi & Poin Ringkas</h3>
-                            <p class="text-[10px] text-slate-400">Input cepat absensi & poin khusus santri</p>
+                            <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Modul Absensi Harian Santri</h3>
+                            <p class="text-[10px] text-slate-400">Catat kehadiran harian dengan cepat</p>
                         </div>
-                        <button @click="exportAbsensiPDF()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-100 transition flex items-center">
+                        <button @click="exportAbsensiPDF()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md transition flex items-center">
                             <i class="fa-solid fa-file-pdf mr-1.5 text-[10px]"></i> Rekap PDF
                         </button>
-                    </div>
-
-                    <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
-                        <div class="flex items-center justify-between border-b border-slate-100 pb-2">
-                            <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center">
-                                <i class="fa-solid fa-bolt text-amber-500 mr-1.5"></i> Input Poin Bebas & Kategori
-                            </h4>
-                        </div>
-                        
-                        <div class="space-y-2.5">
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-600 mb-1">Pilih Santri</label>
-                                <select x-model="customPointForm.santriId" class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus:outline-none font-semibold text-slate-700">
-                                    <option value="">-- Pilih Nama Santri --</option>
-                                    <template x-for="s in santriList" :key="s.id">
-                                        <option :value="s.id" x-text="s.nama + ' (' + (s.kelompok || 'Tanpa Kelompok') + ')'"></option>
-                                    </template>
-                                </select>
-                            </div>
-
-                            <div class="grid grid-cols-2 gap-2">
-                                <div>
-                                    <label class="block text-[10px] font-bold text-slate-600 mb-1">Jumlah Poin (+ / -)</label>
-                                    <input type="number" x-model="customPointForm.poin" placeholder="Contoh: 10" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none font-semibold">
-                                </div>
-                                <div>
-                                    <label class="block text-[10px] font-bold text-slate-600 mb-1">Catatan / Alasan</label>
-                                    <input type="text" x-model="customPointForm.catatan" placeholder="Contoh: Menjawab soal" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
-                                </div>
-                            </div>
-
-                            <div class="bg-emerald-50/50 p-3 rounded-2xl border border-emerald-100 space-y-2">
-                                <div class="flex items-center space-x-2">
-                                    <input type="checkbox" x-model="customPointForm.simpanKategori" id="checkKat" class="rounded text-emerald-600">
-                                    <label for="checkKat" class="text-[10px] font-bold text-emerald-800 cursor-pointer">Simpan juga sebagai Kategori Tetap</label>
-                                </div>
-                                <template x-if="customPointForm.simpanKategori">
-                                    <div>
-                                        <input type="text" x-model="customPointForm.namaKategori" placeholder="Nama Kategori (Contoh: Hafalan Baru)" class="w-full px-3 py-2 text-xs bg-white border border-emerald-200 rounded-xl focus:outline-none">
-                                    </div>
-                                </template>
-                            </div>
-
-                            <button @click="submitCustomPoint()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-100 transition">
-                                <i class="fa-solid fa-paper-plane mr-1"></i> Simpan Poin Santri
-                            </button>
-                        </div>
                     </div>
 
                     <div class="space-y-2.5">
@@ -416,29 +369,66 @@
                                         </template>
                                         <span class="text-[9px] text-slate-400 block mt-1" x-text="log.tanggal"></span>
                                     </div>
-                                    <button @click="deleteAttendanceLog(log)" class="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl text-[10px] font-bold transition flex items-center shadow-xs" title="Hapus/Koreksi Log">
+                                    <button @click="deleteAttendanceLog(log)" class="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl text-[10px] font-bold transition flex items-center shadow-xs" title="Hapus">
                                         <i class="fa-solid fa-trash mr-1"></i> Hapus
                                     </button>
                                 </div>
                             </template>
                             <template x-if="attendanceLogsList.length === 0">
-                                <p class="text-xs text-slate-400 text-center py-4 font-medium">Belum ada riwayat absensi atau poin hari ini.</p>
+                                <p class="text-xs text-slate-400 text-center py-4 font-medium">Belum ada riwayat absensi.</p>
                             </template>
                         </div>
                     </div>
                 </div>
 
-                <!-- TAB: KATEGORI POIN TETAP -->
+                <!-- TAB 4: KATEGORI POIN & PENILAIAN -->
                 <div x-show="activeTab === 'kategori_poin' && currentUser.role === 'admin'" class="space-y-4">
                     <div class="flex justify-between items-center">
                         <div>
-                            <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Manajemen Kategori Poin Tetap</h3>
-                            <p class="text-[10px] text-slate-400">Kelola kategori prestasi/pelanggaran</p>
+                            <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Penilaian & Kategori Poin</h3>
+                            <p class="text-[10px] text-slate-400">Berikan poin santri berdasarkan kategori atau buat kategori baru</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-emerald-500/10 p-4 rounded-3xl border border-emerald-200/80 shadow-xs space-y-3">
+                        <h4 class="text-xs font-bold text-emerald-900 uppercase tracking-wider flex items-center">
+                            <i class="fa-solid fa-circle-check text-emerald-600 mr-1.5"></i> Form Penilaian Santri Berdasarkan Kategori
+                        </h4>
+                        
+                        <div class="space-y-2.5">
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-700 mb-1">Pilih Santri</label>
+                                <select x-model="gradingForm.santriId" class="w-full text-xs bg-white border border-emerald-200 rounded-xl px-3 py-2 focus:outline-none font-semibold text-slate-700">
+                                    <option value="">-- Pilih Nama Santri --</option>
+                                    <template x-for="s in santriList" :key="s.id">
+                                        <option :value="s.id" x-text="s.nama + ' (' + (s.kelompok || 'Tanpa Kelompok') + ')'"></option>
+                                    </template>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-700 mb-1">Pilih Kategori Prestasi / Pelanggaran</label>
+                                <select x-model="gradingForm.categoryId" class="w-full text-xs bg-white border border-emerald-200 rounded-xl px-3 py-2 focus:outline-none font-semibold text-slate-700">
+                                    <option value="">-- Pilih Kategori Poin --</option>
+                                    <template x-for="cat in pointItems" :key="cat.id">
+                                        <option :value="cat.id" x-text="cat.nama + ' (' + (cat.poin > 0 ? '+' + cat.poin : cat.poin) + ' Poin)'"></option>
+                                    </template>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-700 mb-1">Catatan Tambahan (Opsional)</label>
+                                <input type="text" x-model="gradingForm.catatan" placeholder="Contoh: Surat Al-Baqarah ayat 1-20" class="w-full px-3 py-2 text-xs bg-white border border-emerald-200 rounded-xl focus:outline-none">
+                            </div>
+
+                            <button @click="submitGrading()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-100 transition">
+                                <i class="fa-solid fa-paper-plane mr-1"></i> Berikan Penilaian & Poin
+                            </button>
                         </div>
                     </div>
 
                     <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
-                        <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider" x-text="pointItemForm.id ? 'Edit Kategori Poin' : 'Tambah Kategori Poin Baru'"></h4>
+                        <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider" x-text="pointItemForm.id ? 'Edit Kategori Poin' : 'Buat Kategori Poin Baru'"></h4>
                         <div>
                             <label class="block text-[10px] font-bold text-slate-600 mb-1">Nama Kategori</label>
                             <input type="text" x-model="pointItemForm.nama" placeholder="Contoh: Menghafal 1 Halaman" class="w-full px-3 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
@@ -451,7 +441,7 @@
                             <template x-if="pointItemForm.id">
                                 <button @click="resetPointItemForm()" class="py-2.5 px-4 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl text-xs font-bold transition">Batal</button>
                             </template>
-                            <button @click="savePointItem()" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-100 transition" x-text="pointItemForm.id ? 'Simpan Perubahan' : 'Tambah Kategori'"></button>
+                            <button @click="savePointItem()" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md transition" x-text="pointItemForm.id ? 'Simpan Perubahan' : 'Tambah Kategori'"></button>
                         </div>
                     </div>
 
@@ -481,7 +471,7 @@
                     </div>
                 </div>
 
-                <!-- TAB 4: KATALOG REWARD & PENUKARAN -->
+                <!-- TAB 5: REWARD -->
                 <div x-show="activeTab === 'reward'" class="space-y-4">
                     <div class="flex justify-between items-center">
                         <div>
@@ -489,7 +479,7 @@
                             <p class="text-[10px] text-slate-400">Tukar poin dengan barang atau uang tunai</p>
                         </div>
                         <template x-if="currentUser.role === 'admin'">
-                            <button @click="openRewardModal()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-100 transition flex items-center">
+                            <button @click="openRewardModal()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md transition flex items-center">
                                 <i class="fa-solid fa-plus mr-1.5 text-[10px]"></i> Tambah Hadiah
                             </button>
                         </template>
@@ -506,9 +496,9 @@
                                     <option :value="s.id" x-text="s.nama + ' (' + s.poin + ' Poin)'"></option>
                                 </template>
                             </select>
-                            <input type="number" x-model="cashExchange.nominal" step="1000" min="1000" placeholder="Nominal (Min. 1.000)" class="text-xs bg-white border border-amber-200 rounded-xl px-3 py-2 focus:outline-none font-semibold text-slate-700">
+                            <input type="number" x-model="cashExchange.nominal" step="1000" min="1000" placeholder="Nominal" class="text-xs bg-white border border-amber-200 rounded-xl px-3 py-2 focus:outline-none font-semibold text-slate-700">
                         </div>
-                        <button @click="processCashExchange()" class="w-full py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold shadow-sm shadow-amber-200 transition">
+                        <button @click="processCashExchange()" class="w-full py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold shadow-sm transition">
                             Tukar Poin ke Uang Tunai
                         </button>
                     </div>
@@ -555,7 +545,7 @@
                     </div>
                 </div>
 
-                <!-- TAB: VALIDASI REWARD -->
+                <!-- TAB 6: VALIDASI -->
                 <div x-show="activeTab === 'validasi' && currentUser.role === 'admin'" class="space-y-4">
                     <div class="flex justify-between items-center">
                         <div>
@@ -587,18 +577,18 @@
                                 </div>
                             </template>
                             <template x-if="notifications.filter(n => n.tipe === 'approval' && n.status_validasi === 'pending').length === 0">
-                                <p class="text-xs text-slate-400 text-center py-4 font-medium">Belum ada pengajuan penukaran yang menunggu.</p>
+                                <p class="text-xs text-slate-400 text-center py-4 font-medium">Belum ada pengajuan penukaran.</p>
                             </template>
                         </div>
                     </div>
                 </div>
 
-                <!-- TAB: MANAJEMEN PENGGUNA / GURU -->
+                <!-- TAB 7: MANAJEMEN GURU -->
                 <div x-show="activeTab === 'users' && currentUser.role === 'admin'" class="space-y-4">
                     <div class="flex justify-between items-center">
                         <div>
                             <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Manajemen Pengguna & Guru</h3>
-                            <p class="text-[10px] text-slate-400">Daftar akun pengajar yang terdaftar di sistem</p>
+                            <p class="text-[10px] text-slate-400">Daftar akun pengajar</p>
                         </div>
                     </div>
 
@@ -613,7 +603,7 @@
                             <label class="flex items-center text-xs space-x-2 text-slate-700 font-medium"><input type="checkbox" x-model="newGuru.permissions.poin" class="rounded text-emerald-600"><span>Kelola Poin Prestasi & Pelanggaran</span></label>
                             <label class="flex items-center text-xs space-x-2 text-slate-700 font-medium"><input type="checkbox" x-model="newGuru.permissions.santri" class="rounded text-emerald-600"><span>Lihat Data Santri</span></label>
                         </div>
-                        <button @click="saveGuru()" class="w-full py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold shadow-md shadow-teal-100 transition">Tambah Akun Guru</button>
+                        <button @click="saveGuru()" class="w-full py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold shadow-md transition">Tambah Akun Guru</button>
                     </div>
 
                     <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
@@ -625,7 +615,6 @@
                                         <h5 class="font-bold text-slate-800 flex items-center">
                                             <i class="fa-solid fa-chalkboard-user text-emerald-600 mr-1.5"></i> <span x-text="teacher.username"></span>
                                         </h5>
-                                        <p class="text-[10px] text-slate-400 mt-0.5">Role: Pengajar / Guru</p>
                                     </div>
                                     <button @click="deleteTeacher(teacher.id)" class="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl text-[10px] font-bold transition flex items-center shadow-xs">
                                         <i class="fa-solid fa-trash mr-1"></i> Hapus
@@ -639,9 +628,32 @@
                     </div>
                 </div>
 
-                <!-- TAB: PENGATURAN ADMIN -->
+                <!-- TAB 8: PENGATURAN ADMIN -->
                 <div x-show="activeTab === 'settings' && currentUser.role === 'admin'" class="space-y-4">
                     <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Panel Admin & Pengaturan Sistem</h3>
+
+                    <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
+                        <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Pengaturan Bobot Poin Kehadiran</h4>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-600 mb-1">Poin Hadir</label>
+                                <input type="number" x-model="attendanceConfig.hadir" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-600 mb-1">Poin Izin</label>
+                                <input type="number" x-model="attendanceConfig.izin" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-600 mb-1">Poin Sakit</label>
+                                <input type="number" x-model="attendanceConfig.sakit" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-600 mb-1">Poin Alpa</label>
+                                <input type="number" x-model="attendanceConfig.alpa" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
+                            </div>
+                        </div>
+                        <button @click="saveAttendanceConfig()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md transition">Simpan Bobot Kehadiran</button>
+                    </div>
 
                     <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
                         <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Profil Instansi & Logo</h4>
@@ -675,34 +687,13 @@
 
                             <template x-if="instansi.logo">
                                 <div class="mt-2 flex items-center space-x-3 bg-slate-50 p-2 rounded-xl border border-slate-100">
-                                    <img :src="instansi.logo" alt="Preview Logo" class="w-10 h-10 object-cover rounded-lg bg-white border border-slate-200">
-                                    <span class="text-[10px] text-slate-500 truncate flex-1">Logo Aktif Terpasang</span>
+                                    <img :src="instansi.logo" alt="Logo" class="w-10 h-10 object-cover rounded-lg bg-white border border-slate-200">
+                                    <span class="text-[10px] text-slate-500 truncate flex-1">Logo Terpasang</span>
                                 </div>
                             </template>
                         </div>
 
-                        <button @click="saveInstansi()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-100 transition mt-2">Simpan Perubahan</button>
-                    </div>
-
-                    <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
-                        <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Pengaturan Teks Kartu Pencapaian / Tasmi'</h4>
-                        <div>
-                            <label class="block text-[10px] font-bold text-slate-600 mb-1">Teks Header Utama</label>
-                            <input type="text" x-model="cardSettings.headerText" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-bold text-slate-600 mb-1">Teks Subheader / Slogan</label>
-                            <input type="text" x-model="cardSettings.subHeader" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-bold text-slate-600 mb-1">Judul Kegiatan</label>
-                            <input type="text" x-model="cardSettings.mainTitle" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-bold text-slate-600 mb-1">Teks Footer Bawah</label>
-                            <input type="text" x-model="cardSettings.footerText" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
-                        </div>
-                        <button @click="saveCardSettings()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-100 transition">Simpan Pengaturan Kartu</button>
+                        <button @click="saveInstansi()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md transition mt-2">Simpan Profil</button>
                     </div>
                 </div>
 
@@ -711,7 +702,7 @@
         </div>
     </template>
 
-    <!-- MODAL KARTU PENCAPAIAN SANTRI -->
+    <!-- MODAL KARTU PENCAPAIAN -->
     <div x-show="isCardModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-3 overflow-y-auto">
         <div class="w-full max-w-sm space-y-3">
             <div id="captureCard" class="bg-gradient-to-br from-emerald-600 via-emerald-700 to-teal-900 w-full rounded-3xl p-4 text-white shadow-2xl relative overflow-hidden border-4 border-white/20">
@@ -745,7 +736,7 @@
                     <div class="flex items-center space-x-3">
                         <div class="w-24 h-28 bg-slate-100 rounded-xl overflow-hidden shadow-md border-2 border-emerald-500 shrink-0">
                             <template x-if="activeCardSantri.foto">
-                                <img :src="activeCardSantri.foto" alt="Foto Santri" class="w-full h-full object-cover">
+                                <img :src="activeCardSantri.foto" alt="Foto" class="w-full h-full object-cover">
                             </template>
                             <template x-if="!activeCardSantri.foto">
                                 <div class="w-full h-full flex items-center justify-center text-slate-400 bg-slate-50">
@@ -784,7 +775,7 @@
     <div x-show="isNotificationModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
         <div class="bg-white w-full max-w-sm rounded-3xl p-5 space-y-4 shadow-2xl">
             <div class="flex justify-between items-center">
-                <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Notifikasi Sistem & Validasi</h3>
+                <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Notifikasi & Validasi</h3>
                 <button @click="closeNotificationModal()" class="text-slate-400 hover:text-slate-600 p-1"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="space-y-2 max-h-60 overflow-y-auto">
@@ -803,7 +794,7 @@
                     </div>
                 </template>
                 <template x-if="notifications.filter(n => !n.validated).length === 0">
-                    <p class="text-xs text-slate-400 text-center py-4 font-medium">Tidak ada pemberitahuan terbaru.</p>
+                    <p class="text-xs text-slate-400 text-center py-4 font-medium">Tidak ada pemberitahuan baru.</p>
                 </template>
             </div>
         </div>
@@ -816,7 +807,7 @@
             <div class="space-y-3 max-h-[70vh] overflow-y-auto pr-1">
                 <div>
                     <label class="block text-[10px] font-bold text-slate-600 mb-1">Nama Lengkap Santri</label>
-                    <input type="text" x-model="santriForm.nama" placeholder="Contoh: Lukman Ngabito" class="w-full px-3 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
+                    <input type="text" x-model="santriForm.nama" placeholder="Contoh: Lukman" class="w-full px-3 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
                 </div>
                 <div>
                     <label class="block text-[10px] font-bold text-slate-600 mb-1">Nama Kelompok / Halaqah</label>
@@ -863,11 +854,11 @@
                 </div>
                 <div>
                     <label class="block text-[10px] font-bold text-slate-600 mb-1">Jumlah Poin</label>
-                    <input type="number" x-model="rewardForm.poin" placeholder="Poin diperlukan" class="w-full px-3 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
+                    <input type="number" x-model="rewardForm.poin" placeholder="Poin" class="w-full px-3 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
                 </div>
                 <div>
                     <label class="block text-[10px] font-bold text-slate-600 mb-1">Stok Barang</label>
-                    <input type="number" x-model="rewardForm.stok" placeholder="Jumlah stok" class="w-full px-3 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
+                    <input type="number" x-model="rewardForm.stok" placeholder="Stok" class="w-full px-3 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
                 </div>
                 <div>
                     <label class="block text-[10px] font-bold text-slate-600 mb-1">Foto Hadiah</label>
@@ -900,7 +891,7 @@
 
     function hideLoading() { Swal.close(); }
 
-    function compressImage(file, maxWidth = 800, quality = 0.8) {
+    function compressImage(file, maxWidth = 200, quality = 0.6) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.readAsDataURL(file);
@@ -953,8 +944,8 @@
                 mainTitle: 'Tasmi\' Hafalan Qur\'an',
                 footerText: 'YAYASAN HAAMILUL QUR\'AN'
             },
-            attendanceConfig: { hadir: 25, izin: 0, sakit: 0, alpa: -10 },
-            loginSettings: { subtitle: 'Silakan masuk menggunakan akun resmi Anda' },
+            
+            attendanceConfig: JSON.parse(localStorage.getItem('attendanceConfig') || '{"hadir":25,"izin":0,"sakit":0,"alpa":-10}'),
             
             santriList: [],
             santriSearch: '',
@@ -972,7 +963,7 @@
             pointItems: [],
             pointItemForm: { id: null, nama: '', poin: 0 },
 
-            customPointForm: { santriId: '', poin: '', catatan: '', simpanKategori: false, namaKategori: '' },
+            gradingForm: { santriId: '', categoryId: '', catatan: '' },
 
             attendanceLogsList: [],
             selectedAction: {},
@@ -989,9 +980,7 @@
             initApp() {
                 this.updateClock();
                 setInterval(() => this.updateClock(), 1000);
-
-                setTimeout(() => { this.showSplash = false; }, 2000);
-
+                setTimeout(() => { this.showSplash = false; }, 1800);
                 this.loadInitialData();
                 this.setupRealtimeSync();
             },
@@ -1019,9 +1008,18 @@
                 localStorage.setItem('activeTab', tabId);
             },
 
+            saveAttendanceConfig() {
+                localStorage.setItem('attendanceConfig', JSON.stringify(this.attendanceConfig));
+                this.showToast('Bobot poin kehadiran berhasil disimpan!');
+            },
+
             async loadInitialData() {
                 try {
-                    // Diurutkan berdasarkan created_at secara ascending agar posisi santri selalu stabil & terkunci
+                    let instansiRes = await supabaseClient.from('instansi').select('*').eq('id', 'profile').maybeSingle();
+                    if (instansiRes.data) {
+                        this.instansi = instansiRes.data;
+                    }
+
                     let santriRes = await supabaseClient.from('santri').select('*').order('created_at', { ascending: true });
                     if (santriRes.data) this.santriList = santriRes.data;
 
@@ -1040,15 +1038,9 @@
                     let notifRes = await supabaseClient.from('notifications').select('*');
                     if (notifRes.data) this.notifications = notifRes.data;
 
-                    let instansiRes = await supabaseClient.from('instansi').select('*').eq('id', 'profile').maybeSingle();
-                    if (instansiRes.data) {
-                        this.instansi = instansiRes.data;
-                    }
-
                     this.unreadNotificationCount = this.notifications.filter(n => !n.validated && n.tipe === 'approval' && (!n.status_validasi || n.status_validasi === 'pending')).length;
-
                 } catch (err) {
-                    console.error('Supabase Connection Error:', err);
+                    console.error('Supabase Error:', err);
                 }
             },
 
@@ -1127,7 +1119,6 @@
                 return [...new Set(this.santriList.map(s => s.kelompok).filter(Boolean))].sort();
             },
 
-            // POSISI TETAP TERKUNCI (Tidak bergeser/berpindah saat diedit karena mempertahankan urutan dari database)
             get filteredSantriFixedPosition() {
                 let result = [...this.santriList];
                 if (this.santriSearch) {
@@ -1156,22 +1147,16 @@
                     poin: parseInt(this.santriForm.poin) || 0
                 };
                 
-                let res;
                 if (this.santriForm.id) {
-                    res = await supabaseClient.from('santri').update(payload).eq('id', this.santriForm.id);
+                    await supabaseClient.from('santri').update(payload).eq('id', this.santriForm.id);
                 } else {
-                    res = await supabaseClient.from('santri').insert([payload]);
+                    await supabaseClient.from('santri').insert([payload]);
                 }
 
                 hideLoading();
-                if (res.error) {
-                    this.showToast('Gagal menyimpan santri: ' + res.error.message, 'error');
-                    return;
-                }
-
                 this.isSantriModalOpen = false;
-                this.showToast('Data santri berhasil disimpan!');
                 this.loadInitialData();
+                this.showToast('Data santri berhasil disimpan!');
             },
 
             openSantriModal() {
@@ -1228,50 +1213,41 @@
             async uploadSantriFoto(event) {
                 const file = event.target.files[0];
                 if (file) {
-                    try {
-                        showLoading('Mengompres foto...');
-                        const compressed = await compressImage(file, 800, 0.8);
-                        const reader = new FileReader();
-                        reader.onload = (e) => { 
-                            this.santriForm.foto = e.target.result; 
-                            hideLoading();
-                        };
-                        reader.readAsDataURL(compressed);
-                    } catch {
-                        hideLoading();
-                        this.showToast('Gagal memproses foto.', 'error');
-                    }
+                    const compressed = await compressImage(file, 800, 0.8);
+                    const reader = new FileReader();
+                    reader.onload = (e) => { this.santriForm.foto = e.target.result; };
+                    reader.readAsDataURL(compressed);
                 }
             },
 
-            async submitCustomPoint() {
-                if (!this.customPointForm.santriId || !this.customPointForm.poin || !this.customPointForm.catatan) {
-                    this.showToast('Lengkapi santri, poin, dan catatan!', 'warning');
+            async submitGrading() {
+                if (!this.gradingForm.santriId || !this.gradingForm.categoryId) {
+                    this.showToast('Pilih santri dan kategori penilaian terlebih dahulu!', 'warning');
                     return;
                 }
 
-                let santri = this.santriList.find(s => s.id == this.customPointForm.santriId);
-                let poinAdd = parseInt(this.customPointForm.poin);
+                let santri = this.santriList.find(s => s.id == this.gradingForm.santriId);
+                let category = this.pointItems.find(c => c.id == this.gradingForm.categoryId);
 
-                showLoading('Menyimpan poin...');
-                let newPoin = (santri.poin || 0) + poinAdd;
-                await supabaseClient.from('santri').update({ poin: newPoin }).eq('id', santri.id);
+                if (!santri || !category) return;
+
+                let poinAdd = parseInt(category.poin) || 0;
+                let keteranganCatatan = this.gradingForm.catatan ? `${category.nama} - ${this.gradingForm.catatan}` : category.nama;
+
+                showLoading('Menyimpan penilaian...');
+                await supabaseClient.from('santri').update({ poin: (santri.poin || 0) + poinAdd }).eq('id', santri.id);
                 await supabaseClient.from('attendance_logs').insert([{ 
                     santri_nama: santri.nama, 
-                    status: `Poin Bebas (${poinAdd >= 0 ? '+' + poinAdd : poinAdd})`, 
+                    status: `Penilaian Kategori (${poinAdd >= 0 ? '+' + poinAdd : poinAdd})`, 
                     poin: poinAdd, 
-                    catatan: this.customPointForm.catatan,
+                    catatan: keteranganCatatan,
                     tanggal: new Date().toLocaleDateString() 
                 }]);
 
-                if (this.customPointForm.simpanKategori && this.customPointForm.namaKategori.trim()) {
-                    await supabaseClient.from('point_items').insert([{ nama: this.customPointForm.namaKategori.trim(), poin: poinAdd }]);
-                }
-
                 hideLoading();
-                this.customPointForm = { santriId: '', poin: '', catatan: '', simpanKategori: false, namaKategori: '' };
+                this.gradingForm = { santriId: '', categoryId: '', catatan: '' };
                 this.loadInitialData();
-                this.showToast('Poin berhasil disimpan!');
+                this.showToast('Penilaian & poin berhasil diberikan!');
             },
 
             async processAbsensiOnly(santriId) {
@@ -1381,19 +1357,25 @@
             async uploadLogo(event) {
                 const file = event.target.files[0];
                 if (file) {
-                    const compressed = await compressImage(file, 500, 0.8);
+                    showLoading('Mengoptimalkan logo...');
+                    // Kompres ekstrem ke ukuran maksimal 200px agar ukuran file hanya belasan kilobait
+                    const compressed = await compressImage(file, 200, 0.6);
                     const reader = new FileReader();
-                    reader.onload = (e) => { this.instansi.logo = e.target.result; };
+                    reader.onload = (e) => { 
+                        this.instansi.logo = e.target.result;
+                        hideLoading();
+                        this.showToast('Logo berhasil dioptimalkan!');
+                    };
                     reader.readAsDataURL(compressed);
                 }
             },
 
             async saveInstansi() {
-                showLoading('Menyimpan instansi...');
+                showLoading('Menyimpan instansi ke database...');
                 await supabaseClient.from('instansi').upsert({ id: 'profile', nama: this.instansi.nama, logo: this.instansi.logo });
                 hideLoading();
                 this.loadInitialData();
-                this.showToast('Instansi disimpan.');
+                this.showToast('Profil instansi berhasil disimpan!');
             },
 
             async saveGuru() {
