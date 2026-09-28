@@ -291,40 +291,80 @@
                         </button>
                     </div>
 
-                    <!-- PENGATURAN KATEGORI POIN -->
+                    <!-- PANEL INPUT POIN BEBAS / KELOLA KATEGORI DI ATAS -->
                     <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
-                        <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Pengaturan Item Penilaian Poin</h4>
-                        <div class="grid grid-cols-3 gap-2">
-                            <input type="text" x-model="newPointItem.nama" placeholder="Nama Kategori" class="px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
-                            <input type="number" x-model="newPointItem.poin" placeholder="Jumlah Poin" class="px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
-                            <button @click="savePointItem()" class="bg-emerald-600 text-white rounded-xl text-xs font-bold py-2 hover:bg-emerald-700 transition">Simpan</button>
+                        <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+                            <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center">
+                                <i class="fa-solid fa-bolt text-amber-500 mr-1.5"></i> Input Poin Bebas & Kategori
+                            </h4>
                         </div>
-                        <div class="space-y-1.5 mt-2 max-h-32 overflow-y-auto">
+                        
+                        <div class="space-y-2.5">
+                            <!-- Pemilihan Nama Santri -->
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-600 mb-1">Pilih Santri</label>
+                                <select x-model="customPointForm.santriId" class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus:outline-none font-semibold text-slate-700">
+                                    <option value="">-- Pilih Nama Santri --</option>
+                                    <template x-for="s in santriList" :key="s.id">
+                                        <option :value="s.id" x-text="s.nama + ' (' + (s.kelompok || 'Tanpa Kelompok') + ')'"></option>
+                                    </template>
+                                </select>
+                            </div>
+
+                            <!-- Jumlah Poin & Catatan -->
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-600 mb-1">Jumlah Poin (+ / -)</label>
+                                    <input type="number" x-model="customPointForm.poin" placeholder="Contoh: 10" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none font-semibold">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-600 mb-1">Catatan / Alasan</label>
+                                    <input type="text" x-model="customPointForm.catatan" placeholder="Contoh: Menjawab soal" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
+                                </div>
+                            </div>
+
+                            <!-- Opsi Simpan Sebagai Kategori Tetap (Opsional) -->
+                            <div class="bg-emerald-50/50 p-3 rounded-2xl border border-emerald-100 space-y-2">
+                                <div class="flex items-center space-x-2">
+                                    <input type="checkbox" x-model="customPointForm.simpanKategori" id="checkKat" class="rounded text-emerald-600">
+                                    <label for="checkKat" class="text-[10px] font-bold text-emerald-800 cursor-pointer">Simpan juga sebagai Kategori Tetap (agar bisa dipakai lagi)</label>
+                                </div>
+                                <template x-if="customPointForm.simpanKategori">
+                                    <div>
+                                        <input type="text" x-model="customPointForm.namaKategori" placeholder="Nama Kategori (Contoh: Menjawab Soal Ujian)" class="w-full px-3 py-2 text-xs bg-white border border-emerald-200 rounded-xl focus:outline-none">
+                                    </div>
+                                </template>
+                            </div>
+
+                            <button @click="submitCustomPoint()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-100 transition">
+                                <i class="fa-solid fa-paper-plane mr-1"></i> Simpan Poin Santri
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- DAFTAR ITEM KATEGORI POIN TETAP -->
+                    <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
+                        <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Daftar Kategori Poin Tetap</h4>
+                        <div class="space-y-1.5 max-h-32 overflow-y-auto">
                             <template x-for="item in pointItems" :key="item.id">
                                 <div class="flex justify-between items-center bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-100 text-xs">
                                     <span class="font-semibold text-slate-700" x-text="item.nama + ' (' + (item.poin > 0 ? '+' + item.poin : item.poin) + ' Poin)'"></span>
-                                    <div class="flex space-x-1">
-                                        <button @click="editPointItem(item)" class="text-emerald-500 hover:text-emerald-700 p-1"><i class="fa-solid fa-pen text-[10px]"></i></button>
-                                        <button @click="deletePointItem(item.id)" class="text-rose-500 hover:text-rose-700 p-1"><i class="fa-solid fa-trash text-[10px]"></i></button>
-                                    </div>
+                                    <button @click="deletePointItem(item.id)" class="text-rose-500 hover:text-rose-700 p-1"><i class="fa-solid fa-trash text-[10px]"></i></button>
                                 </div>
+                            </template>
+                            <template x-if="pointItems.length === 0">
+                                <p class="text-xs text-slate-400 text-center py-2">Belum ada kategori tetap.</p>
                             </template>
                         </div>
                     </div>
 
-                    <!-- DAFTAR SANTRI ABSENSI RINGKAS -->
+                    <!-- DAFTAR SANTRI ABSENSI RINGKAS (TANPA TOMBOL POIN BEBAS & TANPA CATATAN) -->
                     <div class="space-y-2.5">
                         <template x-for="s in santriList" :key="s.id">
                             <div class="bg-white p-3.5 rounded-2xl border border-slate-100 shadow-xs space-y-2.5">
                                 <div class="flex items-center justify-between">
                                     <div>
-                                        <div class="flex items-center space-x-2">
-                                            <h4 class="text-xs font-bold text-slate-800" x-text="s.nama"></h4>
-                                            <!-- Tombol Cepat Poin Bebas dengan Catatan -->
-                                            <button @click="openCustomPointModal(s)" class="px-2 py-0.5 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-md text-[9px] font-bold transition flex items-center border border-amber-200 shadow-xs" title="Beri Poin Bebas / Cuma-cuma">
-                                                <i class="fa-solid fa-bolt text-[8px] mr-1 text-amber-500"></i> + Poin Bebas
-                                            </button>
-                                        </div>
+                                        <h4 class="text-xs font-bold text-slate-800" x-text="s.nama"></h4>
                                         <div class="flex items-center space-x-1.5 mt-0.5">
                                             <span class="text-[9px] bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded font-bold" x-text="s.kelompok || 'Tanpa Kelompok'"></span>
                                             <span class="text-[9px] text-emerald-600 font-bold" x-text="'Poin: ' + s.poin"></span>
@@ -351,23 +391,17 @@
                                     </div>
                                 </div>
 
-                                <!-- Input Dropdown & Tombol Aksi yang Dipersimpel -->
+                                <!-- Input Dropdown Status Kehadiran -->
                                 <div class="flex items-center space-x-2 pt-1 border-t border-slate-100">
-                                    <select x-model="selectedAction[s.id]" class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 focus:outline-none font-semibold text-slate-700 flex-1">
-                                        <option value="">Pilih Status / Poin</option>
+                                    <select x-model="selectedAction[s.id]" class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 focus:outline-none font-semibold text-slate-700 flex-1">
+                                        <option value="">Pilih Status Kehadiran</option>
                                         <option value="Hadir" x-text="'Hadir (' + (attendanceConfig.hadir >= 0 ? '+' + attendanceConfig.hadir : attendanceConfig.hadir) + ')'"></option>
                                         <option value="Izin" x-text="'Izin (' + (attendanceConfig.izin >= 0 ? '+' + attendanceConfig.izin : attendanceConfig.izin) + ')'"></option>
                                         <option value="Sakit" x-text="'Sakit (' + (attendanceConfig.sakit >= 0 ? '+' + attendanceConfig.sakit : attendanceConfig.sakit) + ')'"></option>
                                         <option value="Alpa" x-text="'Alpa (' + (attendanceConfig.alpa >= 0 ? '+' + attendanceConfig.alpa : attendanceConfig.alpa) + ')'"></option>
-                                        <template x-for="pi in pointItems" :key="pi.id">
-                                            <option :value="pi.id" x-text="pi.nama + ' (' + (pi.poin > 0 ? '+' + pi.poin : pi.poin) + ')'"></option>
-                                        </template>
                                     </select>
 
-                                    <input type="text" x-model="pointNotes[s.id]" placeholder="Catatan (opsional)..." 
-                                           class="w-32 px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
-
-                                    <button @click="processAbsensiWithNote(s.id)" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-xs shrink-0">
+                                    <button @click="processAbsensiOnly(s.id)" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-xs shrink-0">
                                         Simpan
                                     </button>
                                 </div>
@@ -992,9 +1026,11 @@
             pointItems: [],
             newPointItem: { id: null, nama: '', poin: 0 },
 
+            // Form Poin Bebas Terpusat
+            customPointForm: { santriId: '', poin: '', catatan: '', simpanKategori: false, namaKategori: '' },
+
             attendanceLogsList: [],
             selectedAction: {},
-            pointNotes: {},
 
             cashExchange: { santriId: '', nominal: 1000 },
             
@@ -1306,96 +1342,34 @@
                 }
             },
 
-            async openCustomPointModal(santri) {
-                const { value: formValues } = await Swal.fire({
-                    title: `Beri Poin Bebas (${santri.nama})`,
-                    html: `
-                        <div style="text-align: left; margin-bottom: 10px;">
-                            <label style="font-size: 12px; font-weight: bold; color: #475569; display: block; margin-bottom: 4px;">Jumlah Poin (bisa plus/minus, misal: 5 atau -5)</label>
-                            swal-input1 id="swal-input-poin" class="swal2-input" type="number" placeholder="Contoh: 10" style="margin: 0; width: 100%; font-size: 14px;" />
-                        </div>
-                        <div style="text-align: left;">
-                            <label style="font-size: 12px; font-weight: bold; color: #475569; display: block; margin-bottom: 4px;">Catatan / Alasan (Wajib)</label>
-                            <input id="swal-input-catatan" class="swal2-input" placeholder="Contoh: Menjawab soal / Membersihkan wudu" style="margin: 0; width: 100%; font-size: 14px;" />
-                        </div>
-                    `,
-                    focusConfirm: false,
-                    showCancelButton: true,
-                    confirmButtonColor: '#10b981',
-                    cancelButtonColor: '#64748b',
-                    confirmButtonText: 'Simpan Poin',
-                    cancelButtonText: 'Batal',
-                    preConfirm: () => {
-                        const poin = document.getElementById('swal-input-poin').value;
-                        const catatan = document.getElementById('swal-input-catatan').value;
-                        if (!poin || poin === '0') {
-                            Swal.showValidationMessage('Jumlah poin wajib diisi dan tidak boleh 0!');
-                            return false;
-                        }
-                        if (!catatan.trim()) {
-                            Swal.showValidationMessage('Catatan / alasan wajib diisi!');
-                            return false;
-                        }
-                        return { poin: parseInt(poin), catatan: catatan.trim() };
-                    }
-                });
-
-                if (formValues) {
-                    showLoading('Menyimpan poin bebas...');
-                    let newPoin = (santri.poin || 0) + formValues.poin;
-                    let labelStatus = `Poin Bebas (${formValues.poin >= 0 ? '+' + formValues.poin : formValues.poin})`;
-
-                    await supabaseClient.from('santri').update({ poin: newPoin }).eq('id', santri.id);
-                    await supabaseClient.from('attendance_logs').insert([{ 
-                        santri_nama: santri.nama, 
-                        status: labelStatus, 
-                        poin: formValues.poin, 
-                        catatan: formValues.catatan,
-                        tanggal: new Date().toLocaleDateString() 
-                    }]);
-
-                    hideLoading();
-                    this.showToast(`Berhasil menambahkan poin untuk ${santri.nama}!`);
-                    this.loadInitialData();
-                }
-            },
-
-            async processAbsensiWithNote(santriId) {
-                let statusOrItemId = this.selectedAction[santriId];
-                if (!statusOrItemId) {
-                    this.showToast('Pilih status atau kategori poin terlebih dahulu!', 'warning');
+            async submitCustomPoint() {
+                if (!this.customPointForm.santriId) {
+                    this.showToast('Pilih nama santri terlebih dahulu!', 'warning');
                     return;
                 }
-                let catatan = this.pointNotes[santriId] || '';
-                let santri = this.santriList.find(s => s.id === santriId);
-                if (!santri) return;
-
-                let poinAdd = 0;
-                let labelStatus = '';
-
-                if (statusOrItemId === 'Hadir') {
-                    poinAdd = parseInt(this.attendanceConfig.hadir) || 0;
-                    labelStatus = `Hadir (${poinAdd >= 0 ? '+' + poinAdd : poinAdd})`;
-                } else if (statusOrItemId === 'Alpa') {
-                    poinAdd = parseInt(this.attendanceConfig.alpa) || 0;
-                    labelStatus = `Alpa (${poinAdd >= 0 ? '+' + poinAdd : poinAdd})`;
-                } else if (statusOrItemId === 'Izin') {
-                    poinAdd = parseInt(this.attendanceConfig.izin) || 0;
-                    labelStatus = `Izin (${poinAdd >= 0 ? '+' + poinAdd : poinAdd})`;
-                } else if (statusOrItemId === 'Sakit') {
-                    poinAdd = parseInt(this.attendanceConfig.sakit) || 0;
-                    labelStatus = `Sakit (${poinAdd >= 0 ? '+' + poinAdd : poinAdd})`;
-                } else {
-                    let pointItem = this.pointItems.find(pi => pi.id == statusOrItemId);
-                    if (pointItem) {
-                        poinAdd = parseInt(pointItem.poin);
-                        labelStatus = pointItem.nama;
-                    }
+                if (!this.customPointForm.poin || parseInt(this.customPointForm.poin) === 0) {
+                    this.showToast('Jumlah poin wajib diisi dan tidak boleh 0!', 'warning');
+                    return;
+                }
+                if (!this.customPointForm.catatan.trim()) {
+                    this.showToast('Catatan / alasan wajib diisi!', 'warning');
+                    return;
                 }
 
-                showLoading('Mencatat absensi & poin...');
+                let santri = this.santriList.find(s => s.id == this.customPointForm.santriId);
+                if (!santri) return;
+
+                let poinAdd = parseInt(this.customPointForm.poin);
+                let catatan = this.customPointForm.catatan.trim();
+                let labelStatus = `Poin Bebas (${poinAdd >= 0 ? '+' + poinAdd : poinAdd})`;
+
+                showLoading('Menyimpan poin bebas...');
                 let newPoin = (santri.poin || 0) + poinAdd;
-                await supabaseClient.from('santri').update({ poin: newPoin }).eq('id', santriId);
+                
+                // Update poin santri
+                await supabaseClient.from('santri').update({ poin: newPoin }).eq('id', santri.id);
+                
+                // Catat ke attendance_logs (riwayat)
                 await supabaseClient.from('attendance_logs').insert([{ 
                     santri_nama: santri.nama, 
                     status: labelStatus, 
@@ -1403,13 +1377,65 @@
                     catatan: catatan,
                     tanggal: new Date().toLocaleDateString() 
                 }]);
-                
-                // Reset form input setelah diproses
-                this.selectedAction[santriId] = '';
-                this.pointNotes[santriId] = '';
+
+                // Jika dicentang untuk disimpan sebagai kategori tetap
+                if (this.customPointForm.simpanKategori && this.customPointForm.namaKategori.trim()) {
+                    await supabaseClient.from('point_items').insert([{
+                        nama: this.customPointForm.namaKategori.trim(),
+                        poin: poinAdd
+                    }]);
+                }
 
                 hideLoading();
-                this.showToast(`Absensi / Poin berhasil dicatat untuk ${santri.nama}.`);
+                this.showToast(`Poin berhasil ditambahkan untuk ${santri.nama}!`);
+                
+                // Reset form
+                this.customPointForm = { santriId: '', poin: '', catatan: '', simpanKategori: false, namaKategori: '' };
+                this.loadInitialData();
+            },
+
+            async processAbsensiOnly(santriId) {
+                let status = this.selectedAction[santriId];
+                if (!status) {
+                    this.showToast('Pilih status kehadiran terlebih dahulu!', 'warning');
+                    return;
+                }
+                let santri = this.santriList.find(s => s.id === santriId);
+                if (!santri) return;
+
+                let poinAdd = 0;
+                let labelStatus = '';
+
+                if (status === 'Hadir') {
+                    poinAdd = parseInt(this.attendanceConfig.hadir) || 0;
+                    labelStatus = `Hadir (${poinAdd >= 0 ? '+' + poinAdd : poinAdd})`;
+                } else if (status === 'Alpa') {
+                    poinAdd = parseInt(this.attendanceConfig.alpa) || 0;
+                    labelStatus = `Alpa (${poinAdd >= 0 ? '+' + poinAdd : poinAdd})`;
+                } else if (status === 'Izin') {
+                    poinAdd = parseInt(this.attendanceConfig.izin) || 0;
+                    labelStatus = `Izin (${poinAdd >= 0 ? '+' + poinAdd : poinAdd})`;
+                } else if (status === 'Sakit') {
+                    poinAdd = parseInt(this.attendanceConfig.sakit) || 0;
+                    labelStatus = `Sakit (${poinAdd >= 0 ? '+' + poinAdd : poinAdd})`;
+                }
+
+                showLoading('Mencatat absensi...');
+                let newPoin = (santri.poin || 0) + poinAdd;
+                await supabaseClient.from('santri').update({ poin: newPoin }).eq('id', santriId);
+                await supabaseClient.from('attendance_logs').insert([{ 
+                    santri_nama: santri.nama, 
+                    status: labelStatus, 
+                    poin: poinAdd, 
+                    catatan: 'Kehadiran Harian',
+                    tanggal: new Date().toLocaleDateString() 
+                }]);
+                
+                // Reset dropdown setelah diproses
+                this.selectedAction[santriId] = '';
+
+                hideLoading();
+                this.showToast(`Absensi berhasil dicatat untuk ${santri.nama}.`);
                 this.loadInitialData();
             },
 
@@ -1437,31 +1463,6 @@
                         this.loadInitialData();
                     }
                 });
-            },
-
-            async savePointItem() {
-                if (!this.newPointItem.nama) {
-                    this.showToast('Nama kategori poin wajib diisi!', 'warning');
-                    return;
-                }
-                showLoading('Menyimpan kategori...');
-                let payload = {
-                    nama: this.newPointItem.nama,
-                    poin: parseInt(this.newPointItem.poin) || 0
-                };
-                if (this.newPointItem.id) {
-                    await supabaseClient.from('point_items').update(payload).eq('id', this.newPointItem.id);
-                } else {
-                    await supabaseClient.from('point_items').insert([payload]);
-                }
-                hideLoading();
-                this.newPointItem = { id: null, nama: '', poin: 0 };
-                this.showToast('Kategori poin berhasil disimpan!');
-                this.loadInitialData();
-            },
-
-            editPointItem(item) {
-                this.newPointItem = { ...item };
             },
 
             async deletePointItem(id) {
