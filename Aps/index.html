@@ -145,7 +145,7 @@
                 <template x-for="tab in availableTabs" :key="tab.id">
                     <button @click="setActiveTab(tab.id)" 
                             :class="activeTab === tab.id ? 'text-emerald-600 border-b-2 border-emerald-600 bg-emerald-50/40' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50/50'"
-                            class="flex-1 min-w-[55px] py-3 text-center transition flex flex-col items-center justify-center shrink-0">
+                            class="flex-1 min-w-[50px] py-3 text-center transition flex flex-col items-center justify-center shrink-0">
                         <i :class="tab.icon" class="text-base mb-1"></i>
                         <span class="text-[9px] font-bold tracking-tight" x-text="tab.label"></span>
                     </button>
@@ -222,7 +222,7 @@
                     </div>
                 </div>
 
-                <!-- TAB 2: DATA SANTRI -->
+                <!-- TAB 2: DATA SANTRI (POSISI STABIL TERKUNCI BERDASARKAN CREATED_AT) -->
                 <div x-show="activeTab === 'santri'" class="space-y-4">
                     <div class="flex justify-between items-center">
                         <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Manajemen Data Santri</h3>
@@ -231,14 +231,25 @@
                         </button>
                     </div>
 
-                    <div class="relative">
-                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400"><i class="fa-solid fa-search text-xs"></i></span>
-                        <input type="text" x-model="santriSearch" placeholder="Cari nama santri..." 
-                               class="w-full pl-10 pr-4 py-2.5 text-xs bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-xs">
+                    <div class="bg-white p-3.5 rounded-2xl border border-slate-100 shadow-xs space-y-2.5">
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400"><i class="fa-solid fa-search text-xs"></i></span>
+                            <input type="text" x-model="santriSearch" placeholder="Cari nama santri..." 
+                                   class="w-full pl-10 pr-4 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        </div>
+                        <div>
+                            <label class="block text-[9px] font-bold text-slate-500 mb-1 uppercase tracking-wider">Filter Berdasarkan Kelompok / Guru</label>
+                            <select x-model="selectedKelompokFilter" class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 focus:outline-none font-semibold text-slate-700">
+                                <option value="">Semua Kelompok / Guru</option>
+                                <template x-for="kel in availableKelompokList" :key="kel">
+                                    <option :value="kel" x-text="kel"></option>
+                                </template>
+                            </select>
+                        </div>
                     </div>
 
                     <div class="space-y-2.5">
-                        <template x-for="s in filteredSantri" :key="s.id">
+                        <template x-for="s in filteredSantriFixedPosition" :key="s.id">
                             <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-xs flex justify-between items-center">
                                 <div class="flex items-center space-x-3">
                                     <div class="w-12 h-12 rounded-2xl bg-slate-100 overflow-hidden shrink-0 border border-slate-200">
@@ -273,13 +284,13 @@
                                 </div>
                             </div>
                         </template>
-                        <template x-if="filteredSantri.length === 0">
-                            <p class="text-xs text-slate-400 text-center py-6 font-medium bg-white rounded-2xl border border-slate-100">Belum ada data santri.</p>
+                        <template x-if="filteredSantriFixedPosition.length === 0">
+                            <p class="text-xs text-slate-400 text-center py-6 font-medium bg-white rounded-2xl border border-slate-100">Belum ada data santri yang sesuai.</p>
                         </template>
                     </div>
                 </div>
 
-                <!-- TAB 3: ABSENSI & POIN (TAMPILAN RINGKAS) -->
+                <!-- TAB 3: ABSENSI & POIN -->
                 <div x-show="activeTab === 'absensi'" class="space-y-4">
                     <div class="flex justify-between items-center">
                         <div>
@@ -291,7 +302,6 @@
                         </button>
                     </div>
 
-                    <!-- PANEL INPUT POIN BEBAS / KELOLA KATEGORI DI ATAS -->
                     <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
                         <div class="flex items-center justify-between border-b border-slate-100 pb-2">
                             <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center">
@@ -300,7 +310,6 @@
                         </div>
                         
                         <div class="space-y-2.5">
-                            <!-- Pemilihan Nama Santri -->
                             <div>
                                 <label class="block text-[10px] font-bold text-slate-600 mb-1">Pilih Santri</label>
                                 <select x-model="customPointForm.santriId" class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus:outline-none font-semibold text-slate-700">
@@ -311,7 +320,6 @@
                                 </select>
                             </div>
 
-                            <!-- Jumlah Poin & Catatan -->
                             <div class="grid grid-cols-2 gap-2">
                                 <div>
                                     <label class="block text-[10px] font-bold text-slate-600 mb-1">Jumlah Poin (+ / -)</label>
@@ -323,15 +331,14 @@
                                 </div>
                             </div>
 
-                            <!-- Opsi Simpan Sebagai Kategori Tetap (Opsional) -->
                             <div class="bg-emerald-50/50 p-3 rounded-2xl border border-emerald-100 space-y-2">
                                 <div class="flex items-center space-x-2">
                                     <input type="checkbox" x-model="customPointForm.simpanKategori" id="checkKat" class="rounded text-emerald-600">
-                                    <label for="checkKat" class="text-[10px] font-bold text-emerald-800 cursor-pointer">Simpan juga sebagai Kategori Tetap (agar bisa dipakai lagi)</label>
+                                    <label for="checkKat" class="text-[10px] font-bold text-emerald-800 cursor-pointer">Simpan juga sebagai Kategori Tetap</label>
                                 </div>
                                 <template x-if="customPointForm.simpanKategori">
                                     <div>
-                                        <input type="text" x-model="customPointForm.namaKategori" placeholder="Nama Kategori (Contoh: Menjawab Soal Ujian)" class="w-full px-3 py-2 text-xs bg-white border border-emerald-200 rounded-xl focus:outline-none">
+                                        <input type="text" x-model="customPointForm.namaKategori" placeholder="Nama Kategori (Contoh: Hafalan Baru)" class="w-full px-3 py-2 text-xs bg-white border border-emerald-200 rounded-xl focus:outline-none">
                                     </div>
                                 </template>
                             </div>
@@ -342,23 +349,6 @@
                         </div>
                     </div>
 
-                    <!-- DAFTAR ITEM KATEGORI POIN TETAP -->
-                    <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
-                        <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Daftar Kategori Poin Tetap</h4>
-                        <div class="space-y-1.5 max-h-32 overflow-y-auto">
-                            <template x-for="item in pointItems" :key="item.id">
-                                <div class="flex justify-between items-center bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-100 text-xs">
-                                    <span class="font-semibold text-slate-700" x-text="item.nama + ' (' + (item.poin > 0 ? '+' + item.poin : item.poin) + ' Poin)'"></span>
-                                    <button @click="deletePointItem(item.id)" class="text-rose-500 hover:text-rose-700 p-1"><i class="fa-solid fa-trash text-[10px]"></i></button>
-                                </div>
-                            </template>
-                            <template x-if="pointItems.length === 0">
-                                <p class="text-xs text-slate-400 text-center py-2">Belum ada kategori tetap.</p>
-                            </template>
-                        </div>
-                    </div>
-
-                    <!-- DAFTAR SANTRI ABSENSI RINGKAS (TANPA TOMBOL POIN BEBAS & TANPA CATATAN) -->
                     <div class="space-y-2.5">
                         <template x-for="s in santriList" :key="s.id">
                             <div class="bg-white p-3.5 rounded-2xl border border-slate-100 shadow-xs space-y-2.5">
@@ -370,7 +360,6 @@
                                             <span class="text-[9px] text-emerald-600 font-bold" x-text="'Poin: ' + s.poin"></span>
                                         </div>
                                     </div>
-                                    <!-- Ringkasan Kehadiran Sederhana di Samping -->
                                     <div class="flex space-x-1 text-center">
                                         <div class="bg-emerald-50 text-emerald-800 py-0.5 px-2 rounded-md">
                                             <span class="block text-[8px] font-semibold uppercase text-emerald-600">Hadir</span>
@@ -391,7 +380,6 @@
                                     </div>
                                 </div>
 
-                                <!-- Input Dropdown Status Kehadiran -->
                                 <div class="flex items-center space-x-2 pt-1 border-t border-slate-100">
                                     <select x-model="selectedAction[s.id]" class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 focus:outline-none font-semibold text-slate-700 flex-1">
                                         <option value="">Pilih Status Kehadiran</option>
@@ -409,13 +397,11 @@
                         </template>
                     </div>
 
-                    <!-- RIWAYAT ABSENSI / KOREKSI SALAH INPUT -->
                     <div class="bg-white rounded-3xl p-4 border border-slate-100 shadow-sm space-y-3 mt-4">
                         <div class="flex justify-between items-center">
                             <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center">
                                 <i class="fa-solid fa-clock-rotate-left mr-2 text-emerald-600"></i> Riwayat Log & Catatan Poin
                             </h4>
-                            <span class="text-[10px] text-slate-400 font-medium">Hapus jika salah input</span>
                         </div>
                         <div class="space-y-2 max-h-60 overflow-y-auto">
                             <template x-for="log in attendanceLogsList" :key="log.id">
@@ -437,6 +423,59 @@
                             </template>
                             <template x-if="attendanceLogsList.length === 0">
                                 <p class="text-xs text-slate-400 text-center py-4 font-medium">Belum ada riwayat absensi atau poin hari ini.</p>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: KATEGORI POIN TETAP -->
+                <div x-show="activeTab === 'kategori_poin' && currentUser.role === 'admin'" class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Manajemen Kategori Poin Tetap</h3>
+                            <p class="text-[10px] text-slate-400">Kelola kategori prestasi/pelanggaran</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
+                        <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider" x-text="pointItemForm.id ? 'Edit Kategori Poin' : 'Tambah Kategori Poin Baru'"></h4>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-600 mb-1">Nama Kategori</label>
+                            <input type="text" x-model="pointItemForm.nama" placeholder="Contoh: Menghafal 1 Halaman" class="w-full px-3 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-600 mb-1">Bobot Poin (+ / -)</label>
+                            <input type="number" x-model="pointItemForm.poin" placeholder="Contoh: 10 atau -5" class="w-full px-3 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none font-semibold">
+                        </div>
+                        <div class="flex space-x-2 pt-1">
+                            <template x-if="pointItemForm.id">
+                                <button @click="resetPointItemForm()" class="py-2.5 px-4 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl text-xs font-bold transition">Batal</button>
+                            </template>
+                            <button @click="savePointItem()" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-100 transition" x-text="pointItemForm.id ? 'Simpan Perubahan' : 'Tambah Kategori'"></button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
+                        <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Daftar Kategori Poin Tersimpan</h4>
+                        <div class="space-y-2">
+                            <template x-for="item in pointItems" :key="item.id">
+                                <div class="flex justify-between items-center bg-slate-50 p-3 rounded-2xl border border-slate-100 text-xs">
+                                    <div>
+                                        <h5 class="font-bold text-slate-800" x-text="item.nama"></h5>
+                                        <span class="text-[10px] font-extrabold text-emerald-600 mt-0.5 block" x-text="(item.poin > 0 ? '+' + item.poin : item.poin) + ' Poin'"></span>
+                                    </div>
+                                    <div class="flex items-center space-x-1.5">
+                                        <button @click="editPointItem(item)" class="px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 rounded-xl text-[10px] font-bold transition flex items-center shadow-xs">
+                                            <i class="fa-solid fa-pen mr-1"></i> Edit
+                                        </button>
+                                        <button @click="deletePointItem(item.id)" class="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl text-[10px] font-bold transition flex items-center shadow-xs">
+                                            <i class="fa-solid fa-trash mr-1"></i> Hapus
+                                        </button>
+                                    </div>
+                                </div>
+                            </template>
+                            <template x-if="pointItems.length === 0">
+                                <p class="text-xs text-slate-400 text-center py-4 font-medium">Belum ada kategori poin tetap.</p>
                             </template>
                         </div>
                     </div>
@@ -516,7 +555,7 @@
                     </div>
                 </div>
 
-                <!-- TAB: HALAMAN VALIDASI PENUKARAN REWARD -->
+                <!-- TAB: VALIDASI REWARD -->
                 <div x-show="activeTab === 'validasi' && currentUser.role === 'admin'" class="space-y-4">
                     <div class="flex justify-between items-center">
                         <div>
@@ -552,36 +591,6 @@
                             </template>
                         </div>
                     </div>
-
-                    <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
-                        <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Riwayat Validasi (Disetujui / Ditolak)</h4>
-                        <div class="space-y-2.5">
-                            <template x-for="notif in notifications.filter(n => n.tipe === 'approval' && n.status_validasi && n.status_validasi !== 'pending')" :key="notif.id">
-                                <div class="p-3 bg-slate-50 rounded-2xl border border-slate-100 text-xs space-y-2">
-                                    <div class="flex justify-between items-start">
-                                        <div>
-                                            <p class="font-bold text-slate-800" x-text="notif.pesan"></p>
-                                            <span class="text-[10px] text-slate-400 block mt-0.5" x-text="notif.waktu"></span>
-                                        </div>
-                                        <span class="px-2 py-1 rounded-full text-[9px] font-bold"
-                                              :class="notif.status_validasi === 'disetujui' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'"
-                                              x-text="notif.status_validasi === 'disetujui' ? 'Disetujui' : 'Ditolak'"></span>
-                                    </div>
-                                    <div class="pt-1 flex justify-end space-x-2">
-                                        <button @click="editValidationLog(notif)" class="px-2.5 py-1 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg text-[10px] font-semibold transition">
-                                            <i class="fa-solid fa-pen mr-1"></i> Edit
-                                        </button>
-                                        <button @click="deleteValidationLog(notif.id)" class="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-[10px] font-semibold transition">
-                                            <i class="fa-solid fa-trash mr-1"></i> Hapus
-                                        </button>
-                                    </div>
-                                </div>
-                            </template>
-                            <template x-if="notifications.filter(n => n.tipe === 'approval' && n.status_validasi && n.status_validasi !== 'pending').length === 0">
-                                <p class="text-xs text-slate-400 text-center py-4 font-medium">Belum ada riwayat validasi.</p>
-                            </template>
-                        </div>
-                    </div>
                 </div>
 
                 <!-- TAB: MANAJEMEN PENGGUNA / GURU -->
@@ -603,8 +612,6 @@
                             <label class="flex items-center text-xs space-x-2 text-slate-700 font-medium"><input type="checkbox" x-model="newGuru.permissions.absensi" class="rounded text-emerald-600"><span>Catat Absensi Harian</span></label>
                             <label class="flex items-center text-xs space-x-2 text-slate-700 font-medium"><input type="checkbox" x-model="newGuru.permissions.poin" class="rounded text-emerald-600"><span>Kelola Poin Prestasi & Pelanggaran</span></label>
                             <label class="flex items-center text-xs space-x-2 text-slate-700 font-medium"><input type="checkbox" x-model="newGuru.permissions.santri" class="rounded text-emerald-600"><span>Lihat Data Santri</span></label>
-                            <label class="flex items-center text-xs space-x-2 text-slate-700 font-medium"><input type="checkbox" x-model="newGuru.permissions.laporan" class="rounded text-emerald-600"><span>Akses Laporan Bulanan</span></label>
-                            <label class="flex items-center text-xs space-x-2 text-slate-700 font-medium"><input type="checkbox" x-model="newGuru.permissions.reward" class="rounded text-emerald-600"><span>Validasi Penukaran Reward</span></label>
                         </div>
                         <button @click="saveGuru()" class="w-full py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold shadow-md shadow-teal-100 transition">Tambah Akun Guru</button>
                     </div>
@@ -697,38 +704,6 @@
                         </div>
                         <button @click="saveCardSettings()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-100 transition">Simpan Pengaturan Kartu</button>
                     </div>
-
-                    <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
-                        <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Pengaturan Tampilan Menu Login</h4>
-                        <div>
-                            <label class="block text-[10px] font-bold text-slate-600 mb-1">Subjudul Halaman Login</label>
-                            <input type="text" x-model="loginSettings.subtitle" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
-                        </div>
-                        <button @click="saveLoginSettings()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-100 transition">Simpan Login</button>
-                    </div>
-
-                    <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
-                        <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Pengaturan Bobot Poin Kehadiran</h4>
-                        <div class="grid grid-cols-2 gap-2">
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-600 mb-1">Poin Hadir</label>
-                                <input type="number" x-model="attendanceConfig.hadir" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-600 mb-1">Poin Izin</label>
-                                <input type="number" x-model="attendanceConfig.izin" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-600 mb-1">Poin Sakit</label>
-                                <input type="number" x-model="attendanceConfig.sakit" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-600 mb-1">Poin Alpa</label>
-                                <input type="number" x-model="attendanceConfig.alpa" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
-                            </div>
-                        </div>
-                        <button @click="saveAttendanceConfig()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-100 transition">Simpan Bobot Kehadiran</button>
-                    </div>
                 </div>
 
             </main>
@@ -740,12 +715,6 @@
     <div x-show="isCardModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-3 overflow-y-auto">
         <div class="w-full max-w-sm space-y-3">
             <div id="captureCard" class="bg-gradient-to-br from-emerald-600 via-emerald-700 to-teal-900 w-full rounded-3xl p-4 text-white shadow-2xl relative overflow-hidden border-4 border-white/20">
-                
-                <div class="absolute inset-0 opacity-10 pointer-events-none" style="background-image: url('data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'60\' height=\'60\' viewBox=\'0 0 60 60\'><path fill=\'%23ffffff\' d=\'M30 0l10 20h20l-15 15 5 20-20-10-20 10 5-20-15-15h20z\'/></svg>'); background-repeat: repeat;"></div>
-                
-                <div class="absolute -top-10 -right-10 w-44 h-44 bg-amber-400/20 rounded-full blur-3xl pointer-events-none"></div>
-                <div class="absolute -bottom-10 -left-10 w-44 h-44 bg-teal-400/20 rounded-full blur-3xl pointer-events-none"></div>
-
                 <div class="flex items-center space-x-2.5 pb-3 border-b border-white/20 relative z-10">
                     <div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center p-1 shadow-md shrink-0">
                         <template x-if="instansi.logo">
@@ -785,15 +754,12 @@
                             </template>
                         </div>
                         <div class="flex-1 space-y-1.5 overflow-hidden">
-                            <div class="bg-amber-300 text-slate-900 px-3 py-1.5 rounded-lg shadow-xs font-black uppercase tracking-wide truncate" 
-                                 :style="activeCardSantri.nama && activeCardSantri.nama.length > 20 ? 'font-size: 10px;' : (activeCardSantri.nama && activeCardSantri.nama.length > 14 ? 'font-size: 12px;' : 'font-size: 14px;')" 
-                                 x-text="activeCardSantri.nama"></div>
-
+                            <div class="bg-amber-300 text-slate-900 px-3 py-1.5 rounded-lg shadow-xs font-black uppercase tracking-wide truncate" x-text="activeCardSantri.nama"></div>
                             <div class="text-[11px] font-bold text-slate-700 bg-slate-50 px-2.5 py-1 rounded-md border border-slate-100">
                                 <span class="text-slate-400">Umur :</span> <span x-text="(activeCardSantri.umur || '-') + ' Tahun'"></span>
                             </div>
                             <div class="text-[11px] font-bold text-slate-700 bg-slate-50 px-2.5 py-1 rounded-md border border-slate-100">
-                                <span class="text-slate-400">Asal :</span> <span x-text="activeCardSantri.alamat || 'Desa / Alamat belum diisi'"></span>
+                                <span class="text-slate-400">Asal :</span> <span x-text="activeCardSantri.alamat || 'Alamat belum diisi'"></span>
                             </div>
                         </div>
                     </div>
@@ -803,13 +769,10 @@
                     <div class="flex items-center space-x-1"><i class="fa-brands fa-facebook text-white"></i> <span x-text="cardSettings.footerText"></span></div>
                     <div class="flex items-center space-x-1"><i class="fa-brands fa-instagram text-white"></i> <span x-text="instansi.nama"></span></div>
                 </div>
-
             </div>
 
             <div class="flex space-x-2">
-                <button @click="isCardModalOpen = false" class="flex-1 py-2.5 bg-slate-200 text-slate-700 rounded-xl text-xs font-extrabold shadow-sm hover:bg-slate-300 transition">
-                    Tutup
-                </button>
+                <button @click="isCardModalOpen = false" class="flex-1 py-2.5 bg-slate-200 text-slate-700 rounded-xl text-xs font-extrabold shadow-sm hover:bg-slate-300 transition">Tutup</button>
                 <button @click="downloadCardImage()" class="flex-1 py-2.5 bg-emerald-600 text-white rounded-xl text-xs font-extrabold shadow-lg hover:bg-emerald-700 transition flex items-center justify-center space-x-1.5">
                     <i class="fa-solid fa-download"></i> <span>Download Kartu</span>
                 </button>
@@ -837,14 +800,6 @@
                                 </button>
                             </div>
                         </template>
-
-                        <template x-if="notif.tipe === 'stok_menipis'">
-                            <div class="pt-2">
-                                <button @click="goToRewardMenu()" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-[10px] font-bold shadow-xs transition flex items-center">
-                                    <i class="fa-solid fa-gift mr-1"></i> Kelola / Tambah Stok Reward
-                                </button>
-                            </div>
-                        </template>
                     </div>
                 </template>
                 <template x-if="notifications.filter(n => !n.validated).length === 0">
@@ -865,16 +820,16 @@
                 </div>
                 <div>
                     <label class="block text-[10px] font-bold text-slate-600 mb-1">Nama Kelompok / Halaqah</label>
-                    <input type="text" x-model="santriForm.kelompok" placeholder="Contoh: Kelompok A / Tahfidz" class="w-full px-3 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
+                    <input type="text" x-model="santriForm.kelompok" placeholder="Contoh: Kelompok A" class="w-full px-3 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
                 </div>
                 <div>
-                    <label class="block text-[10px] font-bold text-slate-600 mb-1">Pencapaian Hafalan (Tampil di Kartu)</label>
+                    <label class="block text-[10px] font-bold text-slate-600 mb-1">Pencapaian Hafalan</label>
                     <input type="text" x-model="santriForm.hafalan" placeholder="Contoh: JUZ 7" class="w-full px-3 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none font-bold text-emerald-600">
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
                         <label class="block text-[10px] font-bold text-slate-600 mb-1">Umur (Tahun)</label>
-                        <input type="number" x-model="santriForm.umur" placeholder="Contoh: 15" class="w-full px-3 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
+                        <input type="number" x-model="santriForm.umur" placeholder="15" class="w-full px-3 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
                     </div>
                     <div>
                         <label class="block text-[10px] font-bold text-slate-600 mb-1">Poin Awal</label>
@@ -882,11 +837,11 @@
                     </div>
                 </div>
                 <div>
-                    <label class="block text-[10px] font-bold text-slate-600 mb-1">Alamat / Asal (Tampil di Kartu)</label>
-                    <input type="text" x-model="santriForm.alamat" placeholder="Contoh: Desa Kemiri" class="w-full px-3 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
+                    <label class="block text-[10px] font-bold text-slate-600 mb-1">Alamat / Asal</label>
+                    <input type="text" x-model="santriForm.alamat" placeholder="Desa Kemiri" class="w-full px-3 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
                 </div>
                 <div>
-                    <label class="block text-[10px] font-bold text-slate-600 mb-1">Foto Santri (Otomatis Terkompres)</label>
+                    <label class="block text-[10px] font-bold text-slate-600 mb-1">Foto Santri</label>
                     <input type="file" @change="uploadSantriFoto($event)" accept="image/*" class="w-full text-xs text-slate-500 file:mr-4 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700">
                 </div>
             </div>
@@ -915,7 +870,7 @@
                     <input type="number" x-model="rewardForm.stok" placeholder="Jumlah stok" class="w-full px-3 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
                 </div>
                 <div>
-                    <label class="block text-[10px] font-bold text-slate-600 mb-1">Foto Hadiah (Otomatis Terkompres)</label>
+                    <label class="block text-[10px] font-bold text-slate-600 mb-1">Foto Hadiah</label>
                     <input type="file" @change="uploadRewardFoto($event)" accept="image/*" class="w-full text-xs text-slate-500 file:mr-4 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700">
                 </div>
             </div>
@@ -939,15 +894,11 @@
         Swal.fire({
             title: message,
             allowOutsideClick: false,
-            didOpen: () => {
-                Swal.showLoading();
-            }
+            didOpen: () => { Swal.showLoading(); }
         });
     }
 
-    function hideLoading() {
-        Swal.close();
-    }
+    function hideLoading() { Swal.close(); }
 
     function compressImage(file, maxWidth = 800, quality = 0.8) {
         return new Promise((resolve, reject) => {
@@ -967,18 +918,12 @@
                     canvas.width = width;
                     canvas.height = height;
                     const ctx = canvas.getContext('2d');
-                    ctx.imageSmoothingEnabled = true;
-                    ctx.imageSmoothingQuality = 'high';
                     ctx.drawImage(img, 0, 0, width, height);
                     const dataUrl = canvas.toDataURL('image/webp', quality);
                     fetch(dataUrl)
                         .then(res => res.blob())
                         .then(blob => {
-                            const compressedFile = new File([blob], file.name.replace(/\.[^/.]+$/, ".webp"), {
-                                type: 'image/webp',
-                                lastModified: Date.now()
-                            });
-                            resolve(compressedFile);
+                            resolve(new File([blob], file.name.replace(/\.[^/.]+$/, ".webp"), { type: 'image/webp', lastModified: Date.now() }));
                         })
                         .catch(err => reject(err));
                 };
@@ -999,20 +944,21 @@
             loginForm: { username: '', password: '' },
             currentUser: JSON.parse(localStorage.getItem('currentUser') || '{"username":"","role":"admin","permissions":{}}'),
             
-            instansi: JSON.parse(localStorage.getItem('cachedInstansi') || '{"nama":"Pondok Pesantren","logo":""}'),
+            instansi: { nama: 'Pondok Pesantren', logo: '' },
             logoMethod: 'file',
             
-            cardSettings: JSON.parse(localStorage.getItem('cardSettings') || JSON.stringify({
+            cardSettings: {
                 headerText: 'YAYASAN HAAMILUL QUR\'AN KEC. PAGUAT KAB. POHUWATO',
                 subHeader: 'Mulia Bersama Al-Qur\'an Mencetak Satu Desa Satu Hafiz',
                 mainTitle: 'Tasmi\' Hafalan Qur\'an',
                 footerText: 'YAYASAN HAAMILUL QUR\'AN'
-            })),
-            attendanceConfig: JSON.parse(localStorage.getItem('attendanceConfig') || '{"hadir":25,"izin":0,"sakit":0,"alpa":-10}'),
-            loginSettings: JSON.parse(localStorage.getItem('loginSettings') || '{"subtitle":"Silakan masuk menggunakan akun resmi Anda"}'),
+            },
+            attendanceConfig: { hadir: 25, izin: 0, sakit: 0, alpa: -10 },
+            loginSettings: { subtitle: 'Silakan masuk menggunakan akun resmi Anda' },
             
             santriList: [],
             santriSearch: '',
+            selectedKelompokFilter: '',
             santriForm: { id: null, nama: '', kelompok: '', hafalan: '', umur: '', alamat: '', foto: '', poin: 0 },
             isSantriModalOpen: false,
 
@@ -1024,9 +970,8 @@
             isRewardModalOpen: false,
 
             pointItems: [],
-            newPointItem: { id: null, nama: '', poin: 0 },
+            pointItemForm: { id: null, nama: '', poin: 0 },
 
-            // Form Poin Bebas Terpusat
             customPointForm: { santriId: '', poin: '', catatan: '', simpanKategori: false, namaKategori: '' },
 
             attendanceLogsList: [],
@@ -1039,15 +984,13 @@
             unreadNotificationCount: 0,
 
             teachersList: [],
-            newGuru: { username: '', password: '', permissions: { absensi: true, poin: true, santri: true, laporan: false, reward: false } },
+            newGuru: { username: '', password: '', permissions: { absensi: true, poin: true, santri: true } },
 
             initApp() {
                 this.updateClock();
                 setInterval(() => this.updateClock(), 1000);
 
-                setTimeout(() => {
-                    this.showSplash = false;
-                }, 2000);
+                setTimeout(() => { this.showSplash = false; }, 2000);
 
                 this.loadInitialData();
                 this.setupRealtimeSync();
@@ -1076,24 +1019,10 @@
                 localStorage.setItem('activeTab', tabId);
             },
 
-            saveCardSettings() {
-                localStorage.setItem('cardSettings', JSON.stringify(this.cardSettings));
-                this.showToast('Pengaturan teks kartu pencapaian berhasil disimpan!');
-            },
-
-            saveAttendanceConfig() {
-                localStorage.setItem('attendanceConfig', JSON.stringify(this.attendanceConfig));
-                this.showToast('Pengaturan bobot poin kehadiran berhasil disimpan!');
-            },
-
-            saveLoginSettings() {
-                localStorage.setItem('loginSettings', JSON.stringify(this.loginSettings));
-                this.showToast('Pengaturan tampilan login berhasil disimpan!');
-            },
-
             async loadInitialData() {
                 try {
-                    let santriRes = await supabaseClient.from('santri').select('*');
+                    // Diurutkan berdasarkan created_at secara ascending agar posisi santri selalu stabil & terkunci
+                    let santriRes = await supabaseClient.from('santri').select('*').order('created_at', { ascending: true });
                     if (santriRes.data) this.santriList = santriRes.data;
 
                     let rewardRes = await supabaseClient.from('rewards').select('*');
@@ -1109,44 +1038,23 @@
                     if (teacherRes.data) this.teachersList = teacherRes.data;
 
                     let notifRes = await supabaseClient.from('notifications').select('*');
-                    if (notifRes.data) {
-                        this.notifications = notifRes.data;
-                    }
+                    if (notifRes.data) this.notifications = notifRes.data;
 
                     let instansiRes = await supabaseClient.from('instansi').select('*').eq('id', 'profile').maybeSingle();
                     if (instansiRes.data) {
                         this.instansi = instansiRes.data;
-                        localStorage.setItem('cachedInstansi', JSON.stringify(this.instansi));
                     }
 
-                    this.checkLowStockNotifications();
+                    this.unreadNotificationCount = this.notifications.filter(n => !n.validated && n.tipe === 'approval' && (!n.status_validasi || n.status_validasi === 'pending')).length;
 
                 } catch (err) {
-                    console.error('Network / Supabase Connection Error:', err);
+                    console.error('Supabase Connection Error:', err);
                 }
-            },
-
-            checkLowStockNotifications() {
-                this.notifications = this.notifications.filter(n => n.tipe !== 'stok_menipis');
-
-                let lowStockItems = this.rewardList.filter(r => r.stok <= 2);
-                lowStockItems.forEach(item => {
-                    this.notifications.unshift({
-                        id: 'stock_' + item.id,
-                        pesan: `Peringatan: Stok item "${item.nama}" menipis (Sisa: ${item.stok}).`,
-                        tipe: 'stok_menipis',
-                        validated: false,
-                        waktu: 'Baru saja'
-                    });
-                });
-
-                this.unreadNotificationCount = this.notifications.filter(n => !n.validated && n.tipe === 'approval' && (!n.status_validasi || n.status_validasi === 'pending')).length;
             },
 
             setupRealtimeSync() {
                 supabaseClient.channel('public-db')
-                    .on('postgres_changes', { event: '*', schema: 'public' }, (payload) => {
-                        console.log('Realtime change received:', payload);
+                    .on('postgres_changes', { event: '*', schema: 'public' }, () => {
                         this.loadInitialData();
                     })
                     .subscribe();
@@ -1163,7 +1071,7 @@
 
             async handleLogin() {
                 if (this.loginForm.username === 'admin' && this.loginForm.password === 'admin123') {
-                    this.currentUser = { username: 'admin', role: 'admin', permissions: { absensi: true, poin: true, santri: true, laporan: true, reward: true } };
+                    this.currentUser = { username: 'admin', role: 'admin', permissions: { absensi: true, poin: true, santri: true } };
                     this.isLoggedIn = true;
                 } else {
                     let teacher = this.teachersList.find(t => t.username === this.loginForm.username && t.password === this.loginForm.password);
@@ -1177,32 +1085,18 @@
                 }
                 localStorage.setItem('isLoggedIn', 'true');
                 localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
-                localStorage.setItem('activeTab', 'dashboard');
                 this.activeTab = 'dashboard';
                 this.showToast('Berhasil masuk ke sistem!');
             },
 
             logout() {
-                Swal.fire({
-                    title: 'Keluar Aplikasi',
-                    text: 'Apakah Anda yakin ingin keluar dari sesi ini?',
-                    icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonColor: '#10b981',
-                    cancelButtonColor: '#ef4444',
-                    confirmButtonText: 'Ya, Keluar',
-                    cancelButtonText: 'Batal'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        this.isLoggedIn = false;
-                        this.currentUser = { username: '', role: 'admin', permissions: {} };
-                        localStorage.removeItem('isLoggedIn');
-                        localStorage.removeItem('currentUser');
-                        localStorage.removeItem('activeTab');
-                        this.loginForm = { username: '', password: '' };
-                        this.showToast('Berhasil keluar sesi.');
-                    }
-                });
+                this.isLoggedIn = false;
+                this.currentUser = { username: '', role: 'admin', permissions: {} };
+                localStorage.removeItem('isLoggedIn');
+                localStorage.removeItem('currentUser');
+                localStorage.removeItem('activeTab');
+                this.loginForm = { username: '', password: '' };
+                this.showToast('Berhasil keluar sesi.');
             },
 
             get availableTabs() {
@@ -1212,6 +1106,9 @@
                 }
                 if (this.currentUser.role === 'admin' || this.currentUser.permissions.absensi) {
                     tabs.push({ id: 'absensi', label: 'Absensi', icon: 'fa-solid fa-clipboard-user' });
+                }
+                if (this.currentUser.role === 'admin') {
+                    tabs.push({ id: 'kategori_poin', label: 'Kategori', icon: 'fa-solid fa-tags' });
                 }
                 tabs.push({ id: 'reward', label: 'Reward', icon: 'fa-solid fa-gift' });
                 if (this.currentUser.role === 'admin') {
@@ -1226,12 +1123,20 @@
                 return [...this.santriList].sort((a, b) => b.poin - a.poin);
             },
 
-            get filteredSantri() {
-                if (!this.santriSearch) return this.santriList;
-                return this.santriList.filter(s => 
-                    s.nama.toLowerCase().includes(this.santriSearch.toLowerCase()) || 
-                    (s.kelompok && s.kelompok.toLowerCase().includes(this.santriSearch.toLowerCase()))
-                );
+            get availableKelompokList() {
+                return [...new Set(this.santriList.map(s => s.kelompok).filter(Boolean))].sort();
+            },
+
+            // POSISI TETAP TERKUNCI (Tidak bergeser/berpindah saat diedit karena mempertahankan urutan dari database)
+            get filteredSantriFixedPosition() {
+                let result = [...this.santriList];
+                if (this.santriSearch) {
+                    result = result.filter(s => s.nama.toLowerCase().includes(this.santriSearch.toLowerCase()));
+                }
+                if (this.selectedKelompokFilter) {
+                    result = result.filter(s => s.kelompok === this.selectedKelompokFilter);
+                }
+                return result;
             },
 
             async saveSantri() {
@@ -1260,7 +1165,7 @@
 
                 hideLoading();
                 if (res.error) {
-                    this.showToast('Gagal menyimpan data santri: ' + res.error.message, 'error');
+                    this.showToast('Gagal menyimpan santri: ' + res.error.message, 'error');
                     return;
                 }
 
@@ -1287,37 +1192,35 @@
             downloadCardImage() {
                 const cardElement = document.getElementById('captureCard');
                 showLoading('Menyiapkan gambar kartu...');
-                
                 html2canvas(cardElement, { scale: 3, useCORS: true }).then(canvas => {
                     hideLoading();
                     const link = document.createElement('a');
-                    link.download = `Kartu-Pencapaian-${this.activeCardSantri.nama.replace(/\s+/g, '_')}.png`;
+                    link.download = `Kartu-${this.activeCardSantri.nama.replace(/\s+/g, '_')}.png`;
                     link.href = canvas.toDataURL('image/png');
                     link.click();
                     this.showToast('Kartu berhasil di-download!');
-                }).catch(err => {
+                }).catch(() => {
                     hideLoading();
-                    this.showToast('Gagal mengunduh kartu pencapaian.', 'error');
+                    this.showToast('Gagal mengunduh kartu.', 'error');
                 });
             },
 
             async deleteSantri(id) {
                 Swal.fire({
                     title: 'Hapus Santri?',
-                    text: 'Data santri yang dihapus tidak dapat dikembalikan!',
+                    text: 'Data santri akan dihapus permanen!',
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#ef4444',
-                    cancelButtonColor: '#64748b',
                     confirmButtonText: 'Ya, Hapus',
                     cancelButtonText: 'Batal'
                 }).then(async (result) => {
                     if (result.isConfirmed) {
-                        showLoading('Menghapus data...');
-                        let res = await supabaseClient.from('santri').delete().eq('id', id);
+                        showLoading('Menghapus...');
+                        await supabaseClient.from('santri').delete().eq('id', id);
                         hideLoading();
-                        this.showToast('Data santri berhasil dihapus.');
                         this.loadInitialData();
+                        this.showToast('Santri dihapus.');
                     }
                 });
             },
@@ -1326,16 +1229,15 @@
                 const file = event.target.files[0];
                 if (file) {
                     try {
-                        showLoading('Mengompres foto santri...');
+                        showLoading('Mengompres foto...');
                         const compressed = await compressImage(file, 800, 0.8);
                         const reader = new FileReader();
                         reader.onload = (e) => { 
                             this.santriForm.foto = e.target.result; 
                             hideLoading();
-                            this.showToast('Foto berhasil dimuat & dikompres!');
                         };
                         reader.readAsDataURL(compressed);
-                    } catch (err) {
+                    } catch {
                         hideLoading();
                         this.showToast('Gagal memproses foto.', 'error');
                     }
@@ -1343,148 +1245,100 @@
             },
 
             async submitCustomPoint() {
-                if (!this.customPointForm.santriId) {
-                    this.showToast('Pilih nama santri terlebih dahulu!', 'warning');
-                    return;
-                }
-                if (!this.customPointForm.poin || parseInt(this.customPointForm.poin) === 0) {
-                    this.showToast('Jumlah poin wajib diisi dan tidak boleh 0!', 'warning');
-                    return;
-                }
-                if (!this.customPointForm.catatan.trim()) {
-                    this.showToast('Catatan / alasan wajib diisi!', 'warning');
+                if (!this.customPointForm.santriId || !this.customPointForm.poin || !this.customPointForm.catatan) {
+                    this.showToast('Lengkapi santri, poin, dan catatan!', 'warning');
                     return;
                 }
 
                 let santri = this.santriList.find(s => s.id == this.customPointForm.santriId);
-                if (!santri) return;
-
                 let poinAdd = parseInt(this.customPointForm.poin);
-                let catatan = this.customPointForm.catatan.trim();
-                let labelStatus = `Poin Bebas (${poinAdd >= 0 ? '+' + poinAdd : poinAdd})`;
 
-                showLoading('Menyimpan poin bebas...');
+                showLoading('Menyimpan poin...');
                 let newPoin = (santri.poin || 0) + poinAdd;
-                
-                // Update poin santri
                 await supabaseClient.from('santri').update({ poin: newPoin }).eq('id', santri.id);
-                
-                // Catat ke attendance_logs (riwayat)
                 await supabaseClient.from('attendance_logs').insert([{ 
                     santri_nama: santri.nama, 
-                    status: labelStatus, 
+                    status: `Poin Bebas (${poinAdd >= 0 ? '+' + poinAdd : poinAdd})`, 
                     poin: poinAdd, 
-                    catatan: catatan,
+                    catatan: this.customPointForm.catatan,
                     tanggal: new Date().toLocaleDateString() 
                 }]);
 
-                // Jika dicentang untuk disimpan sebagai kategori tetap
                 if (this.customPointForm.simpanKategori && this.customPointForm.namaKategori.trim()) {
-                    await supabaseClient.from('point_items').insert([{
-                        nama: this.customPointForm.namaKategori.trim(),
-                        poin: poinAdd
-                    }]);
+                    await supabaseClient.from('point_items').insert([{ nama: this.customPointForm.namaKategori.trim(), poin: poinAdd }]);
                 }
 
                 hideLoading();
-                this.showToast(`Poin berhasil ditambahkan untuk ${santri.nama}!`);
-                
-                // Reset form
                 this.customPointForm = { santriId: '', poin: '', catatan: '', simpanKategori: false, namaKategori: '' };
                 this.loadInitialData();
+                this.showToast('Poin berhasil disimpan!');
             },
 
             async processAbsensiOnly(santriId) {
                 let status = this.selectedAction[santriId];
                 if (!status) {
-                    this.showToast('Pilih status kehadiran terlebih dahulu!', 'warning');
+                    this.showToast('Pilih status kehadiran!', 'warning');
                     return;
                 }
                 let santri = this.santriList.find(s => s.id === santriId);
-                if (!santri) return;
-
-                let poinAdd = 0;
-                let labelStatus = '';
-
-                if (status === 'Hadir') {
-                    poinAdd = parseInt(this.attendanceConfig.hadir) || 0;
-                    labelStatus = `Hadir (${poinAdd >= 0 ? '+' + poinAdd : poinAdd})`;
-                } else if (status === 'Alpa') {
-                    poinAdd = parseInt(this.attendanceConfig.alpa) || 0;
-                    labelStatus = `Alpa (${poinAdd >= 0 ? '+' + poinAdd : poinAdd})`;
-                } else if (status === 'Izin') {
-                    poinAdd = parseInt(this.attendanceConfig.izin) || 0;
-                    labelStatus = `Izin (${poinAdd >= 0 ? '+' + poinAdd : poinAdd})`;
-                } else if (status === 'Sakit') {
-                    poinAdd = parseInt(this.attendanceConfig.sakit) || 0;
-                    labelStatus = `Sakit (${poinAdd >= 0 ? '+' + poinAdd : poinAdd})`;
-                }
+                let poinAdd = parseInt(this.attendanceConfig[status.toLowerCase()]) || 0;
 
                 showLoading('Mencatat absensi...');
-                let newPoin = (santri.poin || 0) + poinAdd;
-                await supabaseClient.from('santri').update({ poin: newPoin }).eq('id', santriId);
+                await supabaseClient.from('santri').update({ poin: (santri.poin || 0) + poinAdd }).eq('id', santriId);
                 await supabaseClient.from('attendance_logs').insert([{ 
                     santri_nama: santri.nama, 
-                    status: labelStatus, 
+                    status: `${status} (${poinAdd >= 0 ? '+' + poinAdd : poinAdd})`, 
                     poin: poinAdd, 
                     catatan: 'Kehadiran Harian',
                     tanggal: new Date().toLocaleDateString() 
                 }]);
                 
-                // Reset dropdown setelah diproses
                 this.selectedAction[santriId] = '';
-
                 hideLoading();
-                this.showToast(`Absensi berhasil dicatat untuk ${santri.nama}.`);
                 this.loadInitialData();
+                this.showToast('Absensi dicatat.');
             },
 
             async deleteAttendanceLog(log) {
-                Swal.fire({
-                    title: 'Koreksi / Hapus Log?',
-                    text: `Hapus log absensi "${log.status}" untuk ${log.santri_nama}? Poin santri akan dikoreksi otomatis.`,
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#ef4444',
-                    cancelButtonColor: '#64748b',
-                    confirmButtonText: 'Ya, Koreksi',
-                    cancelButtonText: 'Batal'
-                }).then(async (result) => {
-                    if (result.isConfirmed) {
-                        showLoading('Mengoreksi data...');
-                        let santri = this.santriList.find(s => s.nama === log.santri_nama);
-                        if (santri) {
-                            let correctedPoin = (santri.poin || 0) - (log.poin || 0);
-                            await supabaseClient.from('santri').update({ poin: correctedPoin }).eq('id', santri.id);
-                        }
-                        await supabaseClient.from('attendance_logs').delete().eq('id', log.id);
-                        hideLoading();
-                        this.showToast('Log absensi berhasil dikoreksi/dihapus.');
-                        this.loadInitialData();
-                    }
-                });
+                showLoading('Mengoreksi log...');
+                let santri = this.santriList.find(s => s.nama === log.santri_nama);
+                if (santri) {
+                    await supabaseClient.from('santri').update({ poin: (santri.poin || 0) - (log.poin || 0) }).eq('id', santri.id);
+                }
+                await supabaseClient.from('attendance_logs').delete().eq('id', log.id);
+                hideLoading();
+                this.loadInitialData();
+                this.showToast('Log absensi dikoreksi.');
             },
 
-            async deletePointItem(id) {
-                showLoading('Menghapus...');
-                await supabaseClient.from('point_items').delete().eq('id', id);
+            async savePointItem() {
+                if (!this.pointItemForm.nama) return;
+                showLoading('Menyimpan kategori...');
+                let payload = { nama: this.pointItemForm.nama.trim(), poin: parseInt(this.pointItemForm.poin) || 0 };
+                if (this.pointItemForm.id) {
+                    await supabaseClient.from('point_items').update(payload).eq('id', this.pointItemForm.id);
+                } else {
+                    await supabaseClient.from('point_items').insert([payload]);
+                }
                 hideLoading();
-                this.showToast('Kategori poin dihapus.');
+                this.resetPointItemForm();
                 this.loadInitialData();
+                this.showToast('Kategori disimpan.');
+            },
+
+            editPointItem(item) { this.pointItemForm = { ...item }; },
+            resetPointItemForm() { this.pointItemForm = { id: null, nama: '', poin: 0 }; },
+
+            async deletePointItem(id) {
+                await supabaseClient.from('point_items').delete().eq('id', id);
+                this.loadInitialData();
+                this.showToast('Kategori dihapus.');
             },
 
             async saveReward() {
-                if (!this.rewardForm.nama) {
-                    this.showToast('Nama hadiah wajib diisi!', 'warning');
-                    return;
-                }
+                if (!this.rewardForm.nama) return;
                 showLoading('Menyimpan reward...');
-                let payload = {
-                    nama: this.rewardForm.nama,
-                    poin: parseInt(this.rewardForm.poin) || 0,
-                    stok: parseInt(this.rewardForm.stok) || 0,
-                    foto: this.rewardForm.foto || ''
-                };
+                let payload = { nama: this.rewardForm.nama, poin: parseInt(this.rewardForm.poin) || 0, stok: parseInt(this.rewardForm.stok) || 0, foto: this.rewardForm.foto || '' };
                 if (this.rewardForm.id) {
                     await supabaseClient.from('rewards').update(payload).eq('id', this.rewardForm.id);
                 } else {
@@ -1492,8 +1346,8 @@
                 }
                 hideLoading();
                 this.isRewardModalOpen = false;
-                this.showToast('Hadiah/reward berhasil disimpan!');
                 this.loadInitialData();
+                this.showToast('Reward disimpan.');
             },
 
             openRewardModal() {
@@ -1501,192 +1355,85 @@
                 this.isRewardModalOpen = true;
             },
 
-            editReward(r) {
-                this.rewardForm = { ...r };
-                this.isRewardModalOpen = true;
-            },
+            editReward(r) { this.rewardForm = { ...r }; this.isRewardModalOpen = true; },
 
             async incrementStock(r) {
-                showLoading('Memperbarui stok...');
                 await supabaseClient.from('rewards').update({ stok: (r.stok || 0) + 1 }).eq('id', r.id);
-                hideLoading();
-                this.showToast('Stok berhasil ditambahkan.');
                 this.loadInitialData();
             },
 
             async deleteReward(id) {
-                Swal.fire({
-                    title: 'Hapus Reward?',
-                    text: 'Reward ini akan dihapus dari katalog.',
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#ef4444',
-                    cancelButtonColor: '#64748b',
-                    confirmButtonText: 'Ya, Hapus',
-                    cancelButtonText: 'Batal'
-                }).then(async (result) => {
-                    if (result.isConfirmed) {
-                        showLoading('Menghapus...');
-                        await supabaseClient.from('rewards').delete().eq('id', id);
-                        hideLoading();
-                        this.showToast('Reward berhasil dihapus.');
-                        this.loadInitialData();
-                    }
-                });
+                await supabaseClient.from('rewards').delete().eq('id', id);
+                this.loadInitialData();
+                this.showToast('Reward dihapus.');
             },
 
             async uploadRewardFoto(event) {
                 const file = event.target.files[0];
                 if (file) {
-                    try {
-                        showLoading('Mengompres foto reward...');
-                        const compressed = await compressImage(file, 800, 0.8);
-                        const reader = new FileReader();
-                        reader.onload = (e) => { 
-                            this.rewardForm.foto = e.target.result; 
-                            hideLoading();
-                            this.showToast('Foto reward berhasil diproses!');
-                        };
-                        reader.readAsDataURL(compressed);
-                    } catch (err) {
-                        hideLoading();
-                        this.showToast('Gagal memproses foto.', 'error');
-                    }
+                    const compressed = await compressImage(file, 800, 0.8);
+                    const reader = new FileReader();
+                    reader.onload = (e) => { this.rewardForm.foto = e.target.result; };
+                    reader.readAsDataURL(compressed);
                 }
             },
 
             async uploadLogo(event) {
                 const file = event.target.files[0];
                 if (file) {
-                    try {
-                        showLoading('Mengompres logo instansi...');
-                        const compressed = await compressImage(file, 500, 0.8);
-                        const reader = new FileReader();
-                        reader.onload = (e) => { 
-                            this.instansi.logo = e.target.result; 
-                            localStorage.setItem('cachedInstansi', JSON.stringify(this.instansi));
-                            hideLoading();
-                            this.showToast('Logo berhasil dimuat!');
-                        };
-                        reader.readAsDataURL(compressed);
-                    } catch (err) {
-                        hideLoading();
-                        this.showToast('Gagal memproses logo.', 'error');
-                    }
+                    const compressed = await compressImage(file, 500, 0.8);
+                    const reader = new FileReader();
+                    reader.onload = (e) => { this.instansi.logo = e.target.result; };
+                    reader.readAsDataURL(compressed);
                 }
             },
 
             async saveInstansi() {
-                showLoading('Menyimpan profil instansi...');
-                localStorage.setItem('cachedInstansi', JSON.stringify(this.instansi));
-                
-                let res = await supabaseClient.from('instansi').upsert({
-                    id: 'profile',
-                    nama: this.instansi.nama,
-                    logo: this.instansi.logo
-                });
+                showLoading('Menyimpan instansi...');
+                await supabaseClient.from('instansi').upsert({ id: 'profile', nama: this.instansi.nama, logo: this.instansi.logo });
                 hideLoading();
-                if (res.error) {
-                    this.showToast('Gagal simpan ke database: ' + res.error.message, 'error');
-                    return;
-                }
-                this.showToast('Profil instansi berhasil disimpan!');
                 this.loadInitialData();
+                this.showToast('Instansi disimpan.');
             },
 
             async saveGuru() {
-                if (!this.newGuru.username || !this.newGuru.password) {
-                    this.showToast('Username dan password guru wajib diisi!', 'warning');
-                    return;
-                }
-                showLoading('Menambahkan akun guru...');
-                let res = await supabaseClient.from('teachers').insert([{
-                    username: this.newGuru.username,
-                    password: this.newGuru.password,
-                    permissions: this.newGuru.permissions
-                }]);
+                if (!this.newGuru.username || !this.newGuru.password) return;
+                showLoading('Menambah guru...');
+                await supabaseClient.from('teachers').insert([this.newGuru]);
                 hideLoading();
-                if (res.error) {
-                    this.showToast('Gagal menambah akun: ' + res.error.message, 'error');
-                    return;
-                }
-                this.showToast('Akun guru berhasil ditambahkan!');
-                this.newGuru = { username: '', password: '', permissions: { absensi: true, poin: true, santri: true, laporan: false, reward: false } };
+                this.newGuru = { username: '', password: '', permissions: { absensi: true, poin: true, santri: true } };
                 this.loadInitialData();
+                this.showToast('Guru ditambahkan.');
             },
 
             async deleteTeacher(id) {
-                Swal.fire({
-                    title: 'Hapus Akun Guru?',
-                    text: 'Akun pengajar ini akan dihapus dari sistem.',
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#ef4444',
-                    cancelButtonColor: '#64748b',
-                    confirmButtonText: 'Ya, Hapus',
-                    cancelButtonText: 'Batal'
-                }).then(async (result) => {
-                    if (result.isConfirmed) {
-                        showLoading('Menghapus akun...');
-                        let res = await supabaseClient.from('teachers').delete().eq('id', id);
-                        hideLoading();
-                        if (res.error) {
-                            this.showToast('Gagal menghapus akun: ' + res.error.message, 'error');
-                            return;
-                        }
-                        this.showToast('Akun guru berhasil dihapus.');
-                        this.loadInitialData();
-                    }
-                });
+                await supabaseClient.from('teachers').delete().eq('id', id);
+                this.loadInitialData();
+                this.showToast('Guru dihapus.');
             },
 
             async openExchangeModal(reward) {
-                if (this.santriList.length === 0) {
-                    this.showToast('Belum ada data santri terdaftar.', 'warning');
-                    return;
-                }
-
                 let santriOptions = {};
-                this.santriList.forEach(s => {
-                    santriOptions[s.id] = `${s.nama} (Sisa Poin: ${s.poin})`;
-                });
+                this.santriList.forEach(s => { santriOptions[s.id] = `${s.nama} (${s.poin} Poin)`; });
 
                 const { value: selectedSantriId } = await Swal.fire({
-                    title: 'Ajukan Penukaran Reward',
-                    text: `Pilih Nama Santri untuk menukar "${reward.nama}" (${reward.poin} Poin):`,
+                    title: 'Tukar Reward',
                     input: 'select',
                     inputOptions: santriOptions,
-                    inputPlaceholder: 'Pilih nama santri...',
-                    showCancelButton: true,
-                    confirmButtonColor: '#10b981',
-                    cancelButtonColor: '#64748b',
-                    confirmButtonText: 'Ajukan Penukaran',
-                    cancelButtonText: 'Batal',
-                    inputValidator: (value) => {
-                        if (!value) {
-                            return 'Anda harus memilih salah satu santri!';
-                        }
-                    }
+                    inputPlaceholder: 'Pilih santri...',
+                    showCancelButton: true
                 });
 
                 if (!selectedSantriId) return;
-
                 let santri = this.santriList.find(s => s.id == selectedSantriId);
-                if (!santri) return;
 
                 if (santri.poin < reward.poin) {
-                    this.showToast(`Poin ${santri.nama} tidak cukup! Poin saat ini ${santri.poin}, butuh ${reward.poin}.`, 'warning');
-                    return;
-                }
-                if (reward.stok <= 0) {
-                    this.showToast('Stok hadiah habis!', 'warning');
+                    this.showToast('Poin santri tidak cukup!', 'warning');
                     return;
                 }
 
-                showLoading('Mengirim pengajuan penukaran...');
-                
                 await supabaseClient.from('notifications').insert([{
-                    pesan: `Santri ${santri.nama} mengajukan penukaran reward ${reward.nama} (${reward.poin} poin). Menunggu validasi admin.`,
+                    pesan: `Santri ${santri.nama} menukar ${reward.nama} (${reward.poin} poin).`,
                     tipe: 'approval',
                     validated: false,
                     status_validasi: 'pending',
@@ -1696,151 +1443,66 @@
                     waktu: new Date().toLocaleString()
                 }]);
 
-                hideLoading();
-                this.showToast(`Pengajuan berhasil dikirim! Menunggu validasi admin.`);
                 this.loadInitialData();
+                this.showToast('Pengajuan penukaran terkirim ke admin.');
             },
 
             async processCashExchange() {
-                if (!this.cashExchange.santriId || !this.cashExchange.nominal) {
-                    this.showToast('Pilih santri dan nominal penukaran uang!', 'warning');
-                    return;
-                }
+                if (!this.cashExchange.santriId || !this.cashExchange.nominal) return;
                 let santri = this.santriList.find(s => s.id == this.cashExchange.santriId);
                 let nominal = parseInt(this.cashExchange.nominal);
 
-                if (nominal < 1000 || nominal % 1000 !== 0) {
-                    this.showToast('Minimal Rp 1.000 dan harus kelipatan 1.000!', 'warning');
-                    return;
-                }
                 if (santri.poin < nominal) {
-                    this.showToast(`Poin tidak cukup! Poin santri ${santri.poin}.`, 'warning');
+                    this.showToast('Poin tidak cukup!', 'warning');
                     return;
                 }
 
-                showLoading('Memproses penukaran tunai...');
+                showLoading('Memproses...');
                 await supabaseClient.from('santri').update({ poin: santri.poin - nominal }).eq('id', santri.id);
                 hideLoading();
-                this.showToast(`Berhasil menukar poin senilai Rp ${nominal.toLocaleString('id-ID')}`);
                 this.cashExchange = { santriId: '', nominal: 1000 };
                 this.loadInitialData();
+                this.showToast('Penukaran tunai berhasil.');
             },
 
-            openNotificationModal() {
-                this.isNotificationModalOpen = true;
-                this.unreadNotificationCount = 0;
-            },
-
-            closeNotificationModal() {
-                this.isNotificationModalOpen = false;
-            },
-
-            goToRewardMenu() {
-                this.isNotificationModalOpen = false;
-                this.setActiveTab('reward');
-            },
-
-            goToValidasiMenu() {
-                this.isNotificationModalOpen = false;
-                this.setActiveTab('validasi');
-            },
+            openNotificationModal() { this.isNotificationModalOpen = true; this.unreadNotificationCount = 0; },
+            closeNotificationModal() { this.isNotificationModalOpen = false; },
+            goToValidasiMenu() { this.isNotificationModalOpen = false; this.setActiveTab('validasi'); },
 
             async approveRedemption(notif) {
-                showLoading('Menyetujui & memvalidasi penukaran...');
-
+                showLoading('Menyetujui...');
                 await supabaseClient.from('notifications').update({ validated: true, status_validasi: 'disetujui' }).eq('id', notif.id);
 
-                if (notif.santri_id && notif.reward_id) {
-                    let santri = this.santriList.find(s => s.id == notif.santri_id);
-                    let reward = this.rewardList.find(r => r.id == notif.reward_id);
+                let santri = this.santriList.find(s => s.id == notif.santri_id);
+                let reward = this.rewardList.find(r => r.id == notif.reward_id);
 
-                    if (santri && reward) {
-                        let newSantriPoin = Math.max(0, (santri.poin || 0) - (notif.poin_tukar || reward.poin));
-                        let newRewardStok = Math.max(0, (reward.stok || 0) - 1);
-
-                        await supabaseClient.from('santri').update({ poin: newSantriPoin }).eq('id', santri.id);
-                        await supabaseClient.from('rewards').update({ stok: newRewardStok }).eq('id', reward.id);
-                    }
+                if (santri && reward) {
+                    await supabaseClient.from('santri').update({ poin: Math.max(0, santri.poin - notif.poin_tukar) }).eq('id', santri.id);
+                    await supabaseClient.from('rewards').update({ stok: Math.max(0, reward.stok - 1) }).eq('id', reward.id);
                 }
 
                 hideLoading();
-                this.showToast('Pengajuan disetujui! Poin & stok telah dikurangi.');
                 this.loadInitialData();
+                this.showToast('Disetujui.');
             },
 
             async rejectRedemption(notif) {
-                showLoading('Menolak pengajuan...');
-
                 await supabaseClient.from('notifications').update({ validated: true, status_validasi: 'ditolak' }).eq('id', notif.id);
-
-                hideLoading();
-                this.showToast('Pengajuan penukaran berhasil ditolak.');
                 this.loadInitialData();
-            },
-
-            async editValidationLog(notif) {
-                const { value: newStatus } = await Swal.fire({
-                    title: 'Ubah Status Validasi',
-                    input: 'select',
-                    inputOptions: {
-                        'disetujui': 'Disetujui',
-                        'ditolak': 'Ditolak'
-                    },
-                    inputValue: notif.status_validasi,
-                    showCancelButton: true,
-                    confirmButtonColor: '#10b981',
-                    cancelButtonColor: '#64748b',
-                    confirmButtonText: 'Simpan',
-                    cancelButtonText: 'Batal'
-                });
-
-                if (newStatus && newStatus !== notif.status_validasi) {
-                    showLoading('Memperbarui status...');
-                    await supabaseClient.from('notifications').update({ status_validasi: newStatus }).eq('id', notif.id);
-                    hideLoading();
-                    this.showToast('Status validasi berhasil diperbarui.');
-                    this.loadInitialData();
-                }
-            },
-
-            async deleteValidationLog(id) {
-                Swal.fire({
-                    title: 'Hapus Riwayat Validasi?',
-                    text: 'Riwayat ini akan dihapus permanen dari daftar.',
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#ef4444',
-                    cancelButtonColor: '#64748b',
-                    confirmButtonText: 'Ya, Hapus',
-                    cancelButtonText: 'Batal'
-                }).then(async (result) => {
-                    if (result.isConfirmed) {
-                        showLoading('Menghapus...');
-                        await supabaseClient.from('notifications').delete().eq('id', id);
-                        hideLoading();
-                        this.showToast('Riwayat berhasil dihapus.');
-                        this.loadInitialData();
-                    }
-                });
+                this.showToast('Ditolak.');
             },
 
             exportAbsensiPDF() {
-                showLoading('Menyiapkan dokumen PDF...');
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF();
-                doc.text(`Rekapitulasi Absensi & Poin - ${this.instansi.nama || 'Pondok Pesantren'}`, 14, 15);
+                doc.text(`Rekap Absensi & Poin - ${this.instansi.nama}`, 14, 15);
                 let rows = this.santriList.map((s, index) => {
                     let stats = this.getAttendanceStats(s.nama);
                     return [index + 1, s.nama, s.kelompok || '-', stats.hadir, stats.izin, stats.sakit, stats.alpa, s.poin];
                 });
-                doc.autoTable({
-                    head: [['No', 'Nama Santri', 'Kelompok', 'Hadir', 'Izin', 'Sakit', 'Alpa', 'Total Poin']],
-                    body: rows,
-                    startY: 20,
-                });
-                hideLoading();
-                doc.save("rekap-absensi-poin-santri.pdf");
-                this.showToast('File PDF rekap berhasil diunduh!');
+                doc.autoTable({ head: [['No', 'Nama', 'Kelompok', 'Hadir', 'Izin', 'Sakit', 'Alpa', 'Poin']], body: rows, startY: 20 });
+                doc.save("rekap-santri.pdf");
+                this.showToast('PDF berhasil diunduh.');
             }
         }
     }
