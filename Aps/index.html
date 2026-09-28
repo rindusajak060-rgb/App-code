@@ -381,18 +381,18 @@
                     </div>
                 </div>
 
-                <!-- TAB 4: KATEGORI POIN & PENILAIAN -->
-                <div x-show="activeTab === 'kategori_poin' && currentUser.role === 'admin'" class="space-y-4">
+                <!-- TAB 4: POIN BONUS & CATATAN (BEBAS) -->
+                <div x-show="activeTab === 'kategori_poin'" class="space-y-4">
                     <div class="flex justify-between items-center">
                         <div>
-                            <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Penilaian & Kategori Poin</h3>
-                            <p class="text-[10px] text-slate-400">Berikan poin santri berdasarkan kategori atau buat kategori baru</p>
+                            <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Pemberian Poin Bonus & Catatan</h3>
+                            <p class="text-[10px] text-slate-400">Berikan poin tambahan atau pengurangan beserta alasannya</p>
                         </div>
                     </div>
 
                     <div class="bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-emerald-500/10 p-4 rounded-3xl border border-emerald-200/80 shadow-xs space-y-3">
                         <h4 class="text-xs font-bold text-emerald-900 uppercase tracking-wider flex items-center">
-                            <i class="fa-solid fa-circle-check text-emerald-600 mr-1.5"></i> Form Penilaian Santri Berdasarkan Kategori
+                            <i class="fa-solid fa-award text-emerald-600 mr-1.5"></i> Form Poin Bonus & Catatan Keterangan
                         </h4>
                         
                         <div class="space-y-2.5">
@@ -407,66 +407,18 @@
                             </div>
 
                             <div>
-                                <label class="block text-[10px] font-bold text-slate-700 mb-1">Pilih Kategori Prestasi / Pelanggaran</label>
-                                <select x-model="gradingForm.categoryId" class="w-full text-xs bg-white border border-emerald-200 rounded-xl px-3 py-2 focus:outline-none font-semibold text-slate-700">
-                                    <option value="">-- Pilih Kategori Poin --</option>
-                                    <template x-for="cat in pointItems" :key="cat.id">
-                                        <option :value="cat.id" x-text="cat.nama + ' (' + (cat.poin > 0 ? '+' + cat.poin : cat.poin) + ' Poin)'"></option>
-                                    </template>
-                                </select>
+                                <label class="block text-[10px] font-bold text-slate-700 mb-1">Jumlah Poin (+ Bonus atau - Pelanggaran)</label>
+                                <input type="number" x-model="gradingForm.jumlahPoin" placeholder="Contoh: 10 atau -5" class="w-full px-3 py-2 text-xs bg-white border border-emerald-200 rounded-xl focus:outline-none font-bold text-emerald-700">
                             </div>
 
                             <div>
-                                <label class="block text-[10px] font-bold text-slate-700 mb-1">Catatan Tambahan (Opsional)</label>
-                                <input type="text" x-model="gradingForm.catatan" placeholder="Contoh: Surat Al-Baqarah ayat 1-20" class="w-full px-3 py-2 text-xs bg-white border border-emerald-200 rounded-xl focus:outline-none">
+                                <label class="block text-[10px] font-bold text-slate-700 mb-1">Catatan / Alasan (Mengapa poin diberikan)</label>
+                                <textarea x-model="gradingForm.catatan" rows="2" placeholder="Contoh: Menghafal Surat Al-Baqarah ayat 1-10 dengan lancar" class="w-full px-3 py-2 text-xs bg-white border border-emerald-200 rounded-xl focus:outline-none"></textarea>
                             </div>
 
-                            <button @click="submitGrading()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-100 transition">
-                                <i class="fa-solid fa-paper-plane mr-1"></i> Berikan Penilaian & Poin
+                            <button @click="submitBonusPoin()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-100 transition">
+                                <i class="fa-solid fa-paper-plane mr-1"></i> Simpan & Kirim Poin Bonus
                             </button>
-                        </div>
-                    </div>
-
-                    <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
-                        <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider" x-text="pointItemForm.id ? 'Edit Kategori Poin' : 'Buat Kategori Poin Baru'"></h4>
-                        <div>
-                            <label class="block text-[10px] font-bold text-slate-600 mb-1">Nama Kategori</label>
-                            <input type="text" x-model="pointItemForm.nama" placeholder="Contoh: Menghafal 1 Halaman" class="w-full px-3 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-bold text-slate-600 mb-1">Bobot Poin (+ / -)</label>
-                            <input type="number" x-model="pointItemForm.poin" placeholder="Contoh: 10 atau -5" class="w-full px-3 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none font-semibold">
-                        </div>
-                        <div class="flex space-x-2 pt-1">
-                            <template x-if="pointItemForm.id">
-                                <button @click="resetPointItemForm()" class="py-2.5 px-4 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl text-xs font-bold transition">Batal</button>
-                            </template>
-                            <button @click="savePointItem()" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md transition" x-text="pointItemForm.id ? 'Simpan Perubahan' : 'Tambah Kategori'"></button>
-                        </div>
-                    </div>
-
-                    <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
-                        <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Daftar Kategori Poin Tersimpan</h4>
-                        <div class="space-y-2">
-                            <template x-for="item in pointItems" :key="item.id">
-                                <div class="flex justify-between items-center bg-slate-50 p-3 rounded-2xl border border-slate-100 text-xs">
-                                    <div>
-                                        <h5 class="font-bold text-slate-800" x-text="item.nama"></h5>
-                                        <span class="text-[10px] font-extrabold text-emerald-600 mt-0.5 block" x-text="(item.poin > 0 ? '+' + item.poin : item.poin) + ' Poin'"></span>
-                                    </div>
-                                    <div class="flex items-center space-x-1.5">
-                                        <button @click="editPointItem(item)" class="px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 rounded-xl text-[10px] font-bold transition flex items-center shadow-xs">
-                                            <i class="fa-solid fa-pen mr-1"></i> Edit
-                                        </button>
-                                        <button @click="deletePointItem(item.id)" class="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl text-[10px] font-bold transition flex items-center shadow-xs">
-                                            <i class="fa-solid fa-trash mr-1"></i> Hapus
-                                        </button>
-                                    </div>
-                                </div>
-                            </template>
-                            <template x-if="pointItems.length === 0">
-                                <p class="text-xs text-slate-400 text-center py-4 font-medium">Belum ada kategori poin tetap.</p>
-                            </template>
                         </div>
                     </div>
                 </div>
@@ -632,6 +584,7 @@
                 <div x-show="activeTab === 'settings' && currentUser.role === 'admin'" class="space-y-4">
                     <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Panel Admin & Pengaturan Sistem</h3>
 
+                    <!-- PENGATURAN BOBOT POIN KEHADIRAN -->
                     <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
                         <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Pengaturan Bobot Poin Kehadiran</h4>
                         <div class="grid grid-cols-2 gap-2">
@@ -655,6 +608,29 @@
                         <button @click="saveAttendanceConfig()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md transition">Simpan Bobot Kehadiran</button>
                     </div>
 
+                    <!-- PENGATURAN KARTU PENCAPAIAN -->
+                    <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
+                        <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Pengaturan Teks Kartu Pencapaian</h4>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-600 mb-1">Sub-Header Kartu (Yayasan/Kecamatan)</label>
+                            <input type="text" x-model="cardSettings.headerText" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-600 mb-1">Motto / Slogan Kartu</label>
+                            <input type="text" x-model="cardSettings.subHeader" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-600 mb-1">Judul Utama Kartu</label>
+                            <input type="text" x-model="cardSettings.mainTitle" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-600 mb-1">Footer / Nama Yayasan di Bawah</label>
+                            <input type="text" x-model="cardSettings.footerText" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none">
+                        </div>
+                        <button @click="saveCardSettings()" class="w-full py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold shadow-md transition">Simpan Pengaturan Kartu</button>
+                    </div>
+
+                    <!-- PENGATURAN PROFIL INSTANSI & LOGO -->
                     <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
                         <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Profil Instansi & Logo</h4>
                         <div>
@@ -938,12 +914,12 @@
             instansi: { nama: 'Pondok Pesantren', logo: '' },
             logoMethod: 'file',
             
-            cardSettings: {
+            cardSettings: JSON.parse(localStorage.getItem('cardSettings') || JSON.stringify({
                 headerText: 'YAYASAN HAAMILUL QUR\'AN KEC. PAGUAT KAB. POHUWATO',
                 subHeader: 'Mulia Bersama Al-Qur\'an Mencetak Satu Desa Satu Hafiz',
                 mainTitle: 'Tasmi\' Hafalan Qur\'an',
                 footerText: 'YAYASAN HAAMILUL QUR\'AN'
-            },
+            })),
             
             attendanceConfig: JSON.parse(localStorage.getItem('attendanceConfig') || '{"hadir":25,"izin":0,"sakit":0,"alpa":-10}'),
             
@@ -960,10 +936,7 @@
             rewardForm: { id: null, nama: '', poin: 0, stok: 0, foto: '' },
             isRewardModalOpen: false,
 
-            pointItems: [],
-            pointItemForm: { id: null, nama: '', poin: 0 },
-
-            gradingForm: { santriId: '', categoryId: '', catatan: '' },
+            gradingForm: { santriId: '', jumlahPoin: '', catatan: '' },
 
             attendanceLogsList: [],
             selectedAction: {},
@@ -1013,6 +986,11 @@
                 this.showToast('Bobot poin kehadiran berhasil disimpan!');
             },
 
+            saveCardSettings() {
+                localStorage.setItem('cardSettings', JSON.stringify(this.cardSettings));
+                this.showToast('Pengaturan kartu pencapaian berhasil disimpan!');
+            },
+
             async loadInitialData() {
                 try {
                     let instansiRes = await supabaseClient.from('instansi').select('*').eq('id', 'profile').maybeSingle();
@@ -1025,9 +1003,6 @@
 
                     let rewardRes = await supabaseClient.from('rewards').select('*');
                     if (rewardRes.data) this.rewardList = rewardRes.data;
-
-                    let pointRes = await supabaseClient.from('point_items').select('*');
-                    if (pointRes.data) this.pointItems = pointRes.data;
 
                     let logRes = await supabaseClient.from('attendance_logs').select('*');
                     if (logRes.data) this.attendanceLogsList = logRes.data;
@@ -1099,8 +1074,8 @@
                 if (this.currentUser.role === 'admin' || this.currentUser.permissions.absensi) {
                     tabs.push({ id: 'absensi', label: 'Absensi', icon: 'fa-solid fa-clipboard-user' });
                 }
-                if (this.currentUser.role === 'admin') {
-                    tabs.push({ id: 'kategori_poin', label: 'Kategori', icon: 'fa-solid fa-tags' });
+                if (this.currentUser.role === 'admin' || this.currentUser.permissions.poin) {
+                    tabs.push({ id: 'kategori_poin', label: 'Poin Bonus', icon: 'fa-solid fa-award' });
                 }
                 tabs.push({ id: 'reward', label: 'Reward', icon: 'fa-solid fa-gift' });
                 if (this.currentUser.role === 'admin') {
@@ -1220,34 +1195,30 @@
                 }
             },
 
-            async submitGrading() {
-                if (!this.gradingForm.santriId || !this.gradingForm.categoryId) {
-                    this.showToast('Pilih santri dan kategori penilaian terlebih dahulu!', 'warning');
+            async submitBonusPoin() {
+                if (!this.gradingForm.santriId || !this.gradingForm.jumlahPoin || !this.gradingForm.catatan) {
+                    this.showToast('Pilih santri, masukkan jumlah poin, dan tulis catatan alasannya!', 'warning');
                     return;
                 }
 
                 let santri = this.santriList.find(s => s.id == this.gradingForm.santriId);
-                let category = this.pointItems.find(c => c.id == this.gradingForm.categoryId);
+                let poinAdd = parseInt(this.gradingForm.jumlahPoin) || 0;
+                let keterangan = this.gradingForm.catatan.trim();
 
-                if (!santri || !category) return;
-
-                let poinAdd = parseInt(category.poin) || 0;
-                let keteranganCatatan = this.gradingForm.catatan ? `${category.nama} - ${this.gradingForm.catatan}` : category.nama;
-
-                showLoading('Menyimpan penilaian...');
+                showLoading('Menyimpan poin bonus...');
                 await supabaseClient.from('santri').update({ poin: (santri.poin || 0) + poinAdd }).eq('id', santri.id);
                 await supabaseClient.from('attendance_logs').insert([{ 
                     santri_nama: santri.nama, 
-                    status: `Penilaian Kategori (${poinAdd >= 0 ? '+' + poinAdd : poinAdd})`, 
+                    status: `Poin Bonus (${poinAdd >= 0 ? '+' + poinAdd : poinAdd})`, 
                     poin: poinAdd, 
-                    catatan: keteranganCatatan,
+                    catatan: keterangan,
                     tanggal: new Date().toLocaleDateString() 
                 }]);
 
                 hideLoading();
-                this.gradingForm = { santriId: '', categoryId: '', catatan: '' };
+                this.gradingForm = { santriId: '', jumlahPoin: '', catatan: '' };
                 this.loadInitialData();
-                this.showToast('Penilaian & poin berhasil diberikan!');
+                this.showToast('Poin bonus & catatan berhasil disimpan!');
             },
 
             async processAbsensiOnly(santriId) {
@@ -1285,30 +1256,6 @@
                 hideLoading();
                 this.loadInitialData();
                 this.showToast('Log absensi dikoreksi.');
-            },
-
-            async savePointItem() {
-                if (!this.pointItemForm.nama) return;
-                showLoading('Menyimpan kategori...');
-                let payload = { nama: this.pointItemForm.nama.trim(), poin: parseInt(this.pointItemForm.poin) || 0 };
-                if (this.pointItemForm.id) {
-                    await supabaseClient.from('point_items').update(payload).eq('id', this.pointItemForm.id);
-                } else {
-                    await supabaseClient.from('point_items').insert([payload]);
-                }
-                hideLoading();
-                this.resetPointItemForm();
-                this.loadInitialData();
-                this.showToast('Kategori disimpan.');
-            },
-
-            editPointItem(item) { this.pointItemForm = { ...item }; },
-            resetPointItemForm() { this.pointItemForm = { id: null, nama: '', poin: 0 }; },
-
-            async deletePointItem(id) {
-                await supabaseClient.from('point_items').delete().eq('id', id);
-                this.loadInitialData();
-                this.showToast('Kategori dihapus.');
             },
 
             async saveReward() {
@@ -1358,7 +1305,6 @@
                 const file = event.target.files[0];
                 if (file) {
                     showLoading('Mengoptimalkan logo...');
-                    // Kompres ekstrem ke ukuran maksimal 200px agar ukuran file hanya belasan kilobait
                     const compressed = await compressImage(file, 200, 0.6);
                     const reader = new FileReader();
                     reader.onload = (e) => { 
