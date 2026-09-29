@@ -130,7 +130,8 @@
                 <div class="flex items-center space-x-2">
                     <button @click="openNotificationModal()" class="relative p-2.5 text-slate-600 hover:bg-slate-100 rounded-full transition">
                         <i class="fa-solid fa-bell text-sm"></i>
-                        <template x-if="unreadNotificationCount > 0">
+                        <!-- Titik merah notifikasi hanya tampil untuk admin -->
+                        <template x-if="currentUser.role === 'admin' && unreadNotificationCount > 0">
                             <span class="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-rose-500 rounded-full ring-2 ring-white animate-pulse"></span>
                         </template>
                     </button>
@@ -201,8 +202,8 @@
                             <template x-for="(s, index) in sortedSantriLeaderboard" :key="s.id">
                                 <div class="flex items-center justify-between p-3 bg-slate-50/70 rounded-2xl border border-slate-100/80">
                                     <div class="flex items-center space-x-3">
-                                        <div class="w-7 h-7 rounded-xl flex items-center justify-center text-xs font-extrabold shadow-xs"
-                                             :class="index === 0 ? 'bg-amber-400 text-white' : (index === 1 ? 'bg-slate-300 text-white' : (index === 2 ? 'bg-amber-700 text-white' : 'bg-slate-200 text-slate-600'))"
+                                        <!-- Warna nomor urut disamakan seragam -->
+                                        <div class="w-7 h-7 rounded-xl flex items-center justify-center text-xs font-extrabold shadow-xs bg-slate-100 text-slate-700"
                                              x-text="index + 1">
                                         </div>
                                         <div>
@@ -804,7 +805,6 @@
                             </template>
                         </div>
                         <div class="flex-1 space-y-1.5 min-w-0">
-                            <!-- PERBAIKAN: Kotak Nama Responsif Otomatis Mengencil Menurut Panjang Karakter -->
                             <div class="bg-amber-300 text-slate-900 px-3 py-1.5 rounded-lg shadow-xs font-black uppercase tracking-wide flex items-center justify-start min-h-[36px] w-full overflow-hidden">
                                 <span class="block w-full break-words leading-tight" 
                                       :class="getCardNameFontSize()" 
@@ -1051,7 +1051,6 @@
                 this.setupRealtimeSync();
             },
 
-            // METHOD TAMBAHAN: Menghitung ukuran huruf nama santri pada kartu secara fleksibel
             getCardNameFontSize() {
                 const name = (this.activeCardSantri.nama || '').trim();
                 const len = name.length;
