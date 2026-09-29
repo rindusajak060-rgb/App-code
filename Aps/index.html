@@ -202,7 +202,7 @@
                             <template x-for="(s, index) in sortedSantriLeaderboard" :key="s.id">
                                 <div class="flex items-center justify-between p-3 bg-slate-50/70 rounded-2xl border border-slate-100/80">
                                     <div class="flex items-center space-x-3">
-                                        <!-- Warna nomor urut disamakan seragam -->
+                                        <!-- Warna nomor urut seragam -->
                                         <div class="w-7 h-7 rounded-xl flex items-center justify-center text-xs font-extrabold shadow-xs bg-slate-100 text-slate-700"
                                              x-text="index + 1">
                                         </div>
@@ -238,14 +238,26 @@
                             <input type="text" x-model="santriSearch" placeholder="Cari nama santri..." 
                                    class="w-full pl-10 pr-4 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500">
                         </div>
-                        <div>
-                            <label class="block text-[9px] font-bold text-slate-500 mb-1 uppercase tracking-wider">Filter Berdasarkan Kelompok / Guru</label>
-                            <select x-model="selectedKelompokFilter" class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 focus:outline-none font-semibold text-slate-700">
-                                <option value="">Semua Kelompok / Guru</option>
-                                <template x-for="kel in availableKelompokList" :key="kel">
-                                    <option :value="kel" x-text="kel"></option>
-                                </template>
-                            </select>
+
+                        <!-- Filter Guru/Kelompok & Pengurutan Abjad -->
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[9px] font-bold text-slate-500 mb-1 uppercase tracking-wider">Filter Kelompok / Guru</label>
+                                <select x-model="selectedKelompokFilter" class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 focus:outline-none font-semibold text-slate-700">
+                                    <option value="">Semua Kelompok / Guru</option>
+                                    <template x-for="kel in availableKelompokList" :key="kel">
+                                        <option :value="kel" x-text="kel"></option>
+                                    </template>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[9px] font-bold text-slate-500 mb-1 uppercase tracking-wider">Urutkan Abjad</label>
+                                <select x-model="santriSortBy" class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 focus:outline-none font-semibold text-slate-700">
+                                    <option value="default">Default (Terbaru)</option>
+                                    <option value="name-asc">Nama: A ke Z</option>
+                                    <option value="name-desc">Nama: Z ke A</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
 
@@ -303,8 +315,17 @@
                         </button>
                     </div>
 
+                    <!-- Kotak Pencarian Halaman Absensi Baru -->
+                    <div class="bg-white p-3.5 rounded-2xl border border-slate-100 shadow-xs">
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400"><i class="fa-solid fa-search text-xs"></i></span>
+                            <input type="text" x-model="absensiSearch" placeholder="Cari nama santri untuk absensi..." 
+                                   class="w-full pl-10 pr-4 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        </div>
+                    </div>
+
                     <div class="space-y-2.5">
-                        <template x-for="s in santriList" :key="s.id">
+                        <template x-for="s in filteredAbsensiList" :key="s.id">
                             <div class="bg-white p-3.5 rounded-2xl border border-slate-100 shadow-xs space-y-2.5">
                                 <div class="flex items-center justify-between">
                                     <div>
@@ -349,6 +370,9 @@
                                 </div>
                             </div>
                         </template>
+                        <template x-if="filteredAbsensiList.length === 0">
+                            <p class="text-xs text-slate-400 text-center py-6 font-medium bg-white rounded-2xl border border-slate-100">Tidak ada santri yang ditemukan pada pencarian absensi.</p>
+                        </template>
                     </div>
 
                     <div class="bg-white rounded-3xl p-4 border border-slate-100 shadow-sm space-y-3 mt-4">
@@ -382,7 +406,7 @@
                     </div>
                 </div>
 
-                <!-- TAB 4: KATEGORI POIN & POIN BONUS (LENGKAP) -->
+                <!-- TAB 4: KATEGORI POIN & POIN BONUS -->
                 <div x-show="activeTab === 'kategori_poin'" class="space-y-4">
                     <div class="flex justify-between items-center">
                         <div>
@@ -391,7 +415,6 @@
                         </div>
                     </div>
 
-                    <!-- 1. FORM PENILAIAN BERDASARKAN KATEGORI TETAP -->
                     <div class="bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-emerald-500/10 p-4 rounded-3xl border border-emerald-200/80 shadow-xs space-y-3">
                         <h4 class="text-xs font-bold text-emerald-900 uppercase tracking-wider flex items-center">
                             <i class="fa-solid fa-circle-check text-emerald-600 mr-1.5"></i> Form Penilaian Berdasarkan Kategori
@@ -429,7 +452,6 @@
                         </div>
                     </div>
 
-                    <!-- 2. FORM POIN BONUS BEBAS & CATATAN -->
                     <div class="bg-gradient-to-br from-amber-500/15 via-orange-500/5 to-amber-500/10 p-4 rounded-3xl border border-amber-200/80 shadow-xs space-y-3">
                         <h4 class="text-xs font-bold text-amber-900 uppercase tracking-wider flex items-center">
                             <i class="fa-solid fa-award text-amber-600 mr-1.5"></i> Form Poin Bonus & Catatan Alasan Bebas
@@ -462,7 +484,6 @@
                         </div>
                     </div>
 
-                    <!-- 3. KELOLA KATEGORI / ITEM POIN -->
                     <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
                         <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider" x-text="pointItemForm.id ? 'Edit Kategori Poin' : 'Buat Kategori Poin Baru'"></h4>
                         <div>
@@ -668,7 +689,6 @@
                 <div x-show="activeTab === 'settings' && currentUser.role === 'admin'" class="space-y-4">
                     <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Panel Admin & Pengaturan Sistem</h3>
 
-                    <!-- PENGATURAN BOBOT POIN KEHADIRAN -->
                     <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
                         <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Pengaturan Bobot Poin Kehadiran</h4>
                         <div class="grid grid-cols-2 gap-2">
@@ -692,7 +712,6 @@
                         <button @click="saveAttendanceConfig()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md transition">Simpan Bobot Kehadiran</button>
                     </div>
 
-                    <!-- PENGATURAN KARTU PENCAPAIAN -->
                     <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
                         <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Pengaturan Teks Kartu Pencapaian</h4>
                         <div>
@@ -714,7 +733,6 @@
                         <button @click="saveCardSettings()" class="w-full py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold shadow-md transition">Simpan Pengaturan Kartu</button>
                     </div>
 
-                    <!-- PENGATURAN PROFIL INSTANSI & LOGO -->
                     <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm space-y-3">
                         <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Profil Instansi & Logo</h4>
                         <div>
@@ -1015,6 +1033,8 @@
             santriList: [],
             santriSearch: '',
             selectedKelompokFilter: '',
+            santriSortBy: 'default',
+            absensiSearch: '', // State tambahan untuk pencarian halaman absensi
             santriForm: { id: null, nama: '', kelompok: '', hafalan: '', umur: '', alamat: '', foto: '', poin: 0 },
             isSantriModalOpen: false,
 
@@ -1200,6 +1220,7 @@
                 return [...new Set(this.santriList.map(s => s.kelompok).filter(Boolean))].sort();
             },
 
+            // Filter & Sorting santri (Mendukung Pencarian, Filter Kelompok/Guru, dan Sorting Abjad A-Z / Z-A)
             get filteredSantriFixedPosition() {
                 let result = [...this.santriList];
                 if (this.santriSearch) {
@@ -1207,6 +1228,22 @@
                 }
                 if (this.selectedKelompokFilter) {
                     result = result.filter(s => s.kelompok === this.selectedKelompokFilter);
+                }
+
+                if (this.santriSortBy === 'name-asc') {
+                    result.sort((a, b) => (a.nama || '').localeCompare(b.nama || '', 'id', { sensitivity: 'base' }));
+                } else if (this.santriSortBy === 'name-desc') {
+                    result.sort((a, b) => (b.nama || '').localeCompare(a.nama || '', 'id', { sensitivity: 'base' }));
+                }
+
+                return result;
+            },
+
+            // Getter pencarian khusus untuk daftar santri di halaman absensi
+            get filteredAbsensiList() {
+                let result = [...this.santriList];
+                if (this.absensiSearch) {
+                    result = result.filter(s => s.nama.toLowerCase().includes(this.absensiSearch.toLowerCase()));
                 }
                 return result;
             },
