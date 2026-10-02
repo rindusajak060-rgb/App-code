@@ -41,11 +41,9 @@
     </script>
     <script>
     // Konfigurasi Supabase
-const SUPABASE_URL = 'https://isrdibmvxafmnpldbgdg.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_A_j5NU-O8HbCSof5mzfAWQ_1BPufFl3';
-
-// Inisialisasi Client
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const SUPABASE_URL = 'https://isrdibmvxafmnpldbgdg.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_A_j5NU-O8HbCSof5mzfAWQ_1BPufFl3';
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     </script>
     <style>
         @media print {
@@ -59,6 +57,10 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
                 size: var(--print-page-size, A4) portrait;
                 margin: 10mm;
             }
+        }
+        /* Efek Filter Scan Dokumen */
+        .scan-effect {
+            filter: contrast(140%) brightness(105%) grayscale(100%);
         }
     </style>
 </head>
@@ -112,9 +114,9 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
                 { nik: '7501015544330003', name: 'Ahmad Fauzi', gender: 'Laki-laki', pob: 'Paguat', dob: '1998-03-05', address: 'Dsn I Desa Kamiiri', job: 'Mahasiswa', status: 'Belum Kawin' }
             ],
             letters: [
-                { id: 'L-2026-001', nik: '7501011234560001', name: 'Budi Santoso', type: 'Surat Keterangan Domisili', code: '474.3', number: '474.3 / 001 / Des.01 / 2026', date: '2026-08-04', purpose: 'Persyaratan pembukaan rekening bank', status: 'Disetujui', signedBy: 'Drs. H. Maman, M.Si (Kepala Desa)', sifat: 'Penting', lampiran: '-', includePurpose: true, photo: null },
-                { id: 'L-2026-002', nik: '7501019876540002', name: 'Siti Aminah', type: 'Surat Keterangan Usaha', code: '503', number: '503 / 002 / Des.01 / 2026', date: '2026-08-05', purpose: 'Pengajuan modal UMKM BNI', status: 'Disetujui', signedBy: 'Drs. H. Maman, M.Si (Kepala Desa)', sifat: 'Biasa', lampiran: '-', includePurpose: true, photo: null },
-                { id: 'L-2026-003', nik: '7501015544330003', name: 'Ahmad Fauzi', type: 'Undangan Rapat', code: '005', number: '005 / KMR.PGT / 22 / VIII / 2026', date: '2026-08-04', purpose: 'Persiapan Pelaksanaan Maulid Nabi Muhammad SAW 1448 H di Masjid Al-kautsar dan Masjid Ar-Raihan', status: 'Disetujui', signedBy: 'Drs. H. Maman, M.Si (Kepala Desa)', sifat: 'Penting', lampiran: '-', includePurpose: true, photo: null }
+                { id: 'L-2026-001', nik: '7501011234560001', name: 'Budi Santoso', type: 'Surat Keterangan Domisili', code: '474.3', number: '474.3 / 001 / Des.01 / 2026', date: '2026-08-04', purpose: 'Persyaratan pembukaan rekening bank', status: 'Disetujui', signedBy: 'Drs. H. Maman, M.Si (Kepala Desa)', sifat: 'Penting', lampiran: '-', includePurpose: true, photo: null, isScanned: false },
+                { id: 'L-2026-002', nik: '7501019876540002', name: 'Siti Aminah', type: 'Surat Keterangan Usaha', code: '503', number: '503 / 002 / Des.01 / 2026', date: '2026-08-05', purpose: 'Pengajuan modal UMKM BNI', status: 'Disetujui', signedBy: 'Drs. H. Maman, M.Si (Kepala Desa)', sifat: 'Biasa', lampiran: '-', includePurpose: true, photo: null, isScanned: false },
+                { id: 'L-2026-003', nik: '7501015544330003', name: 'Ahmad Fauzi', type: 'Undangan Rapat', code: '005', number: '005 / KMR.PGT / 22 / VIII / 2026', date: '2026-08-04', purpose: 'Persiapan Pelaksanaan Maulid Nabi Muhammad SAW 1448 H di Masjid Al-kautsar dan Masjid Ar-Raihan', status: 'Disetujui', signedBy: 'Drs. H. Maman, M.Si (Kepala Desa)', sifat: 'Penting', lampiran: '-', includePurpose: true, photo: null, isScanned: false }
             ],
             agenda: [
                 { id: 'AG-01', type: 'Masuk', noSurat: '005/123/Kec-Paguat/2026', from: 'Kecamatan Paguat', date: '2026-08-02', subject: 'Undangan Rapat Koordinasi Bulanan', status: 'Diteruskan ke Sekdes' },
@@ -130,6 +132,7 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
         };
 
         let tempLetterPhoto = null;
+        let tempIsScanned = false;
 
         function loadState() {
             const saved = localStorage.getItem('siap_desa_persistent_state');
@@ -388,7 +391,7 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
                 </div>
             </header>
 
-            <!-- MOBILE TOP NAVIGATION BAR (Facebook Style Menu Tabs) -->
+            <!-- MOBILE TOP NAVIGATION BAR -->
             <div class="md:hidden bg-slate-900 text-white overflow-x-auto flex items-center space-x-1.5 px-3 py-2.5 no-print shrink-0 shadow-md whitespace-nowrap scrollbar-none" id="mobileTabBar">
                 <button onclick="switchTab('dashboard')" id="mob-nav-dashboard" class="px-3 py-1.5 rounded-lg text-xs font-medium transition bg-brand-600 text-white flex items-center space-x-1.5 shrink-0 shadow">
                     <i class="fa-solid fa-chart-pie"></i><span>Dashboard</span>
@@ -434,7 +437,6 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
             state.activeTab = tabId;
             saveState();
             
-            // Desktop Sidebar Navigation Update
             document.querySelectorAll('aside nav a').forEach(el => {
                 el.classList.remove('bg-brand-600', 'text-white', 'shadow-md');
                 el.classList.add('hover:bg-slate-800', 'hover:text-white');
@@ -445,7 +447,6 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
                 activeNav.classList.remove('hover:bg-slate-800', 'hover:text-white');
             }
 
-            // Mobile Top Bar Navigation Update
             document.querySelectorAll('#mobileTabBar button').forEach(btn => {
                 btn.classList.remove('bg-brand-600', 'text-white', 'shadow');
                 btn.classList.add('text-slate-300', 'hover:bg-slate-800');
@@ -469,7 +470,7 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
                 titleEl.innerText = 'Dashboard Utama Desa ' + vName;
                 container.innerHTML = renderDashboardView();
             } else if(state.activeTab === 'layanan') {
-                titleEl.innerText = 'Modul Pembuatan Surat & Arsip Berbasis Kamera';
+                titleEl.innerText = 'Modul Pembuatan Surat & Arsip Berbasis Kamera Scanner';
                 container.innerHTML = renderLayananView();
             } else if(state.activeTab === 'agenda') {
                 titleEl.innerText = 'Buku Agenda Surat Masuk & Keluar';
@@ -489,6 +490,10 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
             } else if(state.activeTab === 'pengaturan') {
                 titleEl.innerText = 'Pengaturan Nama Desa, Kop & Ukuran Kertas';
                 container.innerHTML = renderPengaturanView();
+                setTimeout(() => {
+                    const kp = document.getElementById('liveKopPreview');
+                    if(kp) kp.innerHTML = renderKopSuratHtml(state.settings);
+                }, 50);
             }
         }
 
@@ -505,7 +510,7 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
                         <div class="space-y-2 mb-4 md:mb-0">
                             <span class="bg-brand-500/40 text-brand-100 text-xs px-3 py-1 rounded-full font-medium">Sistem Informasi Pemerintahan Desa</span>
                             <h2 class="text-2xl font-bold">Portal Administrasi Desa ${vName}</h2>
-                            <p class="text-slate-200 text-sm max-w-xl">Layanan administrasi pembuatan surat keterangan berukuran standar A4/F4, undangan resmi, buku agenda, arsip digital dengan tangkapan foto/kamera.</p>
+                            <p class="text-slate-200 text-sm max-w-xl">Layanan administrasi pembuatan surat keterangan berukuran standar A4/F4, undangan resmi, buku agenda, arsip digital dengan tangkapan foto/kamera scanner dokumen.</p>
                         </div>
                         <button onclick="switchTab('layanan')" class="bg-white text-brand-900 font-semibold px-5 py-2.5 rounded-xl shadow hover:bg-slate-100 transition flex items-center space-x-2">
                             <i class="fa-solid fa-plus-circle text-brand-600"></i>
@@ -603,7 +608,7 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
                     <div class="border-b border-slate-100 pb-4 mb-6 flex justify-between items-center">
                         <div>
                             <h3 class="text-lg font-bold text-slate-800">Formulir Pembuatan & Arsip Surat Desa</h3>
-                            <p class="text-xs text-slate-500">Pilih jenis layanan surat resmi desa lengkap dengan pengambilan foto/kamera arsip langsung dan penomoran otomatis.</p>
+                            <p class="text-xs text-slate-500">Pilih jenis layanan surat resmi desa lengkap dengan pengambilan foto/kamera scanner dokumen dan penomoran otomatis.</p>
                         </div>
                         <span class="bg-blue-50 text-blue-700 text-xs font-semibold px-3 py-1 rounded-lg">Paper: ${state.settings.paperSize || 'A4'}</span>
                     </div>
@@ -668,25 +673,33 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
                             <textarea id="inputPurpose" rows="3" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" placeholder="Contoh: Undangan rapat persiapan Maulid Nabi / Pengajuan modal UMKM..."></textarea>
                         </div>
 
-                        <!-- FITUR PENGAMBILAN GAMBAR / KAMERA SAAT MENGARSIPKAN SURAT -->
+                        <!-- FITUR PENGAMBILAN GAMBAR / KAMERA & SCANNER DOKUMEN -->
                         <div class="p-4 bg-emerald-50/70 rounded-2xl border border-emerald-200 space-y-3">
                             <div class="flex items-center space-x-2 text-emerald-900 font-bold text-xs uppercase tracking-wider">
-                                <i class="fa-solid fa-camera"></i>
-                                <span>Pengambilan / Lampiran Foto Arsip Dokumen / Warga</span>
+                                <i class="fa-solid fa-camera-retro"></i>
+                                <span>Pemindaian Dokumen & Foto Arsip (Document Scanner)</span>
                             </div>
-                            <p class="text-xs text-emerald-700">Gunakan kamera handphone atau ambil gambar dokumen fisik/KTP/persyaratan untuk dilampirkan langsung ke dalam arsip digital surat ini.</p>
+                            <p class="text-xs text-emerald-700">Ambil foto dokumen fisik/KTP/persyaratan menggunakan kamera HP, lalu aktifkan mode <strong>Filter Scan Dokumen</strong> untuk mempertajam tulisan menjadi hitam putih layaknya hasil *scanner* profesional.</p>
                             
                             <div class="flex flex-col sm:flex-row items-center gap-4 pt-2">
                                 <input type="file" id="inputLetterPhoto" accept="image/*" capture="environment" onchange="handlePhotoUpload(event)" class="w-full bg-white border border-emerald-300 rounded-xl px-4 py-2 text-sm file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700">
                             </div>
 
-                            <div id="photoPreviewContainer" class="hidden mt-3">
-                                <p class="text-xs font-semibold text-slate-600 mb-1">Pratinjau Foto Tangkapan Kamera:</p>
+                            <div id="photoPreviewContainer" class="hidden mt-3 space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <p class="text-xs font-semibold text-slate-600">Pratinjau Foto Tangkapan / Hasil Scan:</p>
+                                    <div class="flex items-center space-x-2">
+                                        <button type="button" onclick="toggleScanFilter()" id="scanFilterBtn" class="px-3 py-1 bg-slate-800 text-white text-xs font-semibold rounded-lg shadow hover:bg-slate-700 transition flex items-center space-x-1.5">
+                                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                                            <span id="scanFilterText">Aktifkan Efek Scan</span>
+                                        </button>
+                                        <button type="button" onclick="clearCapturedPhoto()" class="bg-red-600 text-white rounded-lg px-2.5 py-1 text-xs font-semibold shadow hover:bg-red-700 flex items-center space-x-1">
+                                            <i class="fa-solid fa-xmark"></i><span>Hapus</span>
+                                        </button>
+                                    </div>
+                                </div>
                                 <div class="relative inline-block">
-                                    <img id="capturedPhotoImg" src="" alt="Foto Bukti Arsip" class="w-36 h-36 object-cover rounded-xl border-2 border-emerald-500 shadow-md">
-                                    <button type="button" onclick="clearCapturedPhoto()" class="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow hover:bg-red-700" title="Hapus Foto">
-                                        <i class="fa-solid fa-xmark"></i>
-                                    </button>
+                                    <img id="capturedPhotoImg" src="" alt="Foto Bukti Arsip" class="w-44 h-44 object-cover rounded-xl border-2 border-emerald-500 shadow-md transition-all">
                                 </div>
                             </div>
                         </div>
@@ -716,10 +729,14 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     tempLetterPhoto = e.target.result;
+                    tempIsScanned = false;
                     const container = document.getElementById('photoPreviewContainer');
                     const img = document.getElementById('capturedPhotoImg');
+                    const btnText = document.getElementById('scanFilterText');
                     if(container && img) {
                         img.src = tempLetterPhoto;
+                        img.classList.remove('scan-effect');
+                        if(btnText) btnText.innerText = 'Aktifkan Efek Scan';
                         container.classList.remove('hidden');
                     }
                 }
@@ -727,8 +744,24 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
             }
         }
 
+        function toggleScanFilter() {
+            tempIsScanned = !tempIsScanned;
+            const img = document.getElementById('capturedPhotoImg');
+            const btnText = document.getElementById('scanFilterText');
+            if(img) {
+                if(tempIsScanned) {
+                    img.classList.add('scan-effect');
+                    if(btnText) btnText.innerText = 'Nonaktifkan Efek Scan';
+                } else {
+                    img.classList.remove('scan-effect');
+                    if(btnText) btnText.innerText = 'Aktifkan Efek Scan';
+                }
+            }
+        }
+
         function clearCapturedPhoto() {
             tempLetterPhoto = null;
+            tempIsScanned = false;
             const container = document.getElementById('photoPreviewContainer');
             const fileInput = document.getElementById('inputLetterPhoto');
             if(container) container.classList.add('hidden');
@@ -787,7 +820,8 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
                 sifat: sifat,
                 lampiran: lampiran,
                 includePurpose: includePurpose,
-                photo: tempLetterPhoto || null
+                photo: tempLetterPhoto || null,
+                isScanned: tempIsScanned
             };
 
             state.letters.unshift(newLetter);
@@ -801,10 +835,11 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
                 status: 'Terkirim'
             });
 
-            tempLetterPhoto = null; // Reset foto sementara
+            tempLetterPhoto = null; 
+            tempIsScanned = false;
             saveState();
 
-            showModal('Sukses!', `Surat berhasil digenerate & arsip foto tersimpan dengan Nomor Registrasi: <br><strong class="font-mono text-brand-700">${newNo}</strong>`, 'success', () => {
+            showModal('Sukses!', `Surat berhasil digenerate & arsip foto scanner tersimpan dengan Nomor Registrasi: <br><strong class="font-mono text-brand-700">${newNo}</strong>`, 'success', () => {
                 previewLetter(newId);
             });
         }
@@ -859,6 +894,68 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
             `;
         }
 
+        function openAddAgendaModal() {
+            const html = `
+                <div class="space-y-4">
+                    <h3 class="font-bold text-lg text-slate-800">Catat Agenda Surat Masuk / Keluar</h3>
+                    <p class="text-xs text-slate-500">Masukkan rincian surat untuk dicatat ke dalam buku agenda resmi.</p>
+                    <form onsubmit="handleSaveAgenda(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Jenis Agenda:</label>
+                            <select id="agendaType" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-sm">
+                                <option value="Masuk">Surat Masuk</option>
+                                <option value="Keluar">Surat Keluar</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Nomor Surat:</label>
+                            <input type="text" id="agendaNo" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-sm" placeholder="005/123/Kec-Paguat/2026">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Asal / Tujuan Surat:</label>
+                            <input type="text" id="agendaFrom" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-sm" placeholder="Kecamatan / Instansi Lain">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Tanggal Surat:</label>
+                            <input type="date" id="agendaDate" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-sm" value="2026-08-04">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Perihal / Subjek:</label>
+                            <textarea id="agendaSubject" rows="3" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-sm" placeholder="Perihal surat..."></textarea>
+                        </div>
+                        <div class="flex justify-end space-x-3 pt-2">
+                            <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl">Batal</button>
+                            <button type="submit" class="px-5 py-2 bg-brand-600 text-white text-xs font-semibold rounded-xl shadow">Simpan Agenda</button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            showCustomModalHtml(html);
+        }
+
+        function handleSaveAgenda(e) {
+            e.preventDefault();
+            const type = document.getElementById('agendaType').value;
+            const noSurat = document.getElementById('agendaNo').value;
+            const from = document.getElementById('agendaFrom').value;
+            const date = document.getElementById('agendaDate').value;
+            const subject = document.getElementById('agendaSubject').value;
+
+            state.agenda.unshift({
+                id: 'AG-' + (state.agenda.length + 1),
+                type: type,
+                noSurat: noSurat,
+                from: from,
+                date: date,
+                subject: subject,
+                status: type === 'Masuk' ? 'Diterima' : 'Terkirim'
+            });
+
+            saveState();
+            closeModal();
+            showModal('Sukses', 'Agenda surat berhasil dicatat dalam buku agenda.', 'success', () => renderView());
+        }
+
         function renderArsipView(searchQuery = '') {
             const filtered = state.letters.filter(l => 
                 l.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -890,7 +987,7 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
                                         <th class="p-4">No. Surat / Klasifikasi</th>
                                         <th class="p-4">Pemohon & NIK</th>
                                         <th class="p-4">Jenis Surat</th>
-                                        <th class="p-4">Foto Arsip</th>
+                                        <th class="p-4">Foto Arsip / Scan</th>
                                         <th class="p-4">Tanggal Terbit</th>
                                         <th class="p-4 text-center">Aksi Dokumen</th>
                                     </tr>
@@ -907,7 +1004,12 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
                                             </td>
                                             <td class="p-4 text-slate-700">${l.type}</td>
                                             <td class="p-4">
-                                                ${l.photo ? `<img src="${l.photo}" class="w-10 h-10 object-cover rounded-lg border shadow cursor-pointer" onclick="previewLetter('${l.id}')" title="Klik untuk lihat">` : `<span class="text-xs text-slate-400 italic">Tanpa Foto</span>`}
+                                                ${l.photo ? `
+                                                    <div class="flex items-center space-x-2">
+                                                        <img src="${l.photo}" class="w-10 h-10 object-cover rounded-lg border shadow cursor-pointer ${l.isScanned ? 'scan-effect' : ''}" onclick="previewLetter('${l.id}')" title="Klik untuk lihat">
+                                                        ${l.isScanned ? '<span class="text-[10px] bg-slate-800 text-white px-1.5 py-0.5 rounded font-mono">Scan</span>' : ''}
+                                                    </div>
+                                                ` : `<span class="text-xs text-slate-400 italic">Tanpa Foto</span>`}
                                             </td>
                                             <td class="p-4 text-slate-600 text-xs">${l.date}</td>
                                             <td class="p-4 text-center space-x-2">
@@ -1557,8 +1659,11 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
 
                         ${l.photo ? `
                             <div class="pt-4 border-t border-slate-200 mt-6 no-print">
-                                <p class="text-xs font-bold text-slate-700 mb-2"><i class="fa-solid fa-camera mr-1 text-emerald-600"></i> Lampiran Foto Arsip Dokumen / Pemohon:</p>
-                                <img src="${l.photo}" class="w-48 h-48 object-cover rounded-xl border shadow-md" alt="Lampiran Foto Arsip">
+                                <div class="flex items-center justify-between mb-2">
+                                    <p class="text-xs font-bold text-slate-700"><i class="fa-solid fa-camera mr-1 text-emerald-600"></i> Lampiran Foto / Hasil Scan Arsip Dokumen:</p>
+                                    ${l.isScanned ? '<span class="text-[10px] bg-slate-900 text-white px-2 py-0.5 rounded font-mono">Mode Scan Aktif</span>' : ''}
+                                </div>
+                                <img src="${l.photo}" class="w-48 h-48 object-cover rounded-xl border shadow-md ${l.isScanned ? 'scan-effect' : ''}" alt="Lampiran Foto Arsip">
                             </div>
                         ` : ''}
 
@@ -1619,47 +1724,10 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
             document.getElementById('customModal').classList.add('hidden');
         }
 
-        function openAddAgendaModal() {
-            showModal('Catat Agenda', 'Form pencatatan agenda baru tersedia pada modul administratif lanjutan.', 'success');
-        }
-
-        window.onload = function() {
-            switchTab(state.activeTab || 'dashboard');
-            setInterval(() => {
-                const previewEl = document.getElementById('liveKopPreview');
-                if(previewEl && state.activeTab === 'pengaturan') {
-                    const tempSettings = {
-                        kopLine1: document.getElementById('setKop1')?.value || state.settings.kopLine1,
-                        kopLine2: document.getElementById('setKop2')?.value || state.settings.kopLine2,
-                        kopLine3: document.getElementById('setKop3')?.value || state.settings.kopLine3,
-                        kopLine4: document.getElementById('setKop4')?.value || state.settings.kopLine4,
-                        sizeLine1: document.getElementById('setSize1')?.value || state.settings.sizeLine1,
-                        sizeLine2: document.getElementById('setSize2')?.value || state.settings.sizeLine2,
-                        sizeLine3: document.getElementById('setSize3')?.value || state.settings.sizeLine3,
-                        sizeLine4: document.getElementById('setSize4')?.value || state.settings.sizeLine4,
-                        weightLine1: document.getElementById('setWeight1')?.value || state.settings.weightLine1,
-                        weightLine2: document.getElementById('setWeight2')?.value || state.settings.weightLine2,
-                        weightLine3: document.getElementById('setWeight3')?.value || state.settings.weightLine3,
-                        weightLine4: document.getElementById('setWeight4')?.value || state.settings.weightLine4,
-                        spaceLine1: document.getElementById('setSpace1')?.value || state.settings.spaceLine1,
-                        spaceLine2: document.getElementById('setSpace2')?.value || state.settings.spaceLine2,
-                        spaceLine3: document.getElementById('setSpace3')?.value || state.settings.spaceLine3,
-                        spaceLine4: document.getElementById('setSpace4')?.value || state.settings.spaceLine4,
-                        fontLine1: document.getElementById('setFont1')?.value || state.settings.fontLine1,
-                        fontLine2: document.getElementById('setFont2')?.value || state.settings.fontLine2,
-                        fontLine3: document.getElementById('setFont3')?.value || state.settings.fontLine3,
-                        fontLine4: document.getElementById('setFont4')?.value || state.settings.fontLine4,
-                        logo1: document.getElementById('setLogo1')?.value || state.settings.logo1,
-                        logo2: document.getElementById('setLogo2')?.value || state.settings.logo2,
-                        logoCount: document.getElementById('setLogoCount')?.value || state.settings.logoCount,
-                        align: document.getElementById('setAlign')?.value || state.settings.align,
-                        logoHeight: document.getElementById('setLogoHeight')?.value || state.settings.logoHeight,
-                        logoWidth: document.getElementById('setLogoWidth')?.value || state.settings.logoWidth
-                    };
-                    previewEl.innerHTML = renderKopSuratHtml(tempSettings);
-                }
-            }, 500);
-        }
+        // Inisialisasi awal saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', () => {
+            renderView();
+        });
     </script>
 </body>
 </html>
