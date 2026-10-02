@@ -102,9 +102,9 @@
                 { nik: '7501015544330003', name: 'Ahmad Fauzi', gender: 'Laki-laki', pob: 'Paguat', dob: '1998-03-05', address: 'Dsn I Desa Kamiiri', job: 'Mahasiswa', status: 'Belum Kawin' }
             ],
             letters: [
-                { id: 'L-2026-001', nik: '7501011234560001', name: 'Budi Santoso', type: 'Surat Keterangan Domisili', code: '474.3', number: '474.3 / 001 / Des.01 / 2026', date: '2026-08-04', purpose: 'Persyaratan pembukaan rekening bank', status: 'Disetujui', signedBy: 'Drs. H. Maman, M.Si (Kepala Desa)', sifat: 'Penting', lampiran: '-', includePurpose: true },
-                { id: 'L-2026-002', nik: '7501019876540002', name: 'Siti Aminah', type: 'Surat Keterangan Usaha', code: '503', number: '503 / 002 / Des.01 / 2026', date: '2026-08-05', purpose: 'Pengajuan modal UMKM BNI', status: 'Disetujui', signedBy: 'Drs. H. Maman, M.Si (Kepala Desa)', sifat: 'Biasa', lampiran: '-', includePurpose: true },
-                { id: 'L-2026-003', nik: '7501015544330003', name: 'Ahmad Fauzi', type: 'Undangan Rapat', code: '005', number: '005 / KMR.PGT / 22 / VIII / 2026', date: '2026-08-04', purpose: 'Persiapan Pelaksanaan Maulid Nabi Muhammad SAW 1448 H di Masjid Al-kautsar dan Masjid Ar-Raihan', status: 'Disetujui', signedBy: 'Drs. H. Maman, M.Si (Kepala Desa)', sifat: 'Penting', lampiran: '-', includePurpose: true }
+                { id: 'L-2026-001', nik: '7501011234560001', name: 'Budi Santoso', type: 'Surat Keterangan Domisili', code: '474.3', number: '474.3 / 001 / Des.01 / 2026', date: '2026-08-04', purpose: 'Persyaratan pembukaan rekening bank', status: 'Disetujui', signedBy: 'Drs. H. Maman, M.Si (Kepala Desa)', sifat: 'Penting', lampiran: '-', includePurpose: true, photo: null },
+                { id: 'L-2026-002', nik: '7501019876540002', name: 'Siti Aminah', type: 'Surat Keterangan Usaha', code: '503', number: '503 / 002 / Des.01 / 2026', date: '2026-08-05', purpose: 'Pengajuan modal UMKM BNI', status: 'Disetujui', signedBy: 'Drs. H. Maman, M.Si (Kepala Desa)', sifat: 'Biasa', lampiran: '-', includePurpose: true, photo: null },
+                { id: 'L-2026-003', nik: '7501015544330003', name: 'Ahmad Fauzi', type: 'Undangan Rapat', code: '005', number: '005 / KMR.PGT / 22 / VIII / 2026', date: '2026-08-04', purpose: 'Persiapan Pelaksanaan Maulid Nabi Muhammad SAW 1448 H di Masjid Al-kautsar dan Masjid Ar-Raihan', status: 'Disetujui', signedBy: 'Drs. H. Maman, M.Si (Kepala Desa)', sifat: 'Penting', lampiran: '-', includePurpose: true, photo: null }
             ],
             agenda: [
                 { id: 'AG-01', type: 'Masuk', noSurat: '005/123/Kec-Paguat/2026', from: 'Kecamatan Paguat', date: '2026-08-02', subject: 'Undangan Rapat Koordinasi Bulanan', status: 'Diteruskan ke Sekdes' },
@@ -119,7 +119,8 @@
             ]
         };
 
-        // Load from localStorage or fallback to defaultState
+        let tempLetterPhoto = null;
+
         function loadState() {
             const saved = localStorage.getItem('siap_desa_persistent_state');
             if (saved) {
@@ -302,9 +303,9 @@
         }
     </script>
 
-    <div class="flex h-full overflow-hidden">
-        <!-- SIDEBAR -->
-        <aside class="w-64 bg-slate-900 text-slate-300 flex flex-col h-full shadow-xl no-print z-20">
+    <div class="flex h-full overflow-hidden flex-col md:flex-row">
+        <!-- SIDEBAR (Desktop) -->
+        <aside class="hidden md:flex w-64 bg-slate-900 text-slate-300 flex-col h-full shadow-xl no-print z-25">
             <div class="p-5 border-b border-slate-800 flex items-center space-x-3">
                 <div class="bg-white text-slate-900 rounded-xl shadow-lg overflow-hidden flex items-center justify-center w-10 h-10">
                     <img src="https://placehold.co/100x100/ffffff/16a34a?text=SIAP" id="sidebarAppLogo" class="w-full h-full object-cover" alt="App Logo">
@@ -323,7 +324,7 @@
                 </div>
             </div>
 
-            <!-- Navigation Links -->
+            <!-- Navigation Links Desktop -->
             <nav class="flex-1 px-3 py-2 space-y-1 text-sm font-medium overflow-y-auto">
                 <a href="#" onclick="switchTab('dashboard')" id="nav-dashboard" class="flex items-center px-3 py-2.5 rounded-lg transition text-white bg-brand-600 shadow-md">
                     <i class="fa-solid fa-chart-pie w-6"></i> Dashboard Utama
@@ -353,29 +354,57 @@
 
             <div class="p-4 border-t border-slate-800 text-xs text-slate-500 flex justify-between items-center">
                 <span id="sidebarFooterVillage">Kamiiri</span>
-                <span class="bg-brand-900/50 text-brand-400 px-2 py-0.5 rounded font-mono">v3.4</span>
+                <span class="bg-brand-900/50 text-brand-400 px-2 py-0.5 rounded font-mono">v3.5</span>
             </div>
         </aside>
 
         <!-- MAIN CONTAINER -->
         <main class="flex-1 flex flex-col h-full overflow-hidden">
-            <header class="bg-white border-b border-slate-200 h-16 flex items-center justify-between px-6 no-print shadow-sm z-10">
+            <header class="bg-white border-b border-slate-200 h-16 flex items-center justify-between px-6 no-print shadow-sm z-10 shrink-0">
                 <div class="flex items-center space-x-3">
                     <span class="bg-brand-100 text-brand-800 text-xs font-semibold px-2.5 py-1 rounded-full uppercase tracking-wider">
                         Admin Portal
                     </span>
-                    <h2 id="pageTitle" class="text-lg font-bold text-slate-800">Dashboard Administrator</h2>
+                    <h2 id="pageTitle" class="text-lg font-bold text-slate-800 truncate">Dashboard Administrator</h2>
                 </div>
                 <div class="flex items-center space-x-4">
                     <div class="text-right hidden sm:block">
                         <p class="text-xs font-semibold text-slate-700" id="topNavAdminName">Drs. H. Maman, M.Si</p>
                         <p class="text-[11px] text-slate-500">Administrator / Kepala Desa</p>
                     </div>
-                    <div class="h-9 w-9 bg-brand-500 text-white rounded-full flex items-center justify-center font-bold shadow">
+                    <div class="h-9 w-9 bg-brand-500 text-white rounded-full flex items-center justify-center font-bold shadow shrink-0">
                         <i class="fa-solid fa-user-shield"></i>
                     </div>
                 </div>
             </header>
+
+            <!-- MOBILE TOP NAVIGATION BAR (Facebook Style Menu Tabs) -->
+            <div class="md:hidden bg-slate-900 text-white overflow-x-auto flex items-center space-x-1.5 px-3 py-2.5 no-print shrink-0 shadow-md whitespace-nowrap scrollbar-none" id="mobileTabBar">
+                <button onclick="switchTab('dashboard')" id="mob-nav-dashboard" class="px-3 py-1.5 rounded-lg text-xs font-medium transition bg-brand-600 text-white flex items-center space-x-1.5 shrink-0 shadow">
+                    <i class="fa-solid fa-chart-pie"></i><span>Dashboard</span>
+                </button>
+                <button onclick="switchTab('layanan')" id="mob-nav-layanan" class="px-3 py-1.5 rounded-lg text-xs font-medium transition text-slate-300 hover:bg-slate-800 flex items-center space-x-1.5 shrink-0">
+                    <i class="fa-solid fa-file-pen"></i><span>Surat</span>
+                </button>
+                <button onclick="switchTab('agenda')" id="mob-nav-agenda" class="px-3 py-1.5 rounded-lg text-xs font-medium transition text-slate-300 hover:bg-slate-800 flex items-center space-x-1.5 shrink-0">
+                    <i class="fa-solid fa-book-open"></i><span>Agenda</span>
+                </button>
+                <button onclick="switchTab('arsip')" id="mob-nav-arsip" class="px-3 py-1.5 rounded-lg text-xs font-medium transition text-slate-300 hover:bg-slate-800 flex items-center space-x-1.5 shrink-0">
+                    <i class="fa-solid fa-folder-tree"></i><span>Arsip</span>
+                </button>
+                <button onclick="switchTab('laporan')" id="mob-nav-laporan" class="px-3 py-1.5 rounded-lg text-xs font-medium transition text-slate-300 hover:bg-slate-800 flex items-center space-x-1.5 shrink-0">
+                    <i class="fa-solid fa-print"></i><span>Laporan</span>
+                </button>
+                <button onclick="switchTab('penduduk')" id="mob-nav-penduduk" class="px-3 py-1.5 rounded-lg text-xs font-medium transition text-slate-300 hover:bg-slate-800 flex items-center space-x-1.5 shrink-0">
+                    <i class="fa-solid fa-users"></i><span>Penduduk</span>
+                </button>
+                <button onclick="switchTab('pengguna')" id="mob-nav-pengguna" class="px-3 py-1.5 rounded-lg text-xs font-medium transition text-slate-300 hover:bg-slate-800 flex items-center space-x-1.5 shrink-0">
+                    <i class="fa-solid fa-user-shield"></i><span>Akses</span>
+                </button>
+                <button onclick="switchTab('pengaturan')" id="mob-nav-pengaturan" class="px-3 py-1.5 rounded-lg text-xs font-medium transition text-slate-300 hover:bg-slate-800 flex items-center space-x-1.5 shrink-0">
+                    <i class="fa-solid fa-gears"></i><span>Pengaturan</span>
+                </button>
+            </div>
 
             <div id="content-area" class="flex-1 overflow-y-auto p-6 bg-slate-50">
                 <!-- Dynamic Content Injected Here -->
@@ -394,7 +423,9 @@
         function switchTab(tabId) {
             state.activeTab = tabId;
             saveState();
-            document.querySelectorAll('nav a').forEach(el => {
+            
+            // Desktop Sidebar Navigation Update
+            document.querySelectorAll('aside nav a').forEach(el => {
                 el.classList.remove('bg-brand-600', 'text-white', 'shadow-md');
                 el.classList.add('hover:bg-slate-800', 'hover:text-white');
             });
@@ -403,6 +434,18 @@
                 activeNav.classList.add('bg-brand-600', 'text-white', 'shadow-md');
                 activeNav.classList.remove('hover:bg-slate-800', 'hover:text-white');
             }
+
+            // Mobile Top Bar Navigation Update
+            document.querySelectorAll('#mobileTabBar button').forEach(btn => {
+                btn.classList.remove('bg-brand-600', 'text-white', 'shadow');
+                btn.classList.add('text-slate-300', 'hover:bg-slate-800');
+            });
+            const activeMobNav = document.getElementById('mob-nav-' + tabId);
+            if(activeMobNav) {
+                activeMobNav.classList.add('bg-brand-600', 'text-white', 'shadow');
+                activeMobNav.classList.remove('text-slate-300', 'hover:bg-slate-800');
+            }
+
             renderView();
         }
 
@@ -416,7 +459,7 @@
                 titleEl.innerText = 'Dashboard Utama Desa ' + vName;
                 container.innerHTML = renderDashboardView();
             } else if(state.activeTab === 'layanan') {
-                titleEl.innerText = 'Modul Pembuatan Surat Otomatis';
+                titleEl.innerText = 'Modul Pembuatan Surat & Arsip Berbasis Kamera';
                 container.innerHTML = renderLayananView();
             } else if(state.activeTab === 'agenda') {
                 titleEl.innerText = 'Buku Agenda Surat Masuk & Keluar';
@@ -452,7 +495,7 @@
                         <div class="space-y-2 mb-4 md:mb-0">
                             <span class="bg-brand-500/40 text-brand-100 text-xs px-3 py-1 rounded-full font-medium">Sistem Informasi Pemerintahan Desa</span>
                             <h2 class="text-2xl font-bold">Portal Administrasi Desa ${vName}</h2>
-                            <p class="text-slate-200 text-sm max-w-xl">Layanan administrasi pembuatan surat keterangan berukuran standar A4/F4, undangan resmi, buku agenda, dan arsip digital.</p>
+                            <p class="text-slate-200 text-sm max-w-xl">Layanan administrasi pembuatan surat keterangan berukuran standar A4/F4, undangan resmi, buku agenda, arsip digital dengan tangkapan foto/kamera.</p>
                         </div>
                         <button onclick="switchTab('layanan')" class="bg-white text-brand-900 font-semibold px-5 py-2.5 rounded-xl shadow hover:bg-slate-100 transition flex items-center space-x-2">
                             <i class="fa-solid fa-plus-circle text-brand-600"></i>
@@ -549,8 +592,8 @@
                 <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
                     <div class="border-b border-slate-100 pb-4 mb-6 flex justify-between items-center">
                         <div>
-                            <h3 class="text-lg font-bold text-slate-800">Formulir Pembuatan Surat Administrasi Desa</h3>
-                            <p class="text-xs text-slate-500">Pilih jenis layanan surat resmi desa lengkap dengan otomatisasi penomoran arsip dan ukuran kertas ${state.settings.paperSize || 'A4'}.</p>
+                            <h3 class="text-lg font-bold text-slate-800">Formulir Pembuatan & Arsip Surat Desa</h3>
+                            <p class="text-xs text-slate-500">Pilih jenis layanan surat resmi desa lengkap dengan pengambilan foto/kamera arsip langsung dan penomoran otomatis.</p>
                         </div>
                         <span class="bg-blue-50 text-blue-700 text-xs font-semibold px-3 py-1 rounded-lg">Paper: ${state.settings.paperSize || 'A4'}</span>
                     </div>
@@ -615,6 +658,29 @@
                             <textarea id="inputPurpose" rows="3" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" placeholder="Contoh: Undangan rapat persiapan Maulid Nabi / Pengajuan modal UMKM..."></textarea>
                         </div>
 
+                        <!-- FITUR PENGAMBILAN GAMBAR / KAMERA SAAT MENGARSIPKAN SURAT -->
+                        <div class="p-4 bg-emerald-50/70 rounded-2xl border border-emerald-200 space-y-3">
+                            <div class="flex items-center space-x-2 text-emerald-900 font-bold text-xs uppercase tracking-wider">
+                                <i class="fa-solid fa-camera"></i>
+                                <span>Pengambilan / Lampiran Foto Arsip Dokumen / Warga</span>
+                            </div>
+                            <p class="text-xs text-emerald-700">Gunakan kamera handphone atau ambil gambar dokumen fisik/KTP/persyaratan untuk dilampirkan langsung ke dalam arsip digital surat ini.</p>
+                            
+                            <div class="flex flex-col sm:flex-row items-center gap-4 pt-2">
+                                <input type="file" id="inputLetterPhoto" accept="image/*" capture="environment" onchange="handlePhotoUpload(event)" class="w-full bg-white border border-emerald-300 rounded-xl px-4 py-2 text-sm file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700">
+                            </div>
+
+                            <div id="photoPreviewContainer" class="hidden mt-3">
+                                <p class="text-xs font-semibold text-slate-600 mb-1">Pratinjau Foto Tangkapan Kamera:</p>
+                                <div class="relative inline-block">
+                                    <img id="capturedPhotoImg" src="" alt="Foto Bukti Arsip" class="w-36 h-36 object-cover rounded-xl border-2 border-emerald-500 shadow-md">
+                                    <button type="button" onclick="clearCapturedPhoto()" class="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow hover:bg-red-700" title="Hapus Foto">
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="flex items-center space-x-3 p-4 bg-brand-50/60 rounded-xl border border-brand-200">
                             <input type="checkbox" id="inputIncludePurpose" checked class="w-4 h-4 text-brand-600 rounded border-slate-300 focus:ring-brand-500">
                             <label for="inputIncludePurpose" class="text-xs font-semibold text-slate-700 cursor-pointer">
@@ -632,6 +698,31 @@
                     </form>
                 </div>
             `;
+        }
+
+        function handlePhotoUpload(event) {
+            const file = event.target.files[0];
+            if(file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    tempLetterPhoto = e.target.result;
+                    const container = document.getElementById('photoPreviewContainer');
+                    const img = document.getElementById('capturedPhotoImg');
+                    if(container && img) {
+                        img.src = tempLetterPhoto;
+                        container.classList.remove('hidden');
+                    }
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function clearCapturedPhoto() {
+            tempLetterPhoto = null;
+            const container = document.getElementById('photoPreviewContainer');
+            const fileInput = document.getElementById('inputLetterPhoto');
+            if(container) container.classList.add('hidden');
+            if(fileInput) fileInput.value = '';
         }
 
         function autofillResident(nik) {
@@ -685,7 +776,8 @@
                 signedBy: state.settings.headName + ' (' + state.settings.headTitle + ')',
                 sifat: sifat,
                 lampiran: lampiran,
-                includePurpose: includePurpose
+                includePurpose: includePurpose,
+                photo: tempLetterPhoto || null
             };
 
             state.letters.unshift(newLetter);
@@ -699,9 +791,10 @@
                 status: 'Terkirim'
             });
 
+            tempLetterPhoto = null; // Reset foto sementara
             saveState();
 
-            showModal('Sukses!', `Surat berhasil digenerate dengan Nomor Registrasi: <br><strong class="font-mono text-brand-700">${newNo}</strong>`, 'success', () => {
+            showModal('Sukses!', `Surat berhasil digenerate & arsip foto tersimpan dengan Nomor Registrasi: <br><strong class="font-mono text-brand-700">${newNo}</strong>`, 'success', () => {
                 previewLetter(newId);
             });
         }
@@ -787,9 +880,9 @@
                                         <th class="p-4">No. Surat / Klasifikasi</th>
                                         <th class="p-4">Pemohon & NIK</th>
                                         <th class="p-4">Jenis Surat</th>
+                                        <th class="p-4">Foto Arsip</th>
                                         <th class="p-4">Tanggal Terbit</th>
-                                        <th class="p-4">Status</th>
-                                        <th class="p-4 text-center">Aksi Dokumen (${state.settings.paperSize || 'A4'})</th>
+                                        <th class="p-4 text-center">Aksi Dokumen</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-100">
@@ -803,12 +896,10 @@
                                                 <p class="text-xs font-mono text-slate-400">${l.nik}</p>
                                             </td>
                                             <td class="p-4 text-slate-700">${l.type}</td>
-                                            <td class="p-4 text-slate-600 text-xs">${l.date}</td>
                                             <td class="p-4">
-                                                <span class="px-2.5 py-1 text-xs rounded-full font-medium ${l.status === 'Disetujui' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">
-                                                    ${l.status}
-                                                </span>
+                                                ${l.photo ? `<img src="${l.photo}" class="w-10 h-10 object-cover rounded-lg border shadow cursor-pointer" onclick="previewLetter('${l.id}')" title="Klik untuk lihat">` : `<span class="text-xs text-slate-400 italic">Tanpa Foto</span>`}
                                             </td>
+                                            <td class="p-4 text-slate-600 text-xs">${l.date}</td>
                                             <td class="p-4 text-center space-x-2">
                                                 <button onclick="previewLetter('${l.id}')" class="bg-slate-100 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-slate-200 transition">
                                                     <i class="fa-solid fa-eye mr-1"></i> Lihat
@@ -1454,7 +1545,14 @@
                             </div>
                         `}
 
-                        <div class="flex justify-end pt-16 text-xs">
+                        ${l.photo ? `
+                            <div class="pt-4 border-t border-slate-200 mt-6 no-print">
+                                <p class="text-xs font-bold text-slate-700 mb-2"><i class="fa-solid fa-camera mr-1 text-emerald-600"></i> Lampiran Foto Arsip Dokumen / Pemohon:</p>
+                                <img src="${l.photo}" class="w-48 h-48 object-cover rounded-xl border shadow-md" alt="Lampiran Foto Arsip">
+                            </div>
+                        ` : ''}
+
+                        <div class="flex justify-end pt-12 text-xs">
                             <div class="text-center">
                                 <p>${vName}, ${l.date}</p>
                                 <p class="font-bold">${state.settings.headTitle} ${vName}</p>
