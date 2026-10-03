@@ -134,29 +134,57 @@
 
         let tempLetterPhoto = null;
         let tempIsScanned = false;
+        let state = JSON.parse(JSON.stringify(defaultState));
 
-        function loadState() {
-            const saved = localStorage.getItem('siap_desa_persistent_state');
-            if (saved) {
-                try {
-                    return JSON.parse(saved);
-                } catch (e) {
-                    console.error('Gagal memuat state dari localStorage', e);
+        // Sinkronisasi & Ambil Data Logo/Settings langsung dari Supabase Database
+        async function loadSettingsFromSupabase() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('settings')
+                    .select('*')
+                    .eq('id', 1)
+                    .single();
+                
+                if (data && data.config) {
+                    state.settings = typeof data.config === 'string' ? JSON.parse(data.config) : data.config;
                 }
+            } catch (e) {
+                console.log('Memuat pengaturan lokal atau tabel settings belum tersedia:', e);
             }
-            return JSON.parse(JSON.stringify(defaultState));
+            renderView();
         }
 
-        let state = loadState();
+        async function saveSettingsToSupabase() {
+            try {
+                const { error } = await supabaseClient
+                    .from('settings')
+                    .upsert({ 
+                        id: 1, 
+                        config: state.settings,
+                        updated_at: new Date()
+                    });
+                
+                if (error) {
+                    console.error('Gagal sinkronisasi ke Supabase:', error);
+                    showModal('Peringatan', 'Gagal menyimpan ke database Supabase: ' + error.message, 'error');
+                } else {
+                    showModal('Berhasil', 'Logo & Pengaturan berhasil disimpan langsung ke Database Supabase & tersinkronisasi antar perangkat!', 'success', () => renderView());
+                }
+            } catch (err) {
+                console.error('Error Supabase:', err);
+                showModal('Error', 'Terjadi kesalahan koneksi ke database.', 'error');
+            }
+        }
 
         function saveState() {
             localStorage.setItem('siap_desa_persistent_state', JSON.stringify(state));
         }
 
-        function resetToDefaultState() {
+        async function resetToDefaultState() {
             if(confirm('Apakah Anda yakin ingin mereset seluruh pengaturan dan data kembali ke awal?')) {
                 localStorage.removeItem('siap_desa_persistent_state');
                 state = JSON.parse(JSON.stringify(defaultState));
+                await saveSettingsToSupabase();
                 renderView();
                 showModal('Berhasil', 'Sistem berhasil dikembalikan ke pengaturan awal.', 'success');
             }
@@ -197,13 +225,15 @@
             document.documentElement.style.setProperty('--print-page-size', state.settings.paperSize === 'F4' ? '215mm 330mm' : 'A4');
         }
 
-        function uploadLogoFile(event, fieldName) {
+        async function uploadLogoFile(event, fieldName) {
             const file = event.target.files[0];
             if(file) {
                 const reader = new FileReader();
-                reader.onload = function(e) {
+                reader.onload = async function(e) {
                     state.settings[fieldName] = e.target.result;
-                    saveState();
+                    // Simpan langsung ke database Supabase agar tersinkron di device lain
+                    await saveSettingsToSupabase();
+
                     if(fieldName === 'appLogo') {
                         const el = document.getElementById('setAppLogo');
                         if(el) el.value = e.target.result;
@@ -214,7 +244,6 @@
                         const el = document.getElementById('setLogo2');
                         if(el) el.value = e.target.result;
                     }
-                    showModal('Berhasil', 'File logo berhasil diunggah dan disimpan secara permanen!', 'success');
                 }
                 reader.readAsDataURL(file);
             }
@@ -399,7 +428,7 @@
                     <aside class="hidden md:flex w-64 bg-slate-900 text-slate-300 flex-col h-full shadow-xl no-print z-25">
                         <div class="p-5 border-b border-slate-800 flex items-center space-x-3">
                             <div class="bg-white text-slate-900 rounded-xl shadow-lg overflow-hidden flex items-center justify-center w-10 h-10">
-                                <img src="https://placehold.co/100x100/ffffff/16a34a?text=SIAP" id="sidebarAppLogo" class="w-full h-full object-cover" alt="App Logo">
+                                <img src="${state.settings.appLogo || 'https://placehold.co/100x100/ffffff/16a34a?text=SIAP'}" id="sidebarAppLogo" class="w-full h-full object-cover" alt="App Logo">
                             </div>
                             <div>
                                 <h1 class="font-bold text-white text-base tracking-wide">SIAP-Desa</h1>
@@ -1214,7 +1243,7 @@
 
         function changeReportPaperSize(val) {
             state.settings.paperSize = val;
-            saveState();
+            saveSettingsToSupabase();
             renderActiveTabContent();
         }
 
@@ -1605,7 +1634,7 @@
                             <div class="pt-6 border-t border-slate-100 flex justify-end">
                                 <button type="submit" class="px-6 py-2.5 rounded-xl bg-brand-600 text-white text-sm font-semibold shadow hover:bg-brand-700 transition flex items-center space-x-2">
                                     <i class="fa-solid fa-floppy-disk"></i>
-                                    <span>Simpan Perubahan & Sinkronisasi Desa</span>
+                                    <span>Simpan ke Database Supabase</span>
                                 </button>
                             </div>
                         </form>
@@ -1620,7 +1649,7 @@
             `;
         }
 
-        function handleSaveSettings(event) {
+        async function handleSaveSettings(event) {
             event.preventDefault();
             state.settings.paperSize = document.getElementById('setPaperSize').value;
             state.settings.headName = document.getElementById('setHeadName').value;
@@ -1655,8 +1684,8 @@
             state.settings.logoHeight = document.getElementById('setLogoHeight').value;
             state.settings.logoWidth = document.getElementById('setLogoWidth').value;
 
-            saveState();
-            showModal('Berhasil', 'Pengaturan ukuran kertas, Kepala Desa, dan kop surat berhasil disimpan secara permanen!', 'success', () => renderActiveTabContent());
+            await saveSettingsToSupabase();
+            renderActiveTabContent();
         }
 
         function toggleLogoInputs(val) {
@@ -1791,7 +1820,7 @@
 
         function changeModalPaperSize(id, size) {
             state.settings.paperSize = size;
-            saveState();
+            saveSettingsToSupabase();
             previewLetter(id);
         }
 
@@ -1822,9 +1851,9 @@
             document.getElementById('customModal').classList.add('hidden');
         }
 
-        // Inisialisasi awal saat halaman dimuat
-        document.addEventListener('DOMContentLoaded', () => {
-            renderView();
+        // Inisialisasi awal saat halaman dimuat (Memuat pengaturan logo dari Supabase)
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadSettingsFromSupabase();
         });
     </script>
 </body>
