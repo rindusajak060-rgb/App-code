@@ -133,7 +133,14 @@
 
         let tempLetterPhoto = null;
         let tempIsScanned = false;
-        let state = JSON.parse(JSON.stringify(defaultState));
+        
+        // Memuat state dari localStorage (untuk data aplikasi)
+        let savedPersistentState = localStorage.getItem('siap_desa_persistent_state');
+        let state = savedPersistentState ? JSON.parse(savedPersistentState) : JSON.parse(JSON.stringify(defaultState));
+
+        // Memeriksa sessionStorage agar tetap login saat Refresh (F5), tetapi logout saat tab ditutup
+        const isSessionActive = sessionStorage.getItem('siap_desa_logged_in') === 'true';
+        state.isLoggedIn = isSessionActive;
 
         // Fungsi kompresi gambar agar ringan & aman masuk Supabase tabel pengaturan_desa
         function compressImage(file, maxWidth = 250, maxHeight = 250, quality = 0.85) {
@@ -212,6 +219,7 @@
         async function resetToDefaultState() {
             if(confirm('Apakah Anda yakin ingin mereset seluruh pengaturan dan data kembali ke awal?')) {
                 localStorage.removeItem('siap_desa_persistent_state');
+                sessionStorage.removeItem('siap_desa_logged_in');
                 state = JSON.parse(JSON.stringify(defaultState));
                 await saveSettingsToSupabase();
                 renderView();
@@ -401,6 +409,8 @@
 
             if (usernameInput === 'admin' && passwordInput === 'admin123') {
                 state.isLoggedIn = true;
+                // Simpan status login di sessionStorage agar bertahan saat Refresh (F5), tapi terhapus saat tab ditutup
+                sessionStorage.setItem('siap_desa_logged_in', 'true');
                 state.currentUser = { name: 'Admin', role: 'Administrator Utama', username: 'admin' };
                 saveState();
                 renderView();
@@ -412,6 +422,7 @@
         function handleLogout() {
             if(confirm('Apakah Anda ingin keluar dari sesi sistem administrasi ini?')) {
                 state.isLoggedIn = false;
+                sessionStorage.removeItem('siap_desa_logged_in');
                 saveState();
                 renderView();
             }
