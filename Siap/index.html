@@ -66,84 +66,93 @@
 <body class="h-full bg-slate-100 text-slate-800 font-sans antialiased flex flex-col">
 
     <script>
-        const defaultState = {
+        const defaultSettings = {
+            kopLine1: 'PEMERINTAH KABUPATEN POHUWATO',
+            kopLine2: 'KECAMATAN PAGUAT',
+            kopLine3: 'DESA KAMIIRI',
+            kopLine4: 'Alamat : Jln. Trans Sulawesi Dsn I Desa Kamiiri Kec. Paguat Kab. Pohuwato',
+            sizeLine1: '14',
+            sizeLine2: '12',
+            sizeLine3: '18',
+            sizeLine4: '11',
+            spaceLine1: '1.2',
+            spaceLine2: '1.2',
+            spaceLine3: '1.1',
+            spaceLine4: '1.2',
+            fontLine1: 'font-sans',
+            fontLine2: 'font-sans',
+            fontLine3: 'font-sans',
+            fontLine4: 'font-sans',
+            weightLine1: 'font-bold',
+            weightLine2: 'font-semibold',
+            weightLine3: 'font-black',
+            weightLine4: 'font-normal',
+            desaShort: 'Kamiiri',
+            appLogo: 'https://placehold.co/100x100/ffffff/16a34a?text=SIAP',
+            logo1: 'https://placehold.co/100x100/1e293b/ffffff?text=POHUWATO',
+            logo2: 'https://placehold.co/100x100/166534/ffffff?text=DESA',
+            logoCount: '1',
+            align: 'center',
+            logoHeight: '80',
+            logoWidth: '80',
+            headName: 'Admin',
+            headTitle: 'Kepala Desa',
+            paperSize: 'A4'
+        };
+
+        let state = {
             isLoggedIn: false,
             currentUser: { name: 'Admin', role: 'Administrator Utama', username: 'admin' },
             activeTab: 'dashboard',
-            allowedUsers: [
-                { id: 1, name: 'Admin', username: 'admin', role: 'Administrator / Kepala Desa', status: 'Aktif', email: 'admin@pohuwato.desa.id' },
-                { id: 2, name: 'Operator', username: 'operator', role: 'Operator Administrasi', status: 'Aktif', email: 'operator@pohuwato.desa.id' },
-                { id: 3, name: 'Staf Pelayanan', username: 'staf', role: 'Staf Pelayanan Kependudukan', status: 'Aktif', email: 'staf@pohuwato.desa.id' }
-            ],
-            settings: {
-                kopLine1: 'PEMERINTAH KABUPATEN POHUWATO',
-                kopLine2: 'KECAMATAN PAGUAT',
-                kopLine3: 'DESA KAMIIRI',
-                kopLine4: 'Alamat : Jln. Trans Sulawesi Dsn I Desa Kamiiri Kec. Paguat Kab. Pohuwato',
-                sizeLine1: '14',
-                sizeLine2: '12',
-                sizeLine3: '18',
-                sizeLine4: '11',
-                spaceLine1: '1.2',
-                spaceLine2: '1.2',
-                spaceLine3: '1.1',
-                spaceLine4: '1.2',
-                fontLine1: 'font-sans',
-                fontLine2: 'font-sans',
-                fontLine3: 'font-sans',
-                fontLine4: 'font-sans',
-                weightLine1: 'font-bold',
-                weightLine2: 'font-semibold',
-                weightLine3: 'font-black',
-                weightLine4: 'font-normal',
-                desaShort: 'Kamiiri',
-                appLogo: 'https://placehold.co/100x100/ffffff/16a34a?text=SIAP',
-                logo1: 'https://placehold.co/100x100/1e293b/ffffff?text=POHUWATO',
-                logo2: 'https://placehold.co/100x100/166534/ffffff?text=DESA',
-                logoCount: '1',
-                align: 'center',
-                logoHeight: '80',
-                logoWidth: '80',
-                headName: 'Admin',
-                headTitle: 'Kepala Desa',
-                paperSize: 'A4'
-            },
-            residents: [
-                { nik: '7501011234560001', name: 'Budi Santoso', gender: 'Laki-laki', pob: 'Paguat', dob: '1985-06-12', address: 'Dsn I Desa Kamiiri', job: 'Pegawai Swasta', status: 'Kawin' },
-                { nik: '7501019876540002', name: 'Siti Aminah', gender: 'Perempuan', pob: 'Pohuwato', dob: '1990-11-20', address: 'Dsn II Desa Kamiiri', job: 'Ibu Rumah Tangga', status: 'Kawin' },
-                { nik: '7501015544330003', name: 'Ahmad Fauzi', gender: 'Laki-laki', pob: 'Paguat', dob: '1998-03-05', address: 'Dsn I Desa Kamiiri', job: 'Mahasiswa', status: 'Belum Kawin' }
-            ],
-            letters: [
-                { id: 'L-2026-001', nik: '7501011234560001', name: 'Budi Santoso', type: 'Surat Keterangan Domisili', code: '474.3', number: '474.3 / 001 / Des.01 / 2026', date: '2026-08-04', purpose: 'Persyaratan pembukaan rekening bank', status: 'Disetujui', signedBy: 'Admin (Kepala Desa)', sifat: 'Penting', lampiran: '-', includePurpose: true, photo: null, isScanned: false },
-                { id: 'L-2026-002', nik: '7501019876540002', name: 'Siti Aminah', type: 'Surat Keterangan Usaha', code: '503', number: '503 / 002 / Des.01 / 2026', date: '2026-08-05', purpose: 'Pengajuan modal UMKM BNI', status: 'Disetujui', signedBy: 'Admin (Kepala Desa)', sifat: 'Biasa', lampiran: '-', includePurpose: true, photo: null, isScanned: false },
-                { id: 'L-2026-003', nik: '7501015544330003', name: 'Ahmad Fauzi', type: 'Undangan Rapat', code: '005', number: '005 / KMR.PGT / 22 / VIII / 2026', date: '2026-08-04', purpose: 'Persiapan Pelaksanaan Maulid Nabi Muhammad SAW 1448 H di Masjid Al-kautsar dan Masjid Ar-Raihan', status: 'Disetujui', signedBy: 'Admin (Kepala Desa)', sifat: 'Penting', lampiran: '-', includePurpose: true, photo: null, isScanned: false }
-            ],
-            agenda: [
-                { id: 'AG-01', type: 'Masuk', noSurat: '005/123/Kec-Paguat/2026', from: 'Kecamatan Paguat', date: '2026-08-02', subject: 'Undangan Rapat Koordinasi Bulanan', status: 'Diteruskan ke Sekdes' },
-                { id: 'AG-02', type: 'Keluar', noSurat: '005 / KMR.PGT / 22 / VIII / 2026', from: 'Kamiiri', date: '2026-08-04', subject: 'Undangan Rapat Persiapan Maulid Nabi', status: 'Terkirim' },
-                { id: 'AG-03', type: 'Masuk', noSurat: '400/45/Dinkes/2026', from: 'Dinas Kesehatan Kabupaten', date: '2026-08-08', subject: 'Penyuluhan Posyandu Serentak', status: 'Disposisi Bidan Desa' }
-            ],
-            classificationCodes: [
-                { code: '474.3', desc: 'Kependudukan & Catatan Sipil (Domisili, Pindah, Datang)' },
-                { code: '503', desc: 'Perekonomian & Perizinan Usaha (SKU, Izin Keramaian)' },
-                { code: '401', desc: 'Kesejahteraan Rakyat & Sosial (SKTM, Bantuan Sosial)' },
-                { code: '005', desc: 'Ketatausahaan & Undangan Resmi Kedinasan' }
-            ]
+            allowedUsers: [],
+            settings: defaultSettings,
+            residents: [],
+            letters: [],
+            agenda: []
         };
+
+        const classificationCodes = [
+            { code: '474.3', desc: 'Kependudukan & Catatan Sipil (Domisili, Pindah, Datang)' },
+            { code: '503', desc: 'Perekonomian & Perizinan Usaha (SKU, Izin Keramaian)' },
+            { code: '401', desc: 'Kesejahteraan Rakyat & Sosial (SKTM, Bantuan Sosial)' },
+            { code: '005', desc: 'Ketatausahaan & Undangan Resmi Kedinasan' }
+        ];
 
         let tempLetterPhoto = null;
         let tempIsScanned = false;
-        
-        // Memuat state dari localStorage (untuk data aplikasi)
-        let savedPersistentState = localStorage.getItem('siap_desa_persistent_state');
-        let state = savedPersistentState ? JSON.parse(savedPersistentState) : JSON.parse(JSON.stringify(defaultState));
+        let tempIncomingScanPhoto = null;
+        let tempIncomingIsScanned = false;
 
-        // Memeriksa sessionStorage agar tetap login saat Refresh (F5), tetapi logout saat tab ditutup
-        const isSessionActive = sessionStorage.getItem('siap_desa_logged_in') === 'true';
-        state.isLoggedIn = isSessionActive;
+        // Cek Session Login dengan Navigation Timing API (Refresh aman, buka tab baru logout)
+        let sessionSaved = localStorage.getItem('siap_desa_session');
+        let isReload = false;
+        if (performance.navigation && performance.navigation.type === 1) {
+            isReload = true;
+        }
+        if (performance.getEntriesByType) {
+            const entries = performance.getEntriesByType("navigation");
+            if (entries.length > 0 && entries[0].type === 'reload') {
+                isReload = true;
+            }
+        }
 
-        // Fungsi kompresi gambar agar ringan & aman masuk Supabase tabel pengaturan_desa
-        function compressImage(file, maxWidth = 250, maxHeight = 250, quality = 0.85) {
+        if (isReload && sessionSaved) {
+            try {
+                const parsedSession = JSON.parse(sessionSaved);
+                state.isLoggedIn = parsedSession.isLoggedIn;
+                state.currentUser = parsedSession.currentUser;
+            } catch(e) {}
+        }
+
+        function saveSession() {
+            localStorage.setItem('siap_desa_session', JSON.stringify({
+                isLoggedIn: state.isLoggedIn,
+                currentUser: state.currentUser
+            }));
+        }
+
+        // --- FUNGSI KOMPRESI GAMBAR ---
+        function compressImage(file, maxWidth = 900, maxHeight = 900, quality = 0.8) {
             return new Promise((resolve) => {
                 const reader = new FileReader();
                 reader.onload = function(e) {
@@ -175,53 +184,188 @@
             });
         }
 
-        async function loadSettingsFromSupabase() {
+        // --- LOAD SEMUA DATA DARI SUPABASE ---
+        async function loadDataFromSupabase() {
             try {
-                const { data, error } = await supabaseClient
-                    .from('pengaturan_desa')
-                    .select('*')
-                    .eq('id', 1)
-                    .single();
-                
-                if (data && data.config) {
-                    state.settings = typeof data.config === 'string' ? JSON.parse(data.config) : data.config;
+                // 1. Pengaturan Desa
+                const { data: setRow } = await supabaseClient.from('pengaturan_desa').select('*').eq('id', 1).single();
+                if (setRow && setRow.config) {
+                    state.settings = typeof setRow.config === 'string' ? JSON.parse(setRow.config) : setRow.config;
+                } else {
+                    // Seed default settings jika belum ada
+                    await supabaseClient.from('pengaturan_desa').upsert({ id: 1, config: defaultSettings });
                 }
+
+                // 2. Penduduk
+                const { data: resData } = await supabaseClient.from('penduduk').select('*');
+                if (resData && resData.length > 0) {
+                    state.residents = resData;
+                } else {
+                    // Seed data penduduk default
+                    const defaultResidents = [
+                        { nik: '7501011234560001', name: 'Budi Santoso', gender: 'Laki-laki', pob: 'Paguat', dob: '1985-06-12', address: 'Dsn I Desa Kamiiri', job: 'Pegawai Swasta', status: 'Kawin' },
+                        { nik: '7501019876540002', name: 'Siti Aminah', gender: 'Perempuan', pob: 'Pohuwato', dob: '1990-11-20', address: 'Dsn II Desa Kamiiri', job: 'Ibu Rumah Tangga', status: 'Kawin' },
+                        { nik: '7501015544330003', name: 'Ahmad Fauzi', gender: 'Laki-laki', pob: 'Paguat', dob: '1998-03-05', address: 'Dsn I Desa Kamiiri', job: 'Mahasiswa', status: 'Belum Kawin' }
+                    ];
+                    await supabaseClient.from('penduduk').upsert(defaultResidents);
+                    state.residents = defaultResidents;
+                }
+
+                // 3. Surat Desa (Arsip Surat)
+                const { data: letterData } = await supabaseClient.from('surat_desa').select('*').order('created_at', { ascending: false });
+                if (letterData && letterData.length > 0) {
+                    state.letters = letterData.map(l => ({
+                        id: l.id,
+                        nik: l.nik,
+                        name: l.name,
+                        type: l.type,
+                        code: l.code,
+                        number: l.number,
+                        date: l.date,
+                        purpose: l.purpose,
+                        status: l.status,
+                        signedBy: l.signed_by,
+                        sifat: l.sifat,
+                        lampiran: l.lampiran,
+                        includePurpose: l.include_purpose,
+                        photo: l.photo,
+                        isScanned: l.is_scanned
+                    }));
+                } else {
+                    // Seed default letters
+                    const defaultLetters = [
+                        { id: 'L-2026-001', nik: '7501011234560001', name: 'Budi Santoso', type: 'Surat Keterangan Domisili', code: '474.3', number: '474.3 / 001 / Des.01 / 2026', date: '2026-08-04', purpose: 'Persyaratan pembukaan rekening bank', status: 'Disetujui', signed_by: 'Admin (Kepala Desa)', sifat: 'Penting', lampiran: '-', include_purpose: true, photo: null, is_scanned: false },
+                        { id: 'L-2026-002', nik: '7501019876540002', name: 'Siti Aminah', type: 'Surat Keterangan Usaha', code: '503', number: '503 / 002 / Des.01 / 2026', date: '2026-08-05', purpose: 'Pengajuan modal UMKM BNI', status: 'Disetujui', signed_by: 'Admin (Kepala Desa)', sifat: 'Biasa', lampiran: '-', include_purpose: true, photo: null, is_scanned: false }
+                    ];
+                    await supabaseClient.from('surat_desa').upsert(defaultLetters);
+                    state.letters = defaultLetters.map(l => ({ ...l, signedBy: l.signed_by, includePurpose: l.include_purpose, isScanned: l.is_scanned }));
+                }
+
+                // 4. Agenda Surat
+                const { data: agendaData } = await supabaseClient.from('agenda_surat').select('*').order('created_at', { ascending: false });
+                if (agendaData && agendaData.length > 0) {
+                    state.agenda = agendaData.map(a => ({
+                        id: a.id,
+                        type: a.type,
+                        noSurat: a.no_surat,
+                        from: a.surat_from,
+                        date: a.date,
+                        subject: a.subject,
+                        status: a.status
+                    }));
+                } else {
+                    const defaultAgenda = [
+                        { id: 'AG-01', type: 'Masuk', no_surat: '005/123/Kec-Paguat/2026', surat_from: 'Kecamatan Paguat', date: '2026-08-02', subject: 'Undangan Rapat Koordinasi Bulanan', status: 'Diteruskan ke Sekdes' },
+                        { id: 'AG-02', type: 'Keluar', no_surat: '005 / KMR.PGT / 22 / VIII / 2026', surat_from: 'Kamiiri', date: '2026-08-04', subject: 'Undangan Rapat Persiapan Maulid Nabi', status: 'Terkirim' }
+                    ];
+                    await supabaseClient.from('agenda_surat').upsert(defaultAgenda);
+                    state.agenda = defaultAgenda.map(a => ({ id: a.id, type: a.type, noSurat: a.no_surat, from: a.surat_from, date: a.date, subject: a.subject, status: a.status }));
+                }
+
+                // 5. Staf Desa
+                const { data: staffData } = await supabaseClient.from('staf_desa').select('*');
+                if (staffData && staffData.length > 0) {
+                    state.allowedUsers = staffData;
+                } else {
+                    const defaultStaff = [
+                        { id: 1, name: 'Admin', username: 'admin', role: 'Administrator / Kepala Desa', status: 'Aktif', email: 'admin@pohuwato.desa.id' },
+                        { id: 2, name: 'Operator', username: 'operator', role: 'Operator Administrasi', status: 'Aktif', email: 'operator@pohuwato.desa.id' },
+                        { id: 3, name: 'Staf Pelayanan', username: 'staf', role: 'Staf Pelayanan Kependudukan', status: 'Aktif', email: 'staf@pohuwato.desa.id' }
+                    ];
+                    await supabaseClient.from('staf_desa').upsert(defaultStaff);
+                    state.allowedUsers = defaultStaff;
+                }
+
             } catch (e) {
-                console.log('Memuat dari tabel pengaturan_desa:', e);
+                console.error('Error memuat data dari Supabase:', e);
             }
             renderView();
         }
 
         async function saveSettingsToSupabase() {
             try {
-                const { error } = await supabaseClient
-                    .from('pengaturan_desa')
-                    .upsert({ 
-                        id: 1, 
-                        config: state.settings,
-                        updated_at: new Date()
-                    });
-                
-                if (error) {
-                    console.error('Gagal sinkronisasi ke Supabase:', error);
-                } else {
-                    console.log('Pengaturan & Logo berhasil disinkronkan ke tabel pengaturan_desa.');
-                }
+                await supabaseClient.from('pengaturan_desa').upsert({ id: 1, config: state.settings, updated_at: new Date() });
             } catch (err) {
-                console.error('Error Supabase:', err);
+                console.error('Gagal simpan pengaturan:', err);
             }
         }
 
-        function saveState() {
-            localStorage.setItem('siap_desa_persistent_state', JSON.stringify(state));
+        async function saveLetterToSupabase(l) {
+            try {
+                await supabaseClient.from('surat_desa').upsert({
+                    id: l.id,
+                    nik: l.nik,
+                    name: l.name,
+                    type: l.type,
+                    code: l.code,
+                    number: l.number,
+                    date: l.date,
+                    purpose: l.purpose,
+                    status: l.status,
+                    signed_by: l.signedBy,
+                    sifat: l.sifat,
+                    lampiran: l.lampiran,
+                    include_purpose: l.includePurpose,
+                    photo: l.photo,
+                    is_scanned: l.isScanned
+                });
+            } catch (err) {
+                console.error('Gagal simpan surat ke Supabase:', err);
+            }
+        }
+
+        async function deleteLetterFromSupabase(id) {
+            try {
+                await supabaseClient.from('surat_desa').delete().eq('id', id);
+            } catch (err) {
+                console.error('Gagal hapus surat:', err);
+            }
+        }
+
+        async function saveAgendaToSupabase(a) {
+            try {
+                await supabaseClient.from('agenda_surat').upsert({
+                    id: a.id,
+                    type: a.type,
+                    no_surat: a.noSurat,
+                    surat_from: a.from,
+                    date: a.date,
+                    subject: a.subject,
+                    status: a.status
+                });
+            } catch (err) {
+                console.error('Gagal simpan agenda:', err);
+            }
+        }
+
+        async function saveUserToSupabase(u) {
+            try {
+                await supabaseClient.from('staf_desa').upsert({
+                    id: u.id,
+                    name: u.name,
+                    username: u.username,
+                    role: u.role,
+                    status: u.status,
+                    email: u.email
+                });
+            } catch (err) {
+                console.error('Gagal simpan staf:', err);
+            }
+        }
+
+        async function deleteUserFromSupabase(id) {
+            try {
+                await supabaseClient.from('staf_desa').delete().eq('id', id);
+            } catch (err) {
+                console.error('Gagal hapus staf:', err);
+            }
         }
 
         async function resetToDefaultState() {
             if(confirm('Apakah Anda yakin ingin mereset seluruh pengaturan dan data kembali ke awal?')) {
-                localStorage.removeItem('siap_desa_persistent_state');
-                sessionStorage.removeItem('siap_desa_logged_in');
-                state = JSON.parse(JSON.stringify(defaultState));
-                await saveSettingsToSupabase();
+                localStorage.removeItem('siap_desa_session');
+                await supabaseClient.from('pengaturan_desa').upsert({ id: 1, config: defaultSettings });
+                await loadDataFromSupabase();
                 renderView();
                 showModal('Berhasil', 'Sistem berhasil dikembalikan ke pengaturan awal.', 'success');
             }
@@ -279,11 +423,9 @@
                     if(el) el.value = compressedDataUrl;
                 }
 
-                // Render pratinjau langsung seketika
                 const kp = document.getElementById('liveKopPreview');
                 if(kp) kp.innerHTML = renderKopSuratHtml(state.settings);
 
-                // Simpan otomatis ke database tabel pengaturan_desa
                 await saveSettingsToSupabase();
             }
         }
@@ -407,30 +549,34 @@
             const usernameInput = document.getElementById('loginUsername').value.trim();
             const passwordInput = document.getElementById('loginPassword').value;
 
-            if (usernameInput === 'admin' && passwordInput === 'admin123') {
+            // Cek apakah user ada di allowedUsers database
+            const matchedUser = state.allowedUsers.find(u => u.username === usernameInput);
+
+            if (matchedUser && (passwordInput === 'admin123' || passwordInput === 'password')) {
                 state.isLoggedIn = true;
-                // Simpan status login di sessionStorage agar bertahan saat Refresh (F5), tapi terhapus saat tab ditutup
-                sessionStorage.setItem('siap_desa_logged_in', 'true');
+                state.currentUser = { name: matchedUser.name, role: matchedUser.role, username: matchedUser.username };
+                saveSession();
+                renderView();
+            } else if (usernameInput === 'admin' && passwordInput === 'admin123') {
+                state.isLoggedIn = true;
                 state.currentUser = { name: 'Admin', role: 'Administrator Utama', username: 'admin' };
-                saveState();
+                saveSession();
                 renderView();
             } else {
-                showModal('Login Gagal', 'Username atau password salah. Pastikan menggunakan username: admin dan password: admin123', 'error');
+                showModal('Login Gagal', 'Username atau password salah. Cek kembali data akses staf.', 'error');
             }
         }
 
         function handleLogout() {
             if(confirm('Apakah Anda ingin keluar dari sesi sistem administrasi ini?')) {
                 state.isLoggedIn = false;
-                sessionStorage.removeItem('siap_desa_logged_in');
-                saveState();
+                localStorage.removeItem('siap_desa_session');
                 renderView();
             }
         }
 
         function switchTab(tabId) {
             state.activeTab = tabId;
-            saveState();
             
             document.querySelectorAll('aside nav a').forEach(el => {
                 el.classList.remove('bg-brand-600', 'text-white', 'shadow-md');
@@ -491,6 +637,9 @@
                             <a href="#" onclick="switchTab('dashboard')" id="nav-dashboard" class="flex items-center px-3 py-2.5 rounded-lg transition text-white bg-brand-600 shadow-md">
                                 <i class="fa-solid fa-chart-pie w-6"></i> Dashboard Utama
                             </a>
+                            <a href="#" onclick="switchTab('scan-masuk')" id="nav-scan-masuk" class="flex items-center px-3 py-2.5 rounded-lg transition hover:bg-slate-800 hover:text-white">
+                                <i class="fa-solid fa-camera-retro w-6 text-emerald-400"></i> Scan & Arsip Surat Masuk
+                            </a>
                             <a href="#" onclick="switchTab('layanan')" id="nav-layanan" class="flex items-center px-3 py-2.5 rounded-lg transition hover:bg-slate-800 hover:text-white">
                                 <i class="fa-solid fa-file-pen w-6"></i> Pembuatan Surat Desa
                             </a>
@@ -517,7 +666,7 @@
                         <div class="p-4 border-t border-slate-800 space-y-2">
                             <div class="flex justify-between items-center text-xs text-slate-500">
                                 <span id="sidebarFooterVillage">${vName}</span>
-                                <span class="bg-brand-900/50 text-brand-400 px-2 py-0.5 rounded font-mono">v3.5</span>
+                                <span class="bg-brand-900/50 text-brand-400 px-2 py-0.5 rounded font-mono">v3.7 Supabase</span>
                             </div>
                             <button onclick="handleLogout()" class="w-full bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white text-xs font-semibold py-2 rounded-lg transition flex items-center justify-center space-x-2">
                                 <i class="fa-solid fa-right-from-bracket"></i>
@@ -531,7 +680,7 @@
                         <header class="bg-white border-b border-slate-200 h-16 flex items-center justify-between px-6 no-print shadow-sm z-10 shrink-0">
                             <div class="flex items-center space-x-3">
                                 <span class="bg-brand-100 text-brand-800 text-xs font-semibold px-2.5 py-1 rounded-full uppercase tracking-wider">
-                                    Admin Portal
+                                    Supabase Cloud
                                 </span>
                                 <h2 id="pageTitle" class="text-lg font-bold text-slate-800 truncate">Dashboard Administrator</h2>
                             </div>
@@ -554,8 +703,11 @@
                             <button onclick="switchTab('dashboard')" id="mob-nav-dashboard" class="px-3 py-1.5 rounded-lg text-xs font-medium transition bg-brand-600 text-white flex items-center space-x-1.5 shrink-0 shadow">
                                 <i class="fa-solid fa-chart-pie"></i><span>Dashboard</span>
                             </button>
+                            <button onclick="switchTab('scan-masuk')" id="mob-nav-scan-masuk" class="px-3 py-1.5 rounded-lg text-xs font-medium transition text-slate-300 hover:bg-slate-800 flex items-center space-x-1.5 shrink-0">
+                                <i class="fa-solid fa-camera-retro text-emerald-400"></i><span>Scan Masuk</span>
+                            </button>
                             <button onclick="switchTab('layanan')" id="mob-nav-layanan" class="px-3 py-1.5 rounded-lg text-xs font-medium transition text-slate-300 hover:bg-slate-800 flex items-center space-x-1.5 shrink-0">
-                                <i class="fa-solid fa-file-pen"></i><span>Surat</span>
+                                <i class="fa-solid fa-file-pen"></i><span>Buat Surat</span>
                             </button>
                             <button onclick="switchTab('agenda')" id="mob-nav-agenda" class="px-3 py-1.5 rounded-lg text-xs font-medium transition text-slate-300 hover:bg-slate-800 flex items-center space-x-1.5 shrink-0">
                                 <i class="fa-solid fa-book-open"></i><span>Agenda</span>
@@ -605,7 +757,7 @@
                                 <label class="block text-xs font-semibold text-slate-700 mb-1">Username Administrator:</label>
                                 <div class="relative">
                                     <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400"><i class="fa-solid fa-user"></i></span>
-                                    <input type="text" id="loginUsername" required class="w-full bg-slate-50 border border-slate-300 rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 font-mono" placeholder="Masukkan username">
+                                    <input type="text" id="loginUsername" required class="w-full bg-slate-50 border border-slate-300 rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 font-mono" placeholder="admin">
                                 </div>
                             </div>
                             <div>
@@ -639,8 +791,11 @@
             if(state.activeTab === 'dashboard') {
                 if(titleEl) titleEl.innerText = 'Dashboard Utama Desa ' + vName;
                 container.innerHTML = renderDashboardView();
+            } else if(state.activeTab === 'scan-masuk') {
+                if(titleEl) titleEl.innerText = 'Modul Pemindaian & Arsip Surat Masuk Eksternal';
+                container.innerHTML = renderScanMasukView();
             } else if(state.activeTab === 'layanan') {
-                if(titleEl) titleEl.innerText = 'Modul Pembuatan Surat & Arsip Berbasis Kamera Scanner';
+                if(titleEl) titleEl.innerText = 'Modul Pembuatan Surat Keterangan Warga';
                 container.innerHTML = renderLayananView();
             } else if(state.activeTab === 'agenda') {
                 if(titleEl) titleEl.innerText = 'Buku Agenda Surat Masuk & Keluar';
@@ -678,14 +833,20 @@
                 <div class="space-y-6">
                     <div class="bg-gradient-to-r from-brand-700 to-brand-900 rounded-2xl p-6 text-white shadow-lg flex flex-col md:flex-row justify-between items-center">
                         <div class="space-y-2 mb-4 md:mb-0">
-                            <span class="bg-brand-500/40 text-brand-100 text-xs px-3 py-1 rounded-full font-medium">Sistem Informasi Pemerintahan Desa</span>
+                            <span class="bg-brand-500/40 text-brand-100 text-xs px-3 py-1 rounded-full font-medium">Database Supabase Cloud Connected</span>
                             <h2 class="text-2xl font-bold">Portal Administrasi Desa ${vName}</h2>
-                            <p class="text-slate-200 text-sm max-w-xl">Layanan administrasi pembuatan surat keterangan berukuran standar A4/F4, undangan resmi, buku agenda, arsip digital dengan tangkapan foto/kamera scanner dokumen.</p>
+                            <p class="text-slate-200 text-sm max-w-xl">Layanan administrasi pembuatan surat keterangan berukuran standar A4/F4, undangan resmi, buku agenda, arsip digital dengan tangkapan foto/kamera scanner dokumen tersinkronisasi server.</p>
                         </div>
-                        <button onclick="switchTab('layanan')" class="bg-white text-brand-900 font-semibold px-5 py-2.5 rounded-xl shadow hover:bg-slate-100 transition flex items-center space-x-2">
-                            <i class="fa-solid fa-plus-circle text-brand-600"></i>
-                            <span>Buat Surat Baru</span>
-                        </button>
+                        <div class="flex items-center space-x-3">
+                            <button onclick="switchTab('scan-masuk')" class="bg-emerald-500 text-white font-semibold px-4 py-2.5 rounded-xl shadow hover:bg-emerald-600 transition flex items-center space-x-2 text-sm">
+                                <i class="fa-solid fa-camera-retro"></i>
+                                <span>Scan Surat Masuk</span>
+                            </button>
+                            <button onclick="switchTab('layanan')" class="bg-white text-brand-900 font-semibold px-4 py-2.5 rounded-xl shadow hover:bg-slate-100 transition flex items-center space-x-2 text-sm">
+                                <i class="fa-solid fa-plus-circle text-brand-600"></i>
+                                <span>Buat Surat</span>
+                            </button>
+                        </div>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
@@ -722,7 +883,7 @@
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
                             <div class="flex justify-between items-center mb-4">
-                                <h3 class="font-bold text-slate-800 text-base">Arsip Permohonan Surat Terbaru</h3>
+                                <h3 class="font-bold text-slate-800 text-base">Arsip Permohonan & Surat Masuk Terbaru</h3>
                                 <button onclick="switchTab('arsip')" class="text-xs text-brand-600 font-semibold hover:underline">Lihat Semua Arsip</button>
                             </div>
                             <div class="overflow-x-auto">
@@ -730,7 +891,7 @@
                                     <thead>
                                         <tr class="border-b border-slate-100 text-slate-400 font-medium text-xs uppercase">
                                             <th class="pb-3">Nomor Surat</th>
-                                            <th class="pb-3">Pemohon</th>
+                                            <th class="pb-3">Pemohon / Pengirim</th>
                                             <th class="pb-3">Jenis Surat</th>
                                             <th class="pb-3">Status</th>
                                         </tr>
@@ -742,7 +903,7 @@
                                                 <td class="py-3 font-semibold text-slate-800">${l.name}</td>
                                                 <td class="py-3 text-slate-600">${l.type}</td>
                                                 <td class="py-3">
-                                                    <span class="px-2.5 py-1 text-xs rounded-full font-medium ${l.status === 'Disetujui' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">
+                                                    <span class="px-2.5 py-1 text-xs rounded-full font-medium ${l.status === 'Disetujui' || l.status === 'Diterima' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">
                                                         ${l.status}
                                                     </span>
                                                 </td>
@@ -757,7 +918,7 @@
                             <h3 class="font-bold text-slate-800 text-base mb-3">Klasifikasi Surat Resmi</h3>
                             <p class="text-xs text-slate-500 mb-4">Format dokumen otomatis dikonfigurasi ke ukuran ${state.settings.paperSize || 'A4'} resmi.</p>
                             <div class="space-y-3">
-                                ${state.classificationCodes.map(c => `
+                                ${classificationCodes.map(c => `
                                     <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
                                         <div class="flex justify-between items-center mb-1">
                                             <span class="font-mono text-xs font-bold text-brand-700 bg-brand-50 px-2 py-0.5 rounded">${c.code}</span>
@@ -772,13 +933,207 @@
             `;
         }
 
+        // ==========================================
+        // MODUL: SCAN & ARSIP SURAT MASUK EKSTERNAL (SUPABASE)
+        // ==========================================
+        function renderScanMasukView() {
+            const vName = getVillageName();
+            return `
+                <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-sm border border-slate-200 p-8 space-y-6">
+                    <div class="border-b border-slate-100 pb-4 flex justify-between items-center">
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-800"><i class="fa-solid fa-camera-retro text-emerald-600 mr-2"></i> Pemindaian & Arsip Surat Masuk Eksternal</h3>
+                            <p class="text-xs text-slate-500">Ambil foto surat fisik dari instansi luar (Kabupaten, Kecamatan, dll) untuk diarsipkan langsung ke database Supabase.</p>
+                        </div>
+                        <span class="bg-emerald-50 text-emerald-700 text-xs font-semibold px-3 py-1 rounded-lg border border-emerald-200">Supabase Cloud Sync</span>
+                    </div>
+
+                    <form onsubmit="handleSaveIncomingScan(event)" class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-2">Nomor Surat Masuk (Dari Instansi Asal):</label>
+                                <input type="text" id="incomingNo" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Contoh: 400/45/Dinkes/2026">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-2">Asal Instansi / Pengirim Surat:</label>
+                                <input type="text" id="incomingFrom" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Contoh: Dinas Kesehatan Kabupaten">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-2">Tanggal Surat:</label>
+                                <input type="date" id="incomingDate" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm" value="2026-08-04">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-2">Sifat Surat:</label>
+                                <select id="incomingSifat" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm">
+                                    <option value="Penting">Penting</option>
+                                    <option value="Biasa">Biasa</option>
+                                    <option value="Segera">Segera</option>
+                                    <option value="Rahasia">Rahasia</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-2">Perihal / Subjek Surat Masuk:</label>
+                            <textarea id="incomingSubject" rows="3" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Contoh: Undangan rapat koordinasi..."></textarea>
+                        </div>
+
+                        <!-- KAMERA / FILE SCANNER -->
+                        <div class="p-5 bg-emerald-50/70 rounded-2xl border border-emerald-200 space-y-4">
+                            <div class="flex items-center space-x-2 text-emerald-900 font-bold text-xs uppercase tracking-wider">
+                                <i class="fa-solid fa-camera"></i>
+                                <span>Ambil Foto / Pindai Dokumen Fisik Surat Masuk</span>
+                            </div>
+                            <p class="text-xs text-emerald-700">Gunakan kamera HP atau tablet untuk memotret dokumen. Gambar dikompres secara otomatis dan disimpan permanen di database Supabase agar dapat dilihat dari perangkat lain.</p>
+                            
+                            <input type="file" id="incomingPhotoInput" accept="image/*" capture="environment" onchange="handleIncomingPhotoUpload(event)" required class="w-full bg-white border border-emerald-300 rounded-xl px-4 py-2.5 text-sm file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700">
+
+                            <div id="incomingPhotoPreviewContainer" class="hidden mt-4 space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <p class="text-xs font-semibold text-slate-700">Pratinjau Hasil Tangkapan / Scan Dokumen:</p>
+                                    <div class="flex items-center space-x-2">
+                                        <button type="button" onclick="toggleIncomingScanFilter()" id="incomingScanFilterBtn" class="px-3 py-1.5 bg-slate-800 text-white text-xs font-semibold rounded-lg shadow hover:bg-slate-700 transition flex items-center space-x-1.5">
+                                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                                            <span id="incomingScanFilterText">Aktifkan Efek Scan</span>
+                                        </button>
+                                        <button type="button" onclick="clearIncomingPhoto()" class="bg-red-600 text-white rounded-lg px-2.5 py-1.5 text-xs font-semibold shadow hover:bg-red-700 flex items-center space-x-1">
+                                            <i class="fa-solid fa-xmark"></i><span>Hapus Foto</span>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="relative inline-block">
+                                    <img id="incomingPhotoImg" src="" alt="Pratinjau Surat Masuk" class="w-52 h-52 object-cover rounded-xl border-2 border-emerald-500 shadow-md transition-all">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="pt-4 border-t border-slate-100 flex justify-end space-x-3">
+                            <button type="button" onclick="switchTab('dashboard')" class="px-5 py-2.5 rounded-xl border border-slate-300 text-slate-600 text-sm font-semibold hover:bg-slate-50 transition">Batal</button>
+                            <button type="submit" class="px-6 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-semibold shadow hover:bg-emerald-700 transition flex items-center space-x-2">
+                                <i class="fa-solid fa-cloud-arrow-up"></i>
+                                <span>Simpan ke Database Supabase</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            `;
+        }
+
+        async function handleIncomingPhotoUpload(event) {
+            const file = event.target.files[0];
+            if(file) {
+                const compressed = await compressImage(file, 900, 900, 0.8);
+                tempIncomingScanPhoto = compressed;
+                tempIncomingIsScanned = false;
+                const container = document.getElementById('incomingPhotoPreviewContainer');
+                const img = document.getElementById('incomingPhotoImg');
+                const btnText = document.getElementById('incomingScanFilterText');
+                if(container && img) {
+                    img.src = tempIncomingScanPhoto;
+                    img.classList.remove('scan-effect');
+                    if(btnText) btnText.innerText = 'Aktifkan Efek Scan';
+                    container.classList.remove('hidden');
+                }
+            }
+        }
+
+        function toggleIncomingScanFilter() {
+            tempIncomingIsScanned = !tempIncomingIsScanned;
+            const img = document.getElementById('incomingPhotoImg');
+            const btnText = document.getElementById('incomingScanFilterText');
+            if(img) {
+                if(tempIncomingIsScanned) {
+                    img.classList.add('scan-effect');
+                    if(btnText) btnText.innerText = 'Nonaktifkan Efek Scan';
+                } else {
+                    img.classList.remove('scan-effect');
+                    if(btnText) btnText.innerText = 'Aktifkan Efek Scan';
+                }
+            }
+        }
+
+        function clearIncomingPhoto() {
+            tempIncomingScanPhoto = null;
+            tempIncomingIsScanned = false;
+            const container = document.getElementById('incomingPhotoPreviewContainer');
+            const fileInput = document.getElementById('incomingPhotoInput');
+            if(container) container.classList.add('hidden');
+            if(fileInput) fileInput.value = '';
+        }
+
+        async function handleSaveIncomingScan(event) {
+            event.preventDefault();
+            const noSurat = document.getElementById('incomingNo').value;
+            const from = document.getElementById('incomingFrom').value;
+            const date = document.getElementById('incomingDate').value;
+            const sifat = document.getElementById('incomingSifat').value;
+            const subject = document.getElementById('incomingSubject').value;
+
+            if(!tempIncomingScanPhoto) {
+                showModal('Peringatan', 'Silakan ambil atau unggah foto dokumen surat masuk terlebih dahulu!', 'error');
+                return;
+            }
+
+            const newId = 'L-IN-' + Date.now().toString().slice(-4);
+            const agId = 'AG-' + Date.now().toString().slice(-4);
+
+            const newLetterObj = {
+                id: newId,
+                nik: null,
+                name: from,
+                type: 'Surat Masuk (Eksternal)',
+                code: '005',
+                number: noSurat,
+                date: date,
+                purpose: subject,
+                status: 'Diterima',
+                signedBy: from,
+                sifat: sifat,
+                lampiran: '1 Berkas',
+                includePurpose: true,
+                photo: tempIncomingScanPhoto,
+                isScanned: tempIncomingIsScanned
+            };
+
+            const newAgendaObj = {
+                id: agId,
+                type: 'Masuk',
+                noSurat: noSurat,
+                from: from,
+                date: date,
+                subject: subject,
+                status: 'Diterima & Diarsipkan'
+            };
+
+            // Simpan ke Supabase Tables
+            await saveLetterToSupabase(newLetterObj);
+            await saveAgendaToSupabase(newAgendaObj);
+
+            // Perbarui state lokal
+            state.letters.unshift(newLetterObj);
+            state.agenda.unshift(newAgendaObj);
+
+            tempIncomingScanPhoto = null;
+            tempIncomingIsScanned = false;
+
+            showModal('Berhasil!', `Dokumen surat masuk dari <strong>${from}</strong> berhasil dipindai dan disimpan permanen di database Supabase.`, 'success', () => {
+                switchTab('arsip');
+            });
+        }
+
+        // ==========================================
+        // MODUL PEMBUATAN SURAT KETERANGAN WARGA
+        // ==========================================
         function renderLayananView() {
             return `
                 <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
                     <div class="border-b border-slate-100 pb-4 mb-6 flex justify-between items-center">
                         <div>
-                            <h3 class="text-lg font-bold text-slate-800">Formulir Pembuatan & Arsip Surat Desa</h3>
-                            <p class="text-xs text-slate-500">Pilih jenis layanan surat resmi desa lengkap dengan pengambilan foto/kamera scanner dokumen dan penomoran otomatis.</p>
+                            <h3 class="text-lg font-bold text-slate-800">Formulir Pembuatan Surat Keterangan Warga</h3>
+                            <p class="text-xs text-slate-500">Pilih jenis layanan surat keterangan penduduk, surat usaha, atau undangan resmi desa.</p>
                         </div>
                         <span class="bg-blue-50 text-blue-700 text-xs font-semibold px-3 py-1 rounded-lg">Paper: ${state.settings.paperSize || 'A4'}</span>
                     </div>
@@ -840,38 +1195,7 @@
 
                         <div>
                             <label class="block text-xs font-semibold text-slate-600 mb-2">Keperluan / Perihal Surat:</label>
-                            <textarea id="inputPurpose" rows="3" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" placeholder="Contoh: Undangan rapat persiapan Maulid Nabi / Pengajuan modal UMKM..."></textarea>
-                        </div>
-
-                        <!-- SCANNER / FOTO DOKUMEN -->
-                        <div class="p-4 bg-emerald-50/70 rounded-2xl border border-emerald-200 space-y-3">
-                            <div class="flex items-center space-x-2 text-emerald-900 font-bold text-xs uppercase tracking-wider">
-                                <i class="fa-solid fa-camera-retro"></i>
-                                <span>Pemindaian Dokumen & Foto Arsip (Document Scanner)</span>
-                            </div>
-                            <p class="text-xs text-emerald-700">Ambil foto dokumen fisik/KTP/persyaratan menggunakan kamera HP, lalu aktifkan mode <strong>Filter Scan Dokumen</strong>.</p>
-                            
-                            <div class="flex flex-col sm:flex-row items-center gap-4 pt-2">
-                                <input type="file" id="inputLetterPhoto" accept="image/*" capture="environment" onchange="handlePhotoUpload(event)" class="w-full bg-white border border-emerald-300 rounded-xl px-4 py-2 text-sm file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700">
-                            </div>
-
-                            <div id="photoPreviewContainer" class="hidden mt-3 space-y-3">
-                                <div class="flex items-center justify-between">
-                                    <p class="text-xs font-semibold text-slate-600">Pratinjau Foto Tangkapan / Hasil Scan:</p>
-                                    <div class="flex items-center space-x-2">
-                                        <button type="button" onclick="toggleScanFilter()" id="scanFilterBtn" class="px-3 py-1 bg-slate-800 text-white text-xs font-semibold rounded-lg shadow hover:bg-slate-700 transition flex items-center space-x-1.5">
-                                            <i class="fa-solid fa-wand-magic-sparkles"></i>
-                                            <span id="scanFilterText">Aktifkan Efek Scan</span>
-                                        </button>
-                                        <button type="button" onclick="clearCapturedPhoto()" class="bg-red-600 text-white rounded-lg px-2.5 py-1 text-xs font-semibold shadow hover:bg-red-700 flex items-center space-x-1">
-                                            <i class="fa-solid fa-xmark"></i><span>Hapus</span>
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="relative inline-block">
-                                    <img id="capturedPhotoImg" src="" alt="Foto Bukti Arsip" class="w-44 h-44 object-cover rounded-xl border-2 border-emerald-500 shadow-md transition-all">
-                                </div>
-                            </div>
+                            <textarea id="inputPurpose" rows="3" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" placeholder="Contoh: Pengajuan modal UMKM..."></textarea>
                         </div>
 
                         <div class="flex items-center space-x-3 p-4 bg-brand-50/60 rounded-xl border border-brand-200">
@@ -885,54 +1209,12 @@
                             <button type="button" onclick="switchTab('dashboard')" class="px-5 py-2.5 rounded-xl border border-slate-300 text-slate-600 text-sm font-semibold hover:bg-slate-50 transition">Batal</button>
                             <button type="submit" class="px-6 py-2.5 rounded-xl bg-brand-600 text-white text-sm font-semibold shadow hover:bg-brand-700 transition flex items-center space-x-2">
                                 <i class="fa-solid fa-file-circle-plus"></i>
-                                <span>Generate & Simpan Arsip Surat</span>
+                                <span>Generate & Simpan ke Supabase</span>
                             </button>
                         </div>
                     </form>
                 </div>
             `;
-        }
-
-        async function handlePhotoUpload(event) {
-            const file = event.target.files[0];
-            if(file) {
-                const compressed = await compressImage(file, 800, 800, 0.8);
-                tempLetterPhoto = compressed;
-                tempIsScanned = false;
-                const container = document.getElementById('photoPreviewContainer');
-                const img = document.getElementById('capturedPhotoImg');
-                const btnText = document.getElementById('scanFilterText');
-                if(container && img) {
-                    img.src = tempLetterPhoto;
-                    img.classList.remove('scan-effect');
-                    if(btnText) btnText.innerText = 'Aktifkan Efek Scan';
-                    container.classList.remove('hidden');
-                }
-            }
-        }
-
-        function toggleScanFilter() {
-            tempIsScanned = !tempIsScanned;
-            const img = document.getElementById('capturedPhotoImg');
-            const btnText = document.getElementById('scanFilterText');
-            if(img) {
-                if(tempIsScanned) {
-                    img.classList.add('scan-effect');
-                    if(btnText) btnText.innerText = 'Nonaktifkan Efek Scan';
-                } else {
-                    img.classList.remove('scan-effect');
-                    if(btnText) btnText.innerText = 'Aktifkan Efek Scan';
-                }
-            }
-        }
-
-        function clearCapturedPhoto() {
-            tempLetterPhoto = null;
-            tempIsScanned = false;
-            const container = document.getElementById('photoPreviewContainer');
-            const fileInput = document.getElementById('inputLetterPhoto');
-            if(container) container.classList.add('hidden');
-            if(fileInput) fileInput.value = '';
         }
 
         function autofillResident(nik) {
@@ -952,7 +1234,7 @@
             document.getElementById('inputCode').value = code;
         }
 
-        function handleGenerateLetter(event) {
+        async function handleGenerateLetter(event) {
             event.preventDefault();
             const letterTypeFull = document.getElementById('letterType').value;
             const [typeName, typeCode] = letterTypeFull.split('|');
@@ -970,6 +1252,7 @@
             }
 
             const newId = 'L-2026-' + String(state.letters.length + 1).padStart(3, '0');
+            const agId = 'AG-' + Date.now().toString().slice(-4);
             const newNo = `${typeCode} / 0${state.letters.length + 1} / KMR.PGT / VIII / 2026`;
             const today = '2026-08-04';
 
@@ -987,26 +1270,27 @@
                 sifat: sifat,
                 lampiran: lampiran,
                 includePurpose: includePurpose,
-                photo: tempLetterPhoto || null,
-                isScanned: tempIsScanned
+                photo: null,
+                isScanned: false
             };
 
-            state.letters.unshift(newLetter);
-            state.agenda.unshift({
-                id: 'AG-' + (state.agenda.length + 1),
+            const newAgenda = {
+                id: agId,
                 type: 'Keluar',
                 noSurat: newNo,
                 from: vName,
                 date: today,
                 subject: purpose,
                 status: 'Terkirim'
-            });
+            };
 
-            tempLetterPhoto = null; 
-            tempIsScanned = false;
-            saveState();
+            await saveLetterToSupabase(newLetter);
+            await saveAgendaToSupabase(newAgenda);
 
-            showModal('Sukses!', `Surat berhasil digenerate & arsip foto scanner tersimpan dengan Nomor Registrasi: <br><strong class="font-mono text-brand-700">${newNo}</strong>`, 'success', () => {
+            state.letters.unshift(newLetter);
+            state.agenda.unshift(newAgenda);
+
+            showModal('Sukses!', `Surat berhasil digenerate & tersimpan di database Supabase dengan Nomor: <br><strong class="font-mono text-brand-700">${newNo}</strong>`, 'success', () => {
                 previewLetter(newId);
             });
         }
@@ -1020,9 +1304,14 @@
                             <h3 class="font-bold text-slate-800 text-lg">Buku Agenda Surat Masuk & Keluar</h3>
                             <p class="text-xs text-slate-500">Pencatatan resmi arus surat masuk instansi lain dan surat keluar desa ${vName}.</p>
                         </div>
-                        <button onclick="openAddAgendaModal()" class="bg-brand-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold shadow hover:bg-brand-700 transition flex items-center space-x-2">
-                            <i class="fa-solid fa-plus"></i><span>Catat Agenda Baru</span>
-                        </button>
+                        <div class="flex items-center space-x-3">
+                            <button onclick="switchTab('scan-masuk')" class="bg-emerald-600 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow hover:bg-emerald-700 transition flex items-center space-x-1.5">
+                                <i class="fa-solid fa-camera-retro"></i><span>Scan Surat Masuk Baru</span>
+                            </button>
+                            <button onclick="openAddAgendaModal()" class="bg-brand-600 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow hover:bg-brand-700 transition flex items-center space-x-1.5">
+                                <i class="fa-solid fa-plus"></i><span>Catat Manual</span>
+                            </button>
+                        </div>
                     </div>
 
                     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
@@ -1100,7 +1389,7 @@
             showCustomModalHtml(html);
         }
 
-        function handleSaveAgenda(e) {
+        async function handleSaveAgenda(e) {
             e.preventDefault();
             const type = document.getElementById('agendaType').value;
             const noSurat = document.getElementById('agendaNo').value;
@@ -1108,25 +1397,26 @@
             const date = document.getElementById('agendaDate').value;
             const subject = document.getElementById('agendaSubject').value;
 
-            state.agenda.unshift({
-                id: 'AG-' + (state.agenda.length + 1),
+            const agObj = {
+                id: 'AG-' + Date.now().toString().slice(-4),
                 type: type,
                 noSurat: noSurat,
                 from: from,
                 date: date,
                 subject: subject,
                 status: type === 'Masuk' ? 'Diterima' : 'Terkirim'
-            });
+            };
 
-            saveState();
+            await saveAgendaToSupabase(agObj);
+            state.agenda.unshift(agObj);
             closeModal();
-            showModal('Sukses', 'Agenda surat berhasil dicatat dalam buku agenda.', 'success', () => renderView());
+            showModal('Sukses', 'Agenda surat berhasil dicatat dalam buku agenda Supabase.', 'success', () => renderView());
         }
 
         function renderArsipView(searchQuery = '') {
             const filtered = state.letters.filter(l => 
                 l.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                l.nik.includes(searchQuery) ||
+                (l.nik && l.nik.includes(searchQuery)) ||
                 l.number.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 l.type.toLowerCase().includes(searchQuery.toLowerCase())
             );
@@ -1135,8 +1425,8 @@
                 <div class="space-y-6">
                     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col md:flex-row justify-between items-center gap-4">
                         <div>
-                            <h3 class="font-bold text-slate-800 text-lg">Arsip Digital & Pencarian Instan</h3>
-                            <p class="text-xs text-slate-500">Cari arsip surat berdasarkan NIK, nama warga, atau nomor registrasi surat.</p>
+                            <h3 class="font-bold text-slate-800 text-lg">Arsip Digital & Pencarian Instan (Supabase Cloud)</h3>
+                            <p class="text-xs text-slate-500">Semua arsip surat keluar dan surat masuk beserta foto hasil scan tersimpan di server dan dapat diakses dari perangkat berbeda.</p>
                         </div>
                         <div class="w-full md:w-80">
                             <div class="relative">
@@ -1152,7 +1442,7 @@
                                 <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 text-xs uppercase font-semibold">
                                     <tr>
                                         <th class="p-4">No. Surat / Klasifikasi</th>
-                                        <th class="p-4">Pemohon & NIK</th>
+                                        <th class="p-4">Pemohon / Instansi Pengirim</th>
                                         <th class="p-4">Jenis Surat</th>
                                         <th class="p-4">Foto Arsip / Scan</th>
                                         <th class="p-4">Tanggal Terbit</th>
@@ -1167,7 +1457,7 @@
                                             <td class="p-4 font-mono text-xs font-bold text-brand-700">${l.number}</td>
                                             <td class="p-4">
                                                 <p class="font-semibold text-slate-800">${l.name}</p>
-                                                <p class="text-xs font-mono text-slate-400">${l.nik}</p>
+                                                ${l.nik && l.nik !== '0000000000000000' ? `<p class="text-xs font-mono text-slate-400">NIK: ${l.nik}</p>` : '<span class="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-medium">Surat Masuk Eksternal</span>'}
                                             </td>
                                             <td class="p-4 text-slate-700">${l.type}</td>
                                             <td class="p-4">
@@ -1203,10 +1493,13 @@
             document.getElementById('searchInput').focus();
         }
 
-        function deleteLetter(id) {
-            state.letters = state.letters.filter(l => l.id !== id);
-            saveState();
-            showModal('Berhasil', 'Arsip surat berhasil dihapus dari sistem.', 'success', () => renderActiveTabContent());
+        async function deleteLetter(id) {
+            if(confirm('Apakah Anda yakin ingin menghapus arsip surat ini?')) {
+                await deleteLetterFromSupabase(id);
+                state.letters = state.letters.filter(l => l.id !== id);
+                renderActiveTabContent();
+                showModal('Berhasil', 'Arsip surat berhasil dihapus dari database.', 'success');
+            }
         }
 
         function renderLaporanView() {
@@ -1244,7 +1537,7 @@
                                     <tr class="bg-slate-100 text-slate-700 text-xs uppercase font-semibold">
                                         <th class="border border-slate-300 p-3">No</th>
                                         <th class="border border-slate-300 p-3">Nomor Surat</th>
-                                        <th class="border border-slate-300 p-3">Nama Pemohon</th>
+                                        <th class="border border-slate-300 p-3">Pemohon / Pengirim</th>
                                         <th class="border border-slate-300 p-3">Jenis Layanan</th>
                                         <th class="border border-slate-300 p-3">Tanggal</th>
                                         <th class="border border-slate-300 p-3">Status</th>
@@ -1280,9 +1573,9 @@
             `;
         }
 
-        function changeReportPaperSize(val) {
+        async function changeReportPaperSize(val) {
             state.settings.paperSize = val;
-            saveSettingsToSupabase();
+            await saveSettingsToSupabase();
             renderActiveTabContent();
         }
 
@@ -1292,9 +1585,9 @@
                     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex justify-between items-center">
                         <div>
                             <h3 class="font-bold text-slate-800 text-lg">Master Data Penduduk Desa</h3>
-                            <p class="text-xs text-slate-500">Daftar warga terdaftar yang dapat mengajukan layanan administrasi surat.</p>
+                            <p class="text-xs text-slate-500">Daftar warga terdaftar di database Supabase yang dapat mengajukan layanan administrasi surat.</p>
                         </div>
-                        <button onclick="showModal('Informasi', 'Fitur tambah penduduk baru aktif via database kependudukan desa.', 'success')" class="bg-brand-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold shadow hover:bg-brand-700 transition flex items-center space-x-2">
+                        <button onclick="openAddResidentModal()" class="bg-brand-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold shadow hover:bg-brand-700 transition flex items-center space-x-2">
                             <i class="fa-solid fa-user-plus"></i><span>Tambah Penduduk</span>
                         </button>
                     </div>
@@ -1331,6 +1624,75 @@
             `;
         }
 
+        function openAddResidentModal() {
+            const html = `
+                <div class="space-y-4">
+                    <h3 class="font-bold text-lg text-slate-800">Tambah Data Warga Penduduk</h3>
+                    <form onsubmit="handleSaveNewResident(event)" class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">NIK (16 Digit):</label>
+                            <input type="text" id="resNik" required maxlength="16" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-sm font-mono" placeholder="750101...">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Nama Lengkap:</label>
+                            <input type="text" id="resName" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-sm" placeholder="Nama Warga">
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Jenis Kelamin:</label>
+                                <select id="resGender" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm">
+                                    <option value="Laki-laki">Laki-laki</option>
+                                    <option value="Perempuan">Perempuan</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Pekerjaan:</label>
+                                <input type="text" id="resJob" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm" placeholder="Petani / Swasta">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Tempat Lahir:</label>
+                                <input type="text" id="resPob" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm" placeholder="Paguat">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Tanggal Lahir:</label>
+                                <input type="date" id="resDob" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm" value="1995-01-01">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Alamat / Dusun:</label>
+                            <input type="text" id="resAddress" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-sm" placeholder="Dsn I Desa Kamiiri">
+                        </div>
+                        <div class="flex justify-end space-x-3 pt-2">
+                            <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl">Batal</button>
+                            <button type="submit" class="px-5 py-2 bg-brand-600 text-white text-xs font-semibold rounded-xl shadow">Simpan Penduduk</button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            showCustomModalHtml(html);
+        }
+
+        async function handleSaveNewResident(e) {
+            e.preventDefault();
+            const newRes = {
+                nik: document.getElementById('resNik').value.trim(),
+                name: document.getElementById('resName').value,
+                gender: document.getElementById('resGender').value,
+                pob: document.getElementById('resPob').value,
+                dob: document.getElementById('resDob').value,
+                address: document.getElementById('resAddress').value,
+                job: document.getElementById('resJob').value,
+                status: 'Kawin'
+            };
+
+            await supabaseClient.from('penduduk').upsert(newRes);
+            state.residents.unshift(newRes);
+            closeModal();
+            showModal('Sukses', 'Data penduduk berhasil ditambahkan ke database Supabase.', 'success', () => renderView());
+        }
+
         function renderPenggunaView() {
             return `
                 <div class="max-w-4xl mx-auto space-y-6">
@@ -1338,7 +1700,7 @@
                         <div class="border-b border-slate-100 pb-4 mb-6 flex justify-between items-center">
                             <div>
                                 <h3 class="text-lg font-bold text-slate-800">Manajemen Hak Akses & Staf Desa</h3>
-                                <p class="text-xs text-slate-500">Hanya Administrator yang berhak menambah atau mengelola siapa saja yang dapat mengakses sistem administrasi desa.</p>
+                                <p class="text-xs text-slate-500">Kelola staf yang memiliki akses login ke sistem administrasi desa via Supabase.</p>
                             </div>
                             <button onclick="openAddUserModal()" class="bg-brand-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold shadow hover:bg-brand-700 transition flex items-center space-x-2">
                                 <i class="fa-solid fa-user-plus"></i><span>Tambah Staf Akses</span>
@@ -1367,7 +1729,7 @@
                                             <td class="p-4"><span class="bg-emerald-100 text-emerald-700 px-2.5 py-1 text-xs rounded-full font-medium">${u.status}</span></td>
                                             <td class="p-4 text-center space-x-2">
                                                 <button onclick="removeUser(${u.id})" class="text-red-600 hover:text-red-800 text-xs font-semibold p-1.5 rounded bg-red-50 hover:bg-red-100 transition">
-                                                    <i class="fa-solid fa-trash"></i> Hapus Akses
+                                                    <i class="fa-solid fa-trash"></i> Hapus
                                                 </button>
                                             </td>
                                         </tr>
@@ -1384,27 +1746,26 @@
             const html = `
                 <div class="space-y-4">
                     <h3 class="font-bold text-lg text-slate-800">Tambah Staf / Pengguna Baru</h3>
-                    <p class="text-xs text-slate-500">Berikan akses login bagi staf kantor desa untuk mengelola administrasi surat.</p>
-                    <form onsubmit="handleSaveNewUser(event)" class="space-y-4">
+                    <form onsubmit="handleSaveNewUser(event)" class="space-y-3">
                         <div>
                             <label class="block text-xs font-semibold text-slate-600 mb-1">Nama / Label Staf:</label>
-                            <input type="text" id="newUserName" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" placeholder="Contoh: Operator 2">
+                            <input type="text" id="newUserName" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-sm" placeholder="Contoh: Operator 2">
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-slate-600 mb-1">Username Login:</label>
-                            <input type="text" id="newUserUsername" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" placeholder="operator2">
+                            <input type="text" id="newUserUsername" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-sm font-mono" placeholder="operator2">
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-slate-600 mb-1">Jabatan / Peran Sistem:</label>
-                            <input type="text" id="newUserRole" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" placeholder="Staf Pelayanan Umum">
+                            <input type="text" id="newUserRole" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-sm" placeholder="Staf Pelayanan Umum">
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-slate-600 mb-1">Email Resmi:</label>
-                            <input type="email" id="newUserEmail" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" placeholder="staf@desa.id">
+                            <input type="email" id="newUserEmail" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-sm" placeholder="staf@desa.id">
                         </div>
                         <div class="flex justify-end space-x-3 pt-2">
                             <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl">Batal</button>
-                            <button type="submit" class="px-5 py-2 bg-brand-600 text-white text-xs font-semibold rounded-xl shadow">Simpan & Berikan Akses</button>
+                            <button type="submit" class="px-5 py-2 bg-brand-600 text-white text-xs font-semibold rounded-xl shadow">Simpan Staf</button>
                         </div>
                     </form>
                 </div>
@@ -1412,35 +1773,34 @@
             showCustomModalHtml(html);
         }
 
-        function handleSaveNewUser(e) {
+        async function handleSaveNewUser(e) {
             e.preventDefault();
-            const name = document.getElementById('newUserName').value;
-            const username = document.getElementById('newUserUsername').value;
-            const role = document.getElementById('newUserRole').value;
-            const email = document.getElementById('newUserEmail').value;
-
-            state.allowedUsers.push({
-                id: state.allowedUsers.length + 1,
-                name: name,
-                username: username,
-                role: role,
-                email: email,
+            const newUser = {
+                id: Date.now(),
+                name: document.getElementById('newUserName').value,
+                username: document.getElementById('newUserUsername').value,
+                role: document.getElementById('newUserRole').value,
+                email: document.getElementById('newUserEmail').value,
                 status: 'Aktif'
-            });
+            };
 
-            saveState();
+            await saveUserToSupabase(newUser);
+            state.allowedUsers.push(newUser);
             closeModal();
-            showModal('Sukses', `Akses berhasil ditambahkan untuk <strong>${name}</strong>.`, 'success', () => renderActiveTabContent());
+            showModal('Sukses', 'Akses staf berhasil ditambahkan ke Supabase.', 'success', () => renderView());
         }
 
-        function removeUser(id) {
+        async function removeUser(id) {
             if(state.allowedUsers.length <= 1) {
                 showModal('Peringatan', 'Sistem memerlukan setidaknya 1 Administrator aktif.', 'error');
                 return;
             }
-            state.allowedUsers = state.allowedUsers.filter(u => u.id !== id);
-            saveState();
-            showModal('Berhasil', 'Akses pengguna berhasil dicabut dari sistem.', 'success', () => renderActiveTabContent());
+            if(confirm('Cabut akses pengguna ini?')) {
+                await deleteUserFromSupabase(id);
+                state.allowedUsers = state.allowedUsers.filter(u => u.id !== id);
+                renderActiveTabContent();
+                showModal('Berhasil', 'Akses dicabut.', 'success');
+            }
         }
 
         function renderPengaturanView() {
@@ -1451,7 +1811,7 @@
                         <div class="border-b border-slate-100 pb-4 mb-6 flex justify-between items-center">
                             <div>
                                 <h3 class="text-lg font-bold text-slate-800">Pengaturan Standar Kertas (A4 / F4), Penandatangan & Kop Surat</h3>
-                                <p class="text-xs text-slate-500">Pilih ukuran kertas resmi (A4 atau F4/Folio), atur penandatangan, kop surat, jenis font, serta ukuran.</p>
+                                <p class="text-xs text-slate-500">Pilih ukuran kertas resmi, atur kop surat, dan simpan langsung ke database Supabase.</p>
                             </div>
                             <button type="button" onclick="resetToDefaultState()" class="px-3 py-1.5 bg-red-50 text-red-600 hover:bg-red-100 text-xs font-semibold rounded-xl border border-red-200 transition">
                                 <i class="fa-solid fa-rotate-right mr-1"></i> Reset Default
@@ -1467,10 +1827,10 @@
                                         <label class="block text-xs font-semibold text-slate-700 mb-1">Pilih Ukuran Kertas Default:</label>
                                         <select id="setPaperSize" class="w-full bg-white border border-blue-300 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-800">
                                             <option value="A4" ${s.paperSize === 'A4' ? 'selected' : ''}>A4 (210 × 297 mm - Standar Nasional)</option>
-                                            <option value="F4" ${s.paperSize === 'F4' ? 'selected' : ''}>F4 / Folio (215 × 330 mm - Standar Pemerintahan Desa)</option>
+                                            <option value="F4" ${s.paperSize === 'F4' ? 'selected' : ''}>F4 / Folio (215 × 330 mm - Standar Pemerintahan)</option>
                                         </select>
                                     </div>
-                                    <p class="text-xs text-blue-700">Semua pratinjau surat dan laporan rekapitulasi akan otomatis menyesuaikan proporsi ukuran kertas ini saat dicetak atau diunduh.</p>
+                                    <p class="text-xs text-blue-700">Semua pratinjau surat dan laporan akan otomatis mengikuti ukuran ini.</p>
                                 </div>
                             </div>
 
@@ -1480,133 +1840,117 @@
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <label class="block text-xs font-semibold text-slate-700 mb-1">Nama / Label Penandatangan:</label>
-                                        <input type="text" id="setHeadName" value="${s.headName || 'Admin'}" required class="w-full bg-white border border-slate-300 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-brand-500" placeholder="Admin">
+                                        <input type="text" id="setHeadName" value="${s.headName || 'Admin'}" required class="w-full bg-white border border-slate-300 rounded-xl px-4 py-2 text-sm" placeholder="Admin">
                                     </div>
                                     <div>
                                         <label class="block text-xs font-semibold text-slate-700 mb-1">Jabatan Penandatangan:</label>
-                                        <input type="text" id="setHeadTitle" value="${s.headTitle || 'Kepala Desa'}" required class="w-full bg-white border border-slate-300 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-brand-500" placeholder="Kepala Desa">
+                                        <input type="text" id="setHeadTitle" value="${s.headTitle || 'Kepala Desa'}" required class="w-full bg-white border border-slate-300 rounded-xl px-4 py-2 text-sm" placeholder="Kepala Desa">
                                     </div>
                                 </div>
                             </div>
 
                             <div class="p-4 bg-brand-50/50 rounded-2xl border border-brand-200 space-y-4">
-                                <h4 class="font-bold text-brand-900 text-xs uppercase tracking-wider">Konfigurasi Baris, Ukuran, Ketebalan (Weight), Spasi & Nama Font Kop Surat</h4>
+                                <h4 class="font-bold text-brand-900 text-xs uppercase tracking-wider">Konfigurasi Baris, Ukuran, Ketebalan, Spasi & Font Kop Surat</h4>
                                 
                                 <!-- Baris 1 -->
                                 <div class="grid grid-cols-1 md:grid-cols-6 gap-3 items-end">
                                     <div class="md:col-span-2">
-                                        <label class="block text-xs font-semibold text-slate-700 mb-1">Baris 1 (Pemerintahan Kabupaten):</label>
-                                        <input type="text" id="setKop1" value="${s.kopLine1}" required class="w-full bg-white border border-slate-300 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-brand-500">
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">Baris 1:</label>
+                                        <input type="text" id="setKop1" value="${s.kopLine1}" required class="w-full bg-white border border-slate-300 rounded-xl px-4 py-2 text-sm">
                                     </div>
                                     <div>
-                                        <label class="block text-xs font-semibold text-slate-700 mb-1">Ukuran (px):</label>
-                                        <input type="number" id="setSize1" value="${s.sizeLine1}" min="8" max="48" required class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium">
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">Ukuran:</label>
+                                        <input type="number" id="setSize1" value="${s.sizeLine1}" min="8" max="48" required class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs">
                                     </div>
                                     <div>
                                         <label class="block text-xs font-semibold text-slate-700 mb-1">Ketebalan:</label>
-                                        <select id="setWeight1" class="w-full bg-white border border-slate-300 rounded-xl px-2 py-2 text-xs font-semibold text-brand-800">
-                                            ${renderWeightOptions(s.weightLine1)}
-                                        </select>
+                                        <select id="setWeight1" class="w-full bg-white border border-slate-300 rounded-xl px-2 py-2 text-xs">${renderWeightOptions(s.weightLine1)}</select>
                                     </div>
                                     <div>
                                         <label class="block text-xs font-semibold text-slate-700 mb-1">Spasi:</label>
-                                        <input type="text" id="setSpace1" value="${s.spaceLine1 || '1.2'}" required class="w-full bg-white border border-slate-300 rounded-xl px-2 py-2 text-xs font-medium" placeholder="1.2">
+                                        <input type="text" id="setSpace1" value="${s.spaceLine1 || '1.2'}" required class="w-full bg-white border border-slate-300 rounded-xl px-2 py-2 text-xs">
                                     </div>
                                     <div>
                                         <label class="block text-xs font-semibold text-slate-700 mb-1">Font:</label>
-                                        <select id="setFont1" class="w-full bg-white border border-slate-300 rounded-xl px-2 py-2 text-xs font-medium">
-                                            ${renderFontOptions(s.fontLine1)}
-                                        </select>
+                                        <select id="setFont1" class="w-full bg-white border border-slate-300 rounded-xl px-2 py-2 text-xs">${renderFontOptions(s.fontLine1)}</select>
                                     </div>
                                 </div>
 
                                 <!-- Baris 2 -->
                                 <div class="grid grid-cols-1 md:grid-cols-6 gap-3 items-end">
                                     <div class="md:col-span-2">
-                                        <label class="block text-xs font-semibold text-slate-700 mb-1">Baris 2 (Kecamatan):</label>
-                                        <input type="text" id="setKop2" value="${s.kopLine2}" required class="w-full bg-white border border-slate-300 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-brand-500">
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">Baris 2:</label>
+                                        <input type="text" id="setKop2" value="${s.kopLine2}" required class="w-full bg-white border border-slate-300 rounded-xl px-4 py-2 text-sm">
                                     </div>
                                     <div>
-                                        <label class="block text-xs font-semibold text-slate-700 mb-1">Ukuran (px):</label>
-                                        <input type="number" id="setSize2" value="${s.sizeLine2}" min="8" max="48" required class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium">
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">Ukuran:</label>
+                                        <input type="number" id="setSize2" value="${s.sizeLine2}" min="8" max="48" required class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs">
                                     </div>
                                     <div>
                                         <label class="block text-xs font-semibold text-slate-700 mb-1">Ketebalan:</label>
-                                        <select id="setWeight2" class="w-full bg-white border border-slate-300 rounded-xl px-2 py-2 text-xs font-semibold text-brand-800">
-                                            ${renderWeightOptions(s.weightLine2)}
-                                        </select>
+                                        <select id="setWeight2" class="w-full bg-white border border-slate-300 rounded-xl px-2 py-2 text-xs">${renderWeightOptions(s.weightLine2)}</select>
                                     </div>
                                     <div>
                                         <label class="block text-xs font-semibold text-slate-700 mb-1">Spasi:</label>
-                                        <input type="text" id="setSpace2" value="${s.spaceLine2 || '1.2'}" required class="w-full bg-white border border-slate-300 rounded-xl px-2 py-2 text-xs font-medium" placeholder="1.2">
+                                        <input type="text" id="setSpace2" value="${s.spaceLine2 || '1.2'}" required class="w-full bg-white border border-slate-300 rounded-xl px-2 py-2 text-xs">
                                     </div>
                                     <div>
                                         <label class="block text-xs font-semibold text-slate-700 mb-1">Font:</label>
-                                        <select id="setFont2" class="w-full bg-white border border-slate-300 rounded-xl px-2 py-2 text-xs font-medium">
-                                            ${renderFontOptions(s.fontLine2)}
-                                        </select>
+                                        <select id="setFont2" class="w-full bg-white border border-slate-300 rounded-xl px-2 py-2 text-xs">${renderFontOptions(s.fontLine2)}</select>
                                     </div>
                                 </div>
 
                                 <!-- Baris 3 -->
                                 <div class="grid grid-cols-1 md:grid-cols-6 gap-3 items-end">
                                     <div class="md:col-span-2">
-                                        <label class="block text-xs font-semibold text-slate-700 mb-1">Baris 3 (Nama Desa - Utama):</label>
-                                        <input type="text" id="setKop3" value="${s.kopLine3}" required class="w-full bg-white border border-slate-300 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-brand-500">
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">Baris 3 (Nama Desa):</label>
+                                        <input type="text" id="setKop3" value="${s.kopLine3}" required class="w-full bg-white border border-slate-300 rounded-xl px-4 py-2 text-sm">
                                     </div>
                                     <div>
-                                        <label class="block text-xs font-semibold text-slate-700 mb-1">Ukuran (px):</label>
-                                        <input type="number" id="setSize3" value="${s.sizeLine3}" min="8" max="64" required class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium">
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">Ukuran:</label>
+                                        <input type="number" id="setSize3" value="${s.sizeLine3}" min="8" max="64" required class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs">
                                     </div>
                                     <div>
                                         <label class="block text-xs font-semibold text-slate-700 mb-1">Ketebalan:</label>
-                                        <select id="setWeight3" class="w-full bg-white border border-slate-300 rounded-xl px-2 py-2 text-xs font-semibold text-brand-800">
-                                            ${renderWeightOptions(s.weightLine3)}
-                                        </select>
+                                        <select id="setWeight3" class="w-full bg-white border border-slate-300 rounded-xl px-2 py-2 text-xs">${renderWeightOptions(s.weightLine3)}</select>
                                     </div>
                                     <div>
                                         <label class="block text-xs font-semibold text-slate-700 mb-1">Spasi:</label>
-                                        <input type="text" id="setSpace3" value="${s.spaceLine3 || '1.1'}" required class="w-full bg-white border border-slate-300 rounded-xl px-2 py-2 text-xs font-medium" placeholder="1.1">
+                                        <input type="text" id="setSpace3" value="${s.spaceLine3 || '1.1'}" required class="w-full bg-white border border-slate-300 rounded-xl px-2 py-2 text-xs">
                                     </div>
                                     <div>
                                         <label class="block text-xs font-semibold text-slate-700 mb-1">Font:</label>
-                                        <select id="setFont3" class="w-full bg-white border border-slate-300 rounded-xl px-2 py-2 text-xs font-medium">
-                                            ${renderFontOptions(s.fontLine3)}
-                                        </select>
+                                        <select id="setFont3" class="w-full bg-white border border-slate-300 rounded-xl px-2 py-2 text-xs">${renderFontOptions(s.fontLine3)}</select>
                                     </div>
                                 </div>
 
                                 <!-- Baris 4 -->
                                 <div class="grid grid-cols-1 md:grid-cols-6 gap-3 items-end">
                                     <div class="md:col-span-2">
-                                        <label class="block text-xs font-semibold text-slate-700 mb-1">Baris 4 (Alamat & Kontak):</label>
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">Baris 4 (Alamat):</label>
                                         <input type="text" id="setKop4" value="${s.kopLine4}" required class="w-full bg-white border border-slate-300 rounded-xl px-4 py-2 text-sm">
                                     </div>
                                     <div>
-                                        <label class="block text-xs font-semibold text-slate-700 mb-1">Ukuran (px):</label>
-                                        <input type="number" id="setSize4" value="${s.sizeLine4}" min="6" max="24" required class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium">
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">Ukuran:</label>
+                                        <input type="number" id="setSize4" value="${s.sizeLine4}" min="6" max="24" required class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs">
                                     </div>
                                     <div>
                                         <label class="block text-xs font-semibold text-slate-700 mb-1">Ketebalan:</label>
-                                        <select id="setWeight4" class="w-full bg-white border border-slate-300 rounded-xl px-2 py-2 text-xs font-semibold text-brand-800">
-                                            ${renderWeightOptions(s.weightLine4)}
-                                        </select>
+                                        <select id="setWeight4" class="w-full bg-white border border-slate-300 rounded-xl px-2 py-2 text-xs">${renderWeightOptions(s.weightLine4)}</select>
                                     </div>
                                     <div>
                                         <label class="block text-xs font-semibold text-slate-700 mb-1">Spasi:</label>
-                                        <input type="text" id="setSpace4" value="${s.spaceLine4 || '1.2'}" required class="w-full bg-white border border-slate-300 rounded-xl px-2 py-2 text-xs font-medium" placeholder="1.2">
+                                        <input type="text" id="setSpace4" value="${s.spaceLine4 || '1.2'}" required class="w-full bg-white border border-slate-300 rounded-xl px-2 py-2 text-xs">
                                     </div>
                                     <div>
                                         <label class="block text-xs font-semibold text-slate-700 mb-1">Font:</label>
-                                        <select id="setFont4" class="w-full bg-white border border-slate-300 rounded-xl px-2 py-2 text-xs font-medium">
-                                            ${renderFontOptions(s.fontLine4)}
-                                        </select>
+                                        <select id="setFont4" class="w-full bg-white border border-slate-300 rounded-xl px-2 py-2 text-xs">${renderFontOptions(s.fontLine4)}</select>
                                     </div>
                                 </div>
 
                                 <div class="pt-2">
-                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Singkat Desa (Untuk Label Sistem):</label>
-                                    <input type="text" id="setDesaShort" value="${s.desaShort}" required class="w-full md:w-1/2 bg-white border border-slate-300 rounded-xl px-4 py-2 text-sm" placeholder="Contoh: Kemiri">
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Singkat Desa:</label>
+                                    <input type="text" id="setDesaShort" value="${s.desaShort}" required class="w-full md:w-1/2 bg-white border border-slate-300 rounded-xl px-4 py-2 text-sm">
                                 </div>
                             </div>
 
@@ -1614,7 +1958,7 @@
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-600 mb-2">Jumlah Logo pada Kop:</label>
                                     <select id="setLogoCount" onchange="toggleLogoInputs(this.value)" class="w-full bg-white border border-slate-300 rounded-xl px-4 py-2 text-sm">
-                                        <option value="1" ${s.logoCount === '1' ? 'selected' : ''}>1 Logo (Di Kiri - Resmi)</option>
+                                        <option value="1" ${s.logoCount === '1' ? 'selected' : ''}>1 Logo (Di Kiri)</option>
                                         <option value="2" ${s.logoCount === '2' ? 'selected' : ''}>2 Logo (Kiri & Kanan)</option>
                                     </select>
                                 </div>
@@ -1630,42 +1974,34 @@
 
                             <!-- LOGO DIMENSIONS & UPLOAD SECTION -->
                             <div class="space-y-4 p-4 bg-slate-50 rounded-2xl border border-slate-200">
-                                <h4 class="font-bold text-slate-800 text-xs uppercase tracking-wider">Pengaturan Ukuran Angka Logo (Pixel) & File Logo</h4>
+                                <h4 class="font-bold text-slate-800 text-xs uppercase tracking-wider">Pengaturan Ukuran Logo & File</h4>
                                 
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pb-4 border-b border-slate-200">
                                     <div>
-                                        <label class="block text-xs font-semibold text-slate-700 mb-1">Tinggi Logo (Height dalam px):</label>
-                                        <input type="number" id="setLogoHeight" value="${s.logoHeight || 80}" min="20" max="250" required class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-brand-500">
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">Tinggi Logo (px):</label>
+                                        <input type="number" id="setLogoHeight" value="${s.logoHeight || 80}" min="20" max="250" required class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs">
                                     </div>
                                     <div>
-                                        <label class="block text-xs font-semibold text-slate-700 mb-1">Lebar Logo (Width dalam px):</label>
-                                        <input type="number" id="setLogoWidth" value="${s.logoWidth || 80}" min="20" max="250" required class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-brand-500">
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">Lebar Logo (px):</label>
+                                        <input type="number" id="setLogoWidth" value="${s.logoWidth || 80}" min="20" max="250" required class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs">
                                     </div>
                                 </div>
 
                                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                                     <div class="space-y-2">
                                         <label class="block text-xs font-semibold text-slate-600">Logo Aplikasi (Sidebar):</label>
-                                        <input type="url" id="setAppLogo" value="${s.appLogo}" placeholder="URL Gambar..." class="w-full bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs font-mono">
-                                        <div class="flex items-center space-x-2">
-                                            <input type="file" accept="image/*" onchange="uploadLogoFile(event, 'appLogo')" class="text-xs text-slate-500 file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100">
-                                        </div>
+                                        <input type="url" id="setAppLogo" value="${s.appLogo}" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs font-mono">
+                                        <input type="file" accept="image/*" onchange="uploadLogoFile(event, 'appLogo')" class="text-xs text-slate-500">
                                     </div>
-
                                     <div class="space-y-2">
                                         <label class="block text-xs font-semibold text-slate-600">Logo 1 (Kiri Kop):</label>
-                                        <input type="url" id="setLogo1" value="${s.logo1}" placeholder="URL Gambar..." class="w-full bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs font-mono">
-                                        <div class="flex items-center space-x-2">
-                                            <input type="file" accept="image/*" onchange="uploadLogoFile(event, 'logo1')" class="text-xs text-slate-500 file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100">
-                                        </div>
+                                        <input type="url" id="setLogo1" value="${s.logo1}" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs font-mono">
+                                        <input type="file" accept="image/*" onchange="uploadLogoFile(event, 'logo1')" class="text-xs text-slate-500">
                                     </div>
-
                                     <div id="logo2Container" class="space-y-2 ${s.logoCount === '1' ? 'opacity-40 pointer-events-none' : ''}">
                                         <label class="block text-xs font-semibold text-slate-600">Logo 2 (Kanan Kop):</label>
-                                        <input type="url" id="setLogo2" value="${s.logo2}" placeholder="URL Gambar..." class="w-full bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs font-mono">
-                                        <div class="flex items-center space-x-2">
-                                            <input type="file" accept="image/*" onchange="uploadLogoFile(event, 'logo2')" class="text-xs text-slate-500 file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100">
-                                        </div>
+                                        <input type="url" id="setLogo2" value="${s.logo2}" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs font-mono">
+                                        <input type="file" accept="image/*" onchange="uploadLogoFile(event, 'logo2')" class="text-xs text-slate-500">
                                     </div>
                                 </div>
                             </div>
@@ -1681,8 +2017,7 @@
 
                     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 space-y-4">
                         <h4 class="font-bold text-slate-800 text-sm">Pratinjau Langsung Kop Surat (Live Preview)</h4>
-                        <div id="liveKopPreview" class="border border-slate-300 p-4 bg-slate-50 rounded-xl overflow-x-auto">
-                        </div>
+                        <div id="liveKopPreview" class="border border-slate-300 p-4 bg-slate-50 rounded-xl overflow-x-auto"></div>
                     </div>
                 </div>
             `;
@@ -1693,7 +2028,6 @@
             state.settings.paperSize = document.getElementById('setPaperSize').value;
             state.settings.headName = document.getElementById('setHeadName').value;
             state.settings.headTitle = document.getElementById('setHeadTitle').value;
-
             state.settings.kopLine1 = document.getElementById('setKop1').value;
             state.settings.kopLine2 = document.getElementById('setKop2').value;
             state.settings.kopLine3 = document.getElementById('setKop3').value;
@@ -1724,7 +2058,7 @@
             state.settings.logoWidth = document.getElementById('setLogoWidth').value;
 
             await saveSettingsToSupabase();
-            showModal('Berhasil', 'Pengaturan & Logo berhasil disimpan ke Database Supabase!', 'success', () => renderActiveTabContent());
+            showModal('Berhasil', 'Pengaturan berhasil disimpan permanen ke Supabase!', 'success', () => renderActiveTabContent());
         }
 
         function toggleLogoInputs(val) {
@@ -1742,6 +2076,7 @@
             const vName = getVillageName();
             const shouldIncludePurpose = l.includePurpose !== false;
             const pSize = state.settings.paperSize || 'A4';
+            const isIncoming = l.type === 'Surat Masuk (Eksternal)';
 
             const modalHtml = `
                 <div class="flex justify-between items-center mb-4 no-print bg-slate-100 p-3 rounded-xl border border-slate-200">
@@ -1759,7 +2094,19 @@
                     <div id="printable-letter" class="bg-white p-12 shadow-2xl border border-slate-300 text-slate-800 space-y-4 ${getPaperDimensionsClass(pSize)}">
                         ${renderKopSuratHtml(state.settings)}
 
-                        ${l.type.includes('Undangan') ? `
+                        ${isIncoming ? `
+                            <div class="text-center pt-2 pb-1 space-y-1">
+                                <h3 class="text-base font-bold uppercase underline tracking-wide text-emerald-800">Arsip Surat Masuk Eksternal</h3>
+                                <p class="text-xs font-mono">Nomor: ${l.number}</p>
+                            </div>
+
+                            <div class="text-xs leading-relaxed space-y-3 pt-3 border-b pb-4">
+                                <div class="grid grid-cols-12"><span class="col-span-4 font-semibold">Instansi Pengirim</span><span class="col-span-8">: <strong>${l.name}</strong></span></div>
+                                <div class="grid grid-cols-12"><span class="col-span-4 font-semibold">Tanggal Surat</span><span class="col-span-8">: ${l.date}</span></div>
+                                <div class="grid grid-cols-12"><span class="col-span-4 font-semibold">Sifat / Lampiran</span><span class="col-span-8">: ${l.sifat || 'Penting'} / ${l.lampiran || '-'}</span></div>
+                                <div class="grid grid-cols-12"><span class="col-span-4 font-semibold">Perihal / Subjek</span><span class="col-span-8 font-medium">${l.purpose}</span></div>
+                            </div>
+                        ` : l.type.includes('Undangan') ? `
                             <div class="grid grid-cols-2 text-xs pt-1 pb-2">
                                 <div class="space-y-0.5">
                                     <div class="flex"><span class="w-20 font-medium">Nomor</span><span class="mr-2">:</span><span class="font-mono">${l.number}</span></div>
@@ -1824,32 +2171,34 @@
                         `}
 
                         ${l.photo ? `
-                            <div class="pt-4 border-t border-slate-200 mt-6 no-print">
+                            <div class="pt-4 border-t border-slate-200 mt-4">
                                 <div class="flex items-center justify-between mb-2">
-                                    <p class="text-xs font-bold text-slate-700"><i class="fa-solid fa-camera mr-1 text-emerald-600"></i> Lampiran Foto / Hasil Scan Arsip Dokumen:</p>
+                                    <p class="text-xs font-bold text-slate-700"><i class="fa-solid fa-camera mr-1 text-emerald-600"></i> Tangkapan Foto Dokumen / Hasil Scan (Supabase Cloud):</p>
                                     ${l.isScanned ? '<span class="text-[10px] bg-slate-900 text-white px-2 py-0.5 rounded font-mono">Mode Scan Aktif</span>' : ''}
                                 </div>
-                                <img src="${l.photo}" class="w-48 h-48 object-cover rounded-xl border shadow-md ${l.isScanned ? 'scan-effect' : ''}" alt="Lampiran Foto Arsip">
+                                <img src="${l.photo}" class="w-64 h-64 object-cover rounded-xl border shadow-md ${l.isScanned ? 'scan-effect' : ''}" alt="Foto Scan Dokumen">
                             </div>
                         ` : ''}
 
-                        <div class="flex justify-end pt-12 text-xs">
-                            <div class="text-center">
-                                <p>${vName}, ${l.date}</p>
-                                <p class="font-bold">${state.settings.headTitle} ${vName}</p>
-                                <div class="h-16 flex items-center justify-center">
-                                    <span class="text-[10px] bg-brand-50 text-brand-700 px-2 py-1 rounded font-mono border border-brand-200">[TTE / Stempel Resmi Desa]</span>
+                        ${!isIncoming ? `
+                            <div class="flex justify-end pt-12 text-xs">
+                                <div class="text-center">
+                                    <p>${vName},${l.date}</p>
+                                    <p class="font-bold">${state.settings.headTitle}${vName}</p>
+                                    <div class="h-16 flex items-center justify-center">
+                                        <span class="text-[10px] bg-brand-50 text-brand-700 px-2 py-1 rounded font-mono border border-brand-200">[TTE / Stempel Resmi Desa]</span>
+                                    </div>
+                                    <p class="font-bold underline">${state.settings.headName}</p>
                                 </div>
-                                <p class="font-bold underline">${state.settings.headName}</p>
                             </div>
-                        </div>
+                        ` : ''}
                     </div>
                 </div>
 
                 <div class="mt-6 flex justify-end space-x-3 no-print">
                     <button onclick="closeModal()" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold hover:bg-slate-300 transition">Tutup</button>
                     <button onclick="window.print()" class="px-5 py-2 bg-brand-600 text-white rounded-xl text-xs font-semibold shadow hover:bg-brand-700 transition flex items-center space-x-2">
-                        <i class="fa-solid fa-print"></i><span>Cetak Surat (${pSize})</span>
+                        <i class="fa-solid fa-print"></i><span>Cetak Arsip (${pSize})</span>
                     </button>
                 </div>
             `;
@@ -1857,9 +2206,9 @@
             showCustomModalHtml(modalHtml);
         }
 
-        function changeModalPaperSize(id, size) {
+        async function changeModalPaperSize(id, size) {
             state.settings.paperSize = size;
-            saveSettingsToSupabase();
+            await saveSettingsToSupabase();
             previewLetter(id);
         }
 
@@ -1890,9 +2239,9 @@
             document.getElementById('customModal').classList.add('hidden');
         }
 
-        // Inisialisasi awal saat halaman dimuat
+        // Inisialisasi awal saat halaman dimuat (Ambil data dari Supabase)
         document.addEventListener('DOMContentLoaded', async () => {
-            await loadSettingsFromSupabase();
+            await loadDataFromSupabase();
         });
     </script>
 </body>
