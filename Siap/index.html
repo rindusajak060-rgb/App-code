@@ -69,10 +69,10 @@
     <script>
         const defaultState = {
             isLoggedIn: false,
-            currentUser: { name: 'Drs. H. Maman, M.Si', role: 'Administrator Utama', username: 'maman' },
+            currentUser: { name: 'Drs. H. Maman, M.Si', role: 'Administrator Utama', username: 'admin' },
             activeTab: 'dashboard',
             allowedUsers: [
-                { id: 1, name: 'Drs. H. Maman, M.Si', username: 'maman', role: 'Administrator / Kepala Desa', status: 'Aktif', email: 'maman@pohuwato.desa.id' },
+                { id: 1, name: 'Drs. H. Maman, M.Si', username: 'admin', role: 'Administrator / Kepala Desa', status: 'Aktif', email: 'maman@pohuwato.desa.id' },
                 { id: 2, name: 'Samsul Arifin, A.Md', username: 'samsul', role: 'Operator Administrasi', status: 'Aktif', email: 'samsul@pohuwato.desa.id' },
                 { id: 3, name: 'Dewi Lestari, S.Sos', username: 'dewi', role: 'Staf Pelayanan Kependudukan', status: 'Aktif', email: 'dewi@pohuwato.desa.id' }
             ],
@@ -336,17 +336,16 @@
     <script>
         function handleLogin(event) {
             event.preventDefault();
-            const usernameInput = document.getElementById('loginUsername').value.trim().toLowerCase();
+            const usernameInput = document.getElementById('loginUsername').value.trim();
             const passwordInput = document.getElementById('loginPassword').value;
 
-            const foundUser = state.allowedUsers.find(u => u.username.toLowerCase() === usernameInput);
-            if (foundUser) {
+            if (usernameInput === 'admin' && passwordInput === 'admin123') {
                 state.isLoggedIn = true;
-                state.currentUser = foundUser;
+                state.currentUser = { name: 'Drs. H. Maman, M.Si', role: 'Administrator Utama', username: 'admin' };
                 saveState();
                 renderView();
             } else {
-                showModal('Login Gagal', 'Username atau password tidak ditemukan dalam daftar staf desa yang diizinkan. Coba gunakan: maman, samsul, atau dewi.', 'error');
+                showModal('Login Gagal', 'Username atau password salah. Pastikan menggunakan username: admin dan password: admin123', 'error');
             }
         }
 
@@ -532,27 +531,21 @@
 
                         <form onsubmit="handleLogin(event)" class="space-y-4">
                             <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1">Username Staf / Administrator:</label>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Username Administrator:</label>
                                 <div class="relative">
                                     <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400"><i class="fa-solid fa-user"></i></span>
-                                    <input type="text" id="loginUsername" required class="w-full bg-slate-50 border border-slate-300 rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 font-mono" placeholder="maman / samsul / dewi">
+                                    <input type="text" id="loginUsername" required class="w-full bg-slate-50 border border-slate-300 rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 font-mono" placeholder="Masukkan username">
                                 </div>
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 mb-1">Kata Sandi (Password):</label>
                                 <div class="relative">
                                     <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400"><i class="fa-solid fa-lock"></i></span>
-                                    <input type="password" id="loginPassword" class="w-full bg-slate-50 border border-slate-300 rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" placeholder="••••••••">
+                                    <input type="password" id="loginPassword" required class="w-full bg-slate-50 border border-slate-300 rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" placeholder="••••••••">
                                 </div>
                             </div>
 
-                            <div class="p-3 bg-brand-50 rounded-xl border border-brand-200 text-xs text-brand-800 space-y-1">
-                                <p class="font-bold"><i class="fa-solid fa-circle-info mr-1"></i> Akun Uji Coba Cepat:</p>
-                                <p>• Username: <strong class="font-mono">maman</strong> (Kepala Desa)</p>
-                                <p>• Username: <strong class="font-mono">samsul</strong> (Operator)</p>
-                            </div>
-
-                            <button type="submit" class="w-full bg-brand-600 text-white font-semibold py-3 rounded-xl shadow-lg hover:bg-brand-700 transition flex items-center justify-center space-x-2 text-sm">
+                            <button type="submit" class="w-full bg-brand-600 text-white font-semibold py-3 rounded-xl shadow-lg hover:bg-brand-700 transition flex items-center justify-center space-x-2 text-sm mt-2">
                                 <i class="fa-solid fa-right-to-bracket"></i>
                                 <span>Masuk ke Sistem Desa</span>
                             </button>
