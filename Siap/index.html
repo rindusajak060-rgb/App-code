@@ -68,8 +68,9 @@
 
     <script>
         const defaultState = {
+            isLoggedIn: false,
+            currentUser: { name: 'Drs. H. Maman, M.Si', role: 'Administrator Utama', username: 'maman' },
             activeTab: 'dashboard',
-            currentUser: { name: 'Drs. H. Maman, M.Si', role: 'Administrator Utama', username: 'admin' },
             allowedUsers: [
                 { id: 1, name: 'Drs. H. Maman, M.Si', username: 'maman', role: 'Administrator / Kepala Desa', status: 'Aktif', email: 'maman@pohuwato.desa.id' },
                 { id: 2, name: 'Samsul Arifin, A.Md', username: 'samsul', role: 'Operator Administrasi', status: 'Aktif', email: 'samsul@pohuwato.desa.id' },
@@ -185,8 +186,12 @@
             }
 
             const adminNameEl = document.getElementById('topNavAdminName');
-            if(adminNameEl && state.settings.headName) {
-                adminNameEl.innerText = state.settings.headName;
+            const adminRoleEl = document.getElementById('topNavAdminRole');
+            if(adminNameEl && state.currentUser) {
+                adminNameEl.innerText = state.currentUser.name;
+            }
+            if(adminRoleEl && state.currentUser) {
+                adminRoleEl.innerText = state.currentUser.role;
             }
             
             document.documentElement.style.setProperty('--print-page-size', state.settings.paperSize === 'F4' ? '215mm 330mm' : 'A4');
@@ -316,113 +321,9 @@
         }
     </script>
 
-    <div class="flex h-full overflow-hidden flex-col md:flex-row">
-        <!-- SIDEBAR (Desktop) -->
-        <aside class="hidden md:flex w-64 bg-slate-900 text-slate-300 flex-col h-full shadow-xl no-print z-25">
-            <div class="p-5 border-b border-slate-800 flex items-center space-x-3">
-                <div class="bg-white text-slate-900 rounded-xl shadow-lg overflow-hidden flex items-center justify-center w-10 h-10">
-                    <img src="https://placehold.co/100x100/ffffff/16a34a?text=SIAP" id="sidebarAppLogo" class="w-full h-full object-cover" alt="App Logo">
-                </div>
-                <div>
-                    <h1 class="font-bold text-white text-base tracking-wide">SIAP-Desa</h1>
-                    <p class="text-[11px] text-slate-400" id="sidebarVillageLabel">Kamiiri</p>
-                </div>
-            </div>
-
-            <div class="p-3 bg-slate-800/80 m-3 rounded-lg border border-slate-700 flex items-center space-x-2">
-                <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                <div class="overflow-hidden">
-                    <p class="text-[11px] font-semibold text-slate-400">Hak Akses Aktif:</p>
-                    <p class="text-xs font-bold text-white truncate">Administrator Utama (Full)</p>
-                </div>
-            </div>
-
-            <!-- Navigation Links Desktop -->
-            <nav class="flex-1 px-3 py-2 space-y-1 text-sm font-medium overflow-y-auto">
-                <a href="#" onclick="switchTab('dashboard')" id="nav-dashboard" class="flex items-center px-3 py-2.5 rounded-lg transition text-white bg-brand-600 shadow-md">
-                    <i class="fa-solid fa-chart-pie w-6"></i> Dashboard Utama
-                </a>
-                <a href="#" onclick="switchTab('layanan')" id="nav-layanan" class="flex items-center px-3 py-2.5 rounded-lg transition hover:bg-slate-800 hover:text-white">
-                    <i class="fa-solid fa-file-pen w-6"></i> Pembuatan Surat Desa
-                </a>
-                <a href="#" onclick="switchTab('agenda')" id="nav-agenda" class="flex items-center px-3 py-2.5 rounded-lg transition hover:bg-slate-800 hover:text-white">
-                    <i class="fa-solid fa-book-open w-6"></i> Buku Agenda Surat
-                </a>
-                <a href="#" onclick="switchTab('arsip')" id="nav-arsip" class="flex items-center px-3 py-2.5 rounded-lg transition hover:bg-slate-800 hover:text-white">
-                    <i class="fa-solid fa-folder-tree w-6"></i> Arsip Digital & Pencarian
-                </a>
-                <a href="#" onclick="switchTab('laporan')" id="nav-laporan" class="flex items-center px-3 py-2.5 rounded-lg transition hover:bg-slate-800 hover:text-white">
-                    <i class="fa-solid fa-print w-6"></i> Rekapitulasi & Laporan PDF
-                </a>
-                <a href="#" onclick="switchTab('penduduk')" id="nav-penduduk" class="flex items-center px-3 py-2.5 rounded-lg transition hover:bg-slate-800 hover:text-white">
-                    <i class="fa-solid fa-users w-6"></i> Data Penduduk
-                </a>
-                <a href="#" onclick="switchTab('pengguna')" id="nav-pengguna" class="flex items-center px-3 py-2.5 rounded-lg transition hover:bg-slate-800 hover:text-white">
-                    <i class="fa-solid fa-user-shield w-6"></i> Manajemen Hak Akses
-                </a>
-                <a href="#" onclick="switchTab('pengaturan')" id="nav-pengaturan" class="flex items-center px-3 py-2.5 rounded-lg transition hover:bg-slate-800 hover:text-white">
-                    <i class="fa-solid fa-gears w-6"></i> Pengaturan Desa & Kop
-                </a>
-            </nav>
-
-            <div class="p-4 border-t border-slate-800 text-xs text-slate-500 flex justify-between items-center">
-                <span id="sidebarFooterVillage">Kamiiri</span>
-                <span class="bg-brand-900/50 text-brand-400 px-2 py-0.5 rounded font-mono">v3.5</span>
-            </div>
-        </aside>
-
-        <!-- MAIN CONTAINER -->
-        <main class="flex-1 flex flex-col h-full overflow-hidden">
-            <header class="bg-white border-b border-slate-200 h-16 flex items-center justify-between px-6 no-print shadow-sm z-10 shrink-0">
-                <div class="flex items-center space-x-3">
-                    <span class="bg-brand-100 text-brand-800 text-xs font-semibold px-2.5 py-1 rounded-full uppercase tracking-wider">
-                        Admin Portal
-                    </span>
-                    <h2 id="pageTitle" class="text-lg font-bold text-slate-800 truncate">Dashboard Administrator</h2>
-                </div>
-                <div class="flex items-center space-x-4">
-                    <div class="text-right hidden sm:block">
-                        <p class="text-xs font-semibold text-slate-700" id="topNavAdminName">Drs. H. Maman, M.Si</p>
-                        <p class="text-[11px] text-slate-500">Administrator / Kepala Desa</p>
-                    </div>
-                    <div class="h-9 w-9 bg-brand-500 text-white rounded-full flex items-center justify-center font-bold shadow shrink-0">
-                        <i class="fa-solid fa-user-shield"></i>
-                    </div>
-                </div>
-            </header>
-
-            <!-- MOBILE TOP NAVIGATION BAR -->
-            <div class="md:hidden bg-slate-900 text-white overflow-x-auto flex items-center space-x-1.5 px-3 py-2.5 no-print shrink-0 shadow-md whitespace-nowrap scrollbar-none" id="mobileTabBar">
-                <button onclick="switchTab('dashboard')" id="mob-nav-dashboard" class="px-3 py-1.5 rounded-lg text-xs font-medium transition bg-brand-600 text-white flex items-center space-x-1.5 shrink-0 shadow">
-                    <i class="fa-solid fa-chart-pie"></i><span>Dashboard</span>
-                </button>
-                <button onclick="switchTab('layanan')" id="mob-nav-layanan" class="px-3 py-1.5 rounded-lg text-xs font-medium transition text-slate-300 hover:bg-slate-800 flex items-center space-x-1.5 shrink-0">
-                    <i class="fa-solid fa-file-pen"></i><span>Surat</span>
-                </button>
-                <button onclick="switchTab('agenda')" id="mob-nav-agenda" class="px-3 py-1.5 rounded-lg text-xs font-medium transition text-slate-300 hover:bg-slate-800 flex items-center space-x-1.5 shrink-0">
-                    <i class="fa-solid fa-book-open"></i><span>Agenda</span>
-                </button>
-                <button onclick="switchTab('arsip')" id="mob-nav-arsip" class="px-3 py-1.5 rounded-lg text-xs font-medium transition text-slate-300 hover:bg-slate-800 flex items-center space-x-1.5 shrink-0">
-                    <i class="fa-solid fa-folder-tree"></i><span>Arsip</span>
-                </button>
-                <button onclick="switchTab('laporan')" id="mob-nav-laporan" class="px-3 py-1.5 rounded-lg text-xs font-medium transition text-slate-300 hover:bg-slate-800 flex items-center space-x-1.5 shrink-0">
-                    <i class="fa-solid fa-print"></i><span>Laporan</span>
-                </button>
-                <button onclick="switchTab('penduduk')" id="mob-nav-penduduk" class="px-3 py-1.5 rounded-lg text-xs font-medium transition text-slate-300 hover:bg-slate-800 flex items-center space-x-1.5 shrink-0">
-                    <i class="fa-solid fa-users"></i><span>Penduduk</span>
-                </button>
-                <button onclick="switchTab('pengguna')" id="mob-nav-pengguna" class="px-3 py-1.5 rounded-lg text-xs font-medium transition text-slate-300 hover:bg-slate-800 flex items-center space-x-1.5 shrink-0">
-                    <i class="fa-solid fa-user-shield"></i><span>Akses</span>
-                </button>
-                <button onclick="switchTab('pengaturan')" id="mob-nav-pengaturan" class="px-3 py-1.5 rounded-lg text-xs font-medium transition text-slate-300 hover:bg-slate-800 flex items-center space-x-1.5 shrink-0">
-                    <i class="fa-solid fa-gears"></i><span>Pengaturan</span>
-                </button>
-            </div>
-
-            <div id="content-area" class="flex-1 overflow-y-auto p-6 bg-slate-50">
-                <!-- Dynamic Content Injected Here -->
-            </div>
-        </main>
+    <!-- MAIN APP WRAPPER -->
+    <div id="appContainer" class="h-full flex flex-col">
+        <!-- Rendered dynamically based on state.isLoggedIn -->
     </div>
 
     <!-- Modal Container -->
@@ -433,6 +334,30 @@
     </div>
 
     <script>
+        function handleLogin(event) {
+            event.preventDefault();
+            const usernameInput = document.getElementById('loginUsername').value.trim().toLowerCase();
+            const passwordInput = document.getElementById('loginPassword').value;
+
+            const foundUser = state.allowedUsers.find(u => u.username.toLowerCase() === usernameInput);
+            if (foundUser) {
+                state.isLoggedIn = true;
+                state.currentUser = foundUser;
+                saveState();
+                renderView();
+            } else {
+                showModal('Login Gagal', 'Username atau password tidak ditemukan dalam daftar staf desa yang diizinkan. Coba gunakan: maman, samsul, atau dewi.', 'error');
+            }
+        }
+
+        function handleLogout() {
+            if(confirm('Apakah Anda ingin keluar dari sesi sistem administrasi ini?')) {
+                state.isLoggedIn = false;
+                saveState();
+                renderView();
+            }
+        }
+
         function switchTab(tabId) {
             state.activeTab = tabId;
             saveState();
@@ -461,34 +386,215 @@
         }
 
         function renderView() {
+            const wrapper = document.getElementById('appContainer');
+            const vName = getVillageName();
+
+            if (!state.isLoggedIn) {
+                wrapper.innerHTML = renderLoginView();
+                return;
+            }
+
+            wrapper.innerHTML = `
+                <div class="flex h-full overflow-hidden flex-col md:flex-row w-full">
+                    <!-- SIDEBAR (Desktop) -->
+                    <aside class="hidden md:flex w-64 bg-slate-900 text-slate-300 flex-col h-full shadow-xl no-print z-25">
+                        <div class="p-5 border-b border-slate-800 flex items-center space-x-3">
+                            <div class="bg-white text-slate-900 rounded-xl shadow-lg overflow-hidden flex items-center justify-center w-10 h-10">
+                                <img src="https://placehold.co/100x100/ffffff/16a34a?text=SIAP" id="sidebarAppLogo" class="w-full h-full object-cover" alt="App Logo">
+                            </div>
+                            <div>
+                                <h1 class="font-bold text-white text-base tracking-wide">SIAP-Desa</h1>
+                                <p class="text-[11px] text-slate-400" id="sidebarVillageLabel">${vName}</p>
+                            </div>
+                        </div>
+
+                        <div class="p-3 bg-slate-800/80 m-3 rounded-lg border border-slate-700 flex items-center space-x-2">
+                            <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                            <div class="overflow-hidden">
+                                <p class="text-[11px] font-semibold text-slate-400">Login Sebagai:</p>
+                                <p class="text-xs font-bold text-white truncate">${state.currentUser.name}</p>
+                            </div>
+                        </div>
+
+                        <!-- Navigation Links Desktop -->
+                        <nav class="flex-1 px-3 py-2 space-y-1 text-sm font-medium overflow-y-auto">
+                            <a href="#" onclick="switchTab('dashboard')" id="nav-dashboard" class="flex items-center px-3 py-2.5 rounded-lg transition text-white bg-brand-600 shadow-md">
+                                <i class="fa-solid fa-chart-pie w-6"></i> Dashboard Utama
+                            </a>
+                            <a href="#" onclick="switchTab('layanan')" id="nav-layanan" class="flex items-center px-3 py-2.5 rounded-lg transition hover:bg-slate-800 hover:text-white">
+                                <i class="fa-solid fa-file-pen w-6"></i> Pembuatan Surat Desa
+                            </a>
+                            <a href="#" onclick="switchTab('agenda')" id="nav-agenda" class="flex items-center px-3 py-2.5 rounded-lg transition hover:bg-slate-800 hover:text-white">
+                                <i class="fa-solid fa-book-open w-6"></i> Buku Agenda Surat
+                            </a>
+                            <a href="#" onclick="switchTab('arsip')" id="nav-arsip" class="flex items-center px-3 py-2.5 rounded-lg transition hover:bg-slate-800 hover:text-white">
+                                <i class="fa-solid fa-folder-tree w-6"></i> Arsip Digital & Pencarian
+                            </a>
+                            <a href="#" onclick="switchTab('laporan')" id="nav-laporan" class="flex items-center px-3 py-2.5 rounded-lg transition hover:bg-slate-800 hover:text-white">
+                                <i class="fa-solid fa-print w-6"></i> Rekapitulasi & Laporan PDF
+                            </a>
+                            <a href="#" onclick="switchTab('penduduk')" id="nav-penduduk" class="flex items-center px-3 py-2.5 rounded-lg transition hover:bg-slate-800 hover:text-white">
+                                <i class="fa-solid fa-users w-6"></i> Data Penduduk
+                            </a>
+                            <a href="#" onclick="switchTab('pengguna')" id="nav-pengguna" class="flex items-center px-3 py-2.5 rounded-lg transition hover:bg-slate-800 hover:text-white">
+                                <i class="fa-solid fa-user-shield w-6"></i> Manajemen Hak Akses
+                            </a>
+                            <a href="#" onclick="switchTab('pengaturan')" id="nav-pengaturan" class="flex items-center px-3 py-2.5 rounded-lg transition hover:bg-slate-800 hover:text-white">
+                                <i class="fa-solid fa-gears w-6"></i> Pengaturan Desa & Kop
+                            </a>
+                        </nav>
+
+                        <div class="p-4 border-t border-slate-800 space-y-2">
+                            <div class="flex justify-between items-center text-xs text-slate-500">
+                                <span id="sidebarFooterVillage">${vName}</span>
+                                <span class="bg-brand-900/50 text-brand-400 px-2 py-0.5 rounded font-mono">v3.5</span>
+                            </div>
+                            <button onclick="handleLogout()" class="w-full bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white text-xs font-semibold py-2 rounded-lg transition flex items-center justify-center space-x-2">
+                                <i class="fa-solid fa-right-from-bracket"></i>
+                                <span>Keluar Sistem (Logout)</span>
+                            </button>
+                        </div>
+                    </aside>
+
+                    <!-- MAIN CONTAINER -->
+                    <main class="flex-1 flex flex-col h-full overflow-hidden">
+                        <header class="bg-white border-b border-slate-200 h-16 flex items-center justify-between px-6 no-print shadow-sm z-10 shrink-0">
+                            <div class="flex items-center space-x-3">
+                                <span class="bg-brand-100 text-brand-800 text-xs font-semibold px-2.5 py-1 rounded-full uppercase tracking-wider">
+                                    Admin Portal
+                                </span>
+                                <h2 id="pageTitle" class="text-lg font-bold text-slate-800 truncate">Dashboard Administrator</h2>
+                            </div>
+                            <div class="flex items-center space-x-4">
+                                <div class="text-right hidden sm:block">
+                                    <p class="text-xs font-semibold text-slate-700" id="topNavAdminName">${state.currentUser.name}</p>
+                                    <p class="text-[11px] text-slate-500" id="topNavAdminRole">${state.currentUser.role}</p>
+                                </div>
+                                <button onclick="handleLogout()" class="md:hidden bg-red-100 text-red-600 p-2 rounded-lg text-xs" title="Keluar">
+                                    <i class="fa-solid fa-right-from-bracket"></i>
+                                </button>
+                                <div class="h-9 w-9 bg-brand-500 text-white rounded-full flex items-center justify-center font-bold shadow shrink-0">
+                                    <i class="fa-solid fa-user-shield"></i>
+                                </div>
+                            </div>
+                        </header>
+
+                        <!-- MOBILE TOP NAVIGATION BAR -->
+                        <div class="md:hidden bg-slate-900 text-white overflow-x-auto flex items-center space-x-1.5 px-3 py-2.5 no-print shrink-0 shadow-md whitespace-nowrap scrollbar-none" id="mobileTabBar">
+                            <button onclick="switchTab('dashboard')" id="mob-nav-dashboard" class="px-3 py-1.5 rounded-lg text-xs font-medium transition bg-brand-600 text-white flex items-center space-x-1.5 shrink-0 shadow">
+                                <i class="fa-solid fa-chart-pie"></i><span>Dashboard</span>
+                            </button>
+                            <button onclick="switchTab('layanan')" id="mob-nav-layanan" class="px-3 py-1.5 rounded-lg text-xs font-medium transition text-slate-300 hover:bg-slate-800 flex items-center space-x-1.5 shrink-0">
+                                <i class="fa-solid fa-file-pen"></i><span>Surat</span>
+                            </button>
+                            <button onclick="switchTab('agenda')" id="mob-nav-agenda" class="px-3 py-1.5 rounded-lg text-xs font-medium transition text-slate-300 hover:bg-slate-800 flex items-center space-x-1.5 shrink-0">
+                                <i class="fa-solid fa-book-open"></i><span>Agenda</span>
+                            </button>
+                            <button onclick="switchTab('arsip')" id="mob-nav-arsip" class="px-3 py-1.5 rounded-lg text-xs font-medium transition text-slate-300 hover:bg-slate-800 flex items-center space-x-1.5 shrink-0">
+                                <i class="fa-solid fa-folder-tree"></i><span>Arsip</span>
+                            </button>
+                            <button onclick="switchTab('laporan')" id="mob-nav-laporan" class="px-3 py-1.5 rounded-lg text-xs font-medium transition text-slate-300 hover:bg-slate-800 flex items-center space-x-1.5 shrink-0">
+                                <i class="fa-solid fa-print"></i><span>Laporan</span>
+                            </button>
+                            <button onclick="switchTab('penduduk')" id="mob-nav-penduduk" class="px-3 py-1.5 rounded-lg text-xs font-medium transition text-slate-300 hover:bg-slate-800 flex items-center space-x-1.5 shrink-0">
+                                <i class="fa-solid fa-users"></i><span>Penduduk</span>
+                            </button>
+                            <button onclick="switchTab('pengguna')" id="mob-nav-pengguna" class="px-3 py-1.5 rounded-lg text-xs font-medium transition text-slate-300 hover:bg-slate-800 flex items-center space-x-1.5 shrink-0">
+                                <i class="fa-solid fa-user-shield"></i><span>Akses</span>
+                            </button>
+                            <button onclick="switchTab('pengaturan')" id="mob-nav-pengaturan" class="px-3 py-1.5 rounded-lg text-xs font-medium transition text-slate-300 hover:bg-slate-800 flex items-center space-x-1.5 shrink-0">
+                                <i class="fa-solid fa-gears"></i><span>Pengaturan</span>
+                            </button>
+                        </div>
+
+                        <div id="content-area" class="flex-1 overflow-y-auto p-6 bg-slate-50">
+                            <!-- Dynamic Content Injected Here -->
+                        </div>
+                    </main>
+                </div>
+            `;
+
+            renderActiveTabContent();
+        }
+
+        function renderLoginView() {
+            const vName = getVillageName();
+            return `
+                <div class="min-h-full flex items-center justify-center p-6 bg-gradient-to-br from-slate-900 via-slate-800 to-brand-950 flex-1">
+                    <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-8 space-y-6 border border-slate-200">
+                        <div class="text-center space-y-2">
+                            <div class="w-16 h-16 bg-brand-600 text-white rounded-2xl mx-auto flex items-center justify-center text-2xl shadow-lg">
+                                <i class="fa-solid fa-landmark"></i>
+                            </div>
+                            <h1 class="text-xl font-black text-slate-900 tracking-tight">SIAP-Desa ${vName}</h1>
+                            <p class="text-xs text-slate-500">Sistem Informasi Administrasi Pemerintahan & Arsip Digital</p>
+                        </div>
+
+                        <form onsubmit="handleLogin(event)" class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Username Staf / Administrator:</label>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400"><i class="fa-solid fa-user"></i></span>
+                                    <input type="text" id="loginUsername" required class="w-full bg-slate-50 border border-slate-300 rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 font-mono" placeholder="maman / samsul / dewi">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Kata Sandi (Password):</label>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400"><i class="fa-solid fa-lock"></i></span>
+                                    <input type="password" id="loginPassword" class="w-full bg-slate-50 border border-slate-300 rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" placeholder="••••••••">
+                                </div>
+                            </div>
+
+                            <div class="p-3 bg-brand-50 rounded-xl border border-brand-200 text-xs text-brand-800 space-y-1">
+                                <p class="font-bold"><i class="fa-solid fa-circle-info mr-1"></i> Akun Uji Coba Cepat:</p>
+                                <p>• Username: <strong class="font-mono">maman</strong> (Kepala Desa)</p>
+                                <p>• Username: <strong class="font-mono">samsul</strong> (Operator)</p>
+                            </div>
+
+                            <button type="submit" class="w-full bg-brand-600 text-white font-semibold py-3 rounded-xl shadow-lg hover:bg-brand-700 transition flex items-center justify-center space-x-2 text-sm">
+                                <i class="fa-solid fa-right-to-bracket"></i>
+                                <span>Masuk ke Sistem Desa</span>
+                            </button>
+                        </form>
+
+                        <div class="text-center pt-2 border-t border-slate-100">
+                            <p class="text-[11px] text-slate-400">Pemerintah Kabupaten Pohuwato — Kecamatan Paguat</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderActiveTabContent() {
             updateDynamicVillageUI();
             const container = document.getElementById('content-area');
             const titleEl = document.getElementById('pageTitle');
             const vName = getVillageName();
 
             if(state.activeTab === 'dashboard') {
-                titleEl.innerText = 'Dashboard Utama Desa ' + vName;
+                if(titleEl) titleEl.innerText = 'Dashboard Utama Desa ' + vName;
                 container.innerHTML = renderDashboardView();
             } else if(state.activeTab === 'layanan') {
-                titleEl.innerText = 'Modul Pembuatan Surat & Arsip Berbasis Kamera Scanner';
+                if(titleEl) titleEl.innerText = 'Modul Pembuatan Surat & Arsip Berbasis Kamera Scanner';
                 container.innerHTML = renderLayananView();
             } else if(state.activeTab === 'agenda') {
-                titleEl.innerText = 'Buku Agenda Surat Masuk & Keluar';
+                if(titleEl) titleEl.innerText = 'Buku Agenda Surat Masuk & Keluar';
                 container.innerHTML = renderAgendaView();
             } else if(state.activeTab === 'arsip') {
-                titleEl.innerText = 'Arsip Digital & Pencarian Instan';
+                if(titleEl) titleEl.innerText = 'Arsip Digital & Pencarian Instan';
                 container.innerHTML = renderArsipView();
             } else if(state.activeTab === 'laporan') {
-                titleEl.innerText = 'Rekapitulasi Bulanan & Laporan Arsip PDF';
+                if(titleEl) titleEl.innerText = 'Rekapitulasi Bulanan & Laporan Arsip PDF';
                 container.innerHTML = renderLaporanView();
             } else if(state.activeTab === 'penduduk') {
-                titleEl.innerText = 'Master Data Penduduk Desa';
+                if(titleEl) titleEl.innerText = 'Master Data Penduduk Desa';
                 container.innerHTML = renderPendudukView();
             } else if(state.activeTab === 'pengguna') {
-                titleEl.innerText = 'Manajemen Hak Akses & Pengguna Sistem';
+                if(titleEl) titleEl.innerText = 'Manajemen Hak Akses & Pengguna Sistem';
                 container.innerHTML = renderPenggunaView();
             } else if(state.activeTab === 'pengaturan') {
-                titleEl.innerText = 'Pengaturan Nama Desa, Kop & Ukuran Kertas';
+                if(titleEl) titleEl.innerText = 'Pengaturan Nama Desa, Kop & Ukuran Kertas';
                 container.innerHTML = renderPengaturanView();
                 setTimeout(() => {
                     const kp = document.getElementById('liveKopPreview');
@@ -1039,7 +1145,7 @@
         function deleteLetter(id) {
             state.letters = state.letters.filter(l => l.id !== id);
             saveState();
-            showModal('Berhasil', 'Arsip surat berhasil dihapus dari sistem.', 'success', () => renderView());
+            showModal('Berhasil', 'Arsip surat berhasil dihapus dari sistem.', 'success', () => renderActiveTabContent());
         }
 
         function renderLaporanView() {
@@ -1116,7 +1222,7 @@
         function changeReportPaperSize(val) {
             state.settings.paperSize = val;
             saveState();
-            renderView();
+            renderActiveTabContent();
         }
 
         function renderPendudukView() {
@@ -1263,7 +1369,7 @@
 
             saveState();
             closeModal();
-            showModal('Sukses', `Akses berhasil ditambahkan untuk <strong>${name}</strong>.`, 'success', () => renderView());
+            showModal('Sukses', `Akses berhasil ditambahkan untuk <strong>${name}</strong>.`, 'success', () => renderActiveTabContent());
         }
 
         function removeUser(id) {
@@ -1273,7 +1379,7 @@
             }
             state.allowedUsers = state.allowedUsers.filter(u => u.id !== id);
             saveState();
-            showModal('Berhasil', 'Akses pengguna berhasil dicabut dari sistem.', 'success', () => renderView());
+            showModal('Berhasil', 'Akses pengguna berhasil dicabut dari sistem.', 'success', () => renderActiveTabContent());
         }
 
         function renderPengaturanView() {
@@ -1526,7 +1632,6 @@
             state.settings.paperSize = document.getElementById('setPaperSize').value;
             state.settings.headName = document.getElementById('setHeadName').value;
             state.settings.headTitle = document.getElementById('setHeadTitle').value;
-            state.currentUser.name = state.settings.headName;
 
             state.settings.kopLine1 = document.getElementById('setKop1').value;
             state.settings.kopLine2 = document.getElementById('setKop2').value;
@@ -1558,7 +1663,7 @@
             state.settings.logoWidth = document.getElementById('setLogoWidth').value;
 
             saveState();
-            showModal('Berhasil', 'Pengaturan ukuran kertas, Kepala Desa, dan kop surat berhasil disimpan secara permanen!', 'success', () => renderView());
+            showModal('Berhasil', 'Pengaturan ukuran kertas, Kepala Desa, dan kop surat berhasil disimpan secara permanen!', 'success', () => renderActiveTabContent());
         }
 
         function toggleLogoInputs(val) {
