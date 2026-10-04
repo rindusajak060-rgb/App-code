@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistem Administrasi Desa & Arsip Digital (SIAP-Desa)</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Supabase JS Library (Backend Engine) -->
+    <!-- Database Engine Library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- SheetJS Library untuk Impor Excel -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -363,14 +363,14 @@
             }
         }
 
-        async function resetToDefaultState() {
-            if(confirm('Apakah Anda yakin ingin mereset seluruh pengaturan dan data kembali ke awal?')) {
+        function resetToDefaultState() {
+            showConfirm('Reset Sistem', 'Apakah Anda yakin ingin mereset seluruh pengaturan dan data kembali ke awal?', async () => {
                 localStorage.removeItem('siap_desa_session');
                 await supabaseClient.from('pengaturan_desa').upsert({ id: 1, config: defaultSettings });
                 await loadDataFromSupabase();
                 renderView();
                 showModal('Berhasil', 'Sistem berhasil dikembalikan ke pengaturan awal.', 'success');
-            }
+            });
         }
 
         function getVillageName() {
@@ -569,11 +569,11 @@
         }
 
         function handleLogout() {
-            if(confirm('Apakah Anda ingin keluar dari sesi sistem administrasi ini?')) {
+            showConfirm('Konfirmasi Keluar', 'Apakah Anda ingin keluar dari sesi sistem administrasi ini?', () => {
                 state.isLoggedIn = false;
                 localStorage.removeItem('siap_desa_session');
                 renderView();
-            }
+            });
         }
 
         function switchTab(tabId) {
@@ -1346,12 +1346,12 @@
         }
 
         async function deleteAgendaItem(id) {
-            if (confirm('Apakah Anda yakin ingin menghapus agenda surat ini?')) {
+            showConfirm('Konfirmasi Hapus', 'Apakah Anda yakin ingin menghapus agenda surat ini?', async () => {
                 await deleteAgendaFromSupabase(id);
                 state.agenda = state.agenda.filter(a => a.id !== id);
                 renderActiveTabContent();
                 showModal('Berhasil', 'Agenda surat berhasil dihapus dari database.', 'success');
-            }
+            });
         }
 
         function openAddAgendaModal() {
@@ -1498,12 +1498,12 @@
         }
 
         async function deleteLetter(id) {
-            if(confirm('Apakah Anda yakin ingin menghapus arsip surat ini?')) {
+            showConfirm('Konfirmasi Hapus', 'Apakah Anda yakin ingin menghapus arsip surat ini?', async () => {
                 await deleteLetterFromSupabase(id);
                 state.letters = state.letters.filter(l => l.id !== id);
                 renderActiveTabContent();
                 showModal('Berhasil', 'Arsip surat berhasil dihapus dari database.', 'success');
-            }
+            });
         }
 
         function renderLaporanView() {
@@ -1722,7 +1722,7 @@
         }
 
         async function clearAllResidentsData() {
-            if (confirm('Apakah Anda yakin ingin mengosongkan/mereset seluruh data penduduk (termasuk data Excel yang diunggah)?')) {
+            showConfirm('Konfirmasi Reset', 'Apakah Anda yakin ingin mengosongkan/mereset seluruh data penduduk (termasuk data Excel yang diunggah)?', async () => {
                 try {
                     await supabaseClient.from('penduduk').delete().neq('nik', '0000000000000000');
                     state.residents = [];
@@ -1737,11 +1737,11 @@
                     renderActiveTabContent();
                     showModal('Berhasil', 'Semua data penduduk dibersihkan.', 'success');
                 }
-            }
+            });
         }
 
         async function deleteSingleResident(nik) {
-            if (confirm(`Apakah Anda yakin ingin menghapus data penduduk dengan NIK ${nik}?`)) {
+            showConfirm('Konfirmasi Hapus', `Apakah Anda yakin ingin menghapus data penduduk dengan NIK ${nik}?`, async () => {
                 try {
                     await supabaseClient.from('penduduk').delete().eq('nik', nik);
                     state.residents = state.residents.filter(r => r.nik !== nik);
@@ -1752,7 +1752,7 @@
                     renderActiveTabContent();
                     showModal('Berhasil', 'Data penduduk berhasil dihapus.', 'success');
                 }
-            }
+            });
         }
 
         function openAddResidentModal() {
@@ -1926,12 +1926,12 @@
                 showModal('Peringatan', 'Sistem memerlukan setidaknya 1 Administrator aktif.', 'error');
                 return;
             }
-            if(confirm('Cabut akses pengguna ini?')) {
+            showConfirm('Cabut Akses', 'Cabut akses pengguna ini?', async () => {
                 await deleteUserFromSupabase(id);
                 state.allowedUsers = state.allowedUsers.filter(u => u.id !== id);
                 renderActiveTabContent();
                 showModal('Berhasil', 'Akses dicabut.', 'success');
-            }
+            });
         }
 
         function renderPengaturanView() {
@@ -2359,6 +2359,30 @@
             `;
             document.getElementById('modalContent').innerHTML = content;
             document.getElementById('customModal').classList.remove('hidden');
+        }
+
+        // Fungsi baru pengganti confirm() bawaan browser agar tidak memunculkan link web/GitHub
+        function showConfirm(title, message, onConfirm) {
+            const html = `
+                <div class="text-center space-y-4 py-4">
+                    <div class="w-12 h-12 mx-auto rounded-full flex items-center justify-center text-xl bg-amber-100 text-amber-600">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                    <h3 class="font-bold text-lg text-slate-800">${title}</h3>
+                    <p class="text-xs text-slate-600">${message}</p>
+                    <div class="flex space-x-3 pt-2">
+                        <button onclick="closeModal()" class="w-full bg-slate-200 text-slate-700 py-2.5 rounded-xl text-xs font-semibold hover:bg-slate-300 transition">Batal</button>
+                        <button id="modalConfirmYesBtn" class="w-full bg-red-600 text-white py-2.5 rounded-xl text-xs font-semibold shadow hover:bg-red-700 transition">Ya, Lanjutkan</button>
+                    </div>
+                </div>
+            `;
+            document.getElementById('modalContent').innerHTML = html;
+            document.getElementById('customModal').classList.remove('hidden');
+            
+            document.getElementById('modalConfirmYesBtn').onclick = () => {
+                closeModal();
+                if(onConfirm) onConfirm();
+            };
         }
 
         function showCustomModalHtml(html) {
