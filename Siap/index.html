@@ -126,7 +126,7 @@
         let tempIncomingScanPhoto = null;
         let tempIncomingIsScanned = false;
 
-        // Session Navigation Timing API Check (Memulihkan sesi dan tab aktif saat refresh)
+        // Memulihkan sesi dan tab aktif saat halaman di-refresh
         let sessionSaved = localStorage.getItem('siap_desa_session');
         let isReload = false;
         if (performance.navigation && performance.navigation.type === 1) {
@@ -570,7 +570,7 @@
 
         function switchTab(tabId) {
             state.activeTab = tabId;
-            saveSession(); // Simpan posisi tab aktif saat berpindah menu
+            saveSession();
             renderView();
         }
 
@@ -647,7 +647,7 @@
                         <div class="p-4 border-t border-slate-800 space-y-2">
                             <div class="flex justify-between items-center text-xs text-slate-500">
                                 <span id="sidebarFooterVillage">${vName}</span>
-                                <span class="bg-brand-900/50 text-brand-400 px-2 py-0.5 rounded font-mono">v4.0 Supabase</span>
+                                <span class="bg-brand-900/50 text-brand-400 px-2 py-0.5 rounded font-mono">v4.1 Supabase</span>
                             </div>
                             <button onclick="handleLogout()" class="w-full bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white text-xs font-semibold py-2 rounded-lg transition flex items-center justify-center space-x-2">
                                 <i class="fa-solid fa-right-from-bracket"></i>
@@ -1571,7 +1571,10 @@
                             <p class="text-xs text-slate-500">Unggah file Excel (.xlsx / .xls) untuk memuat data penduduk dengan kolom yang otomatis menyesuaikan isi file.</p>
                         </div>
                         <div class="flex items-center space-x-3">
-                            ${excelData ? `<button onclick="clearExcelResidents()" class="bg-red-50 text-red-600 px-4 py-2.5 rounded-xl text-xs font-semibold border border-red-200 hover:bg-red-100 transition"><i class="fa-solid fa-trash mr-1"></i> Reset Tabel Excel</button>` : ''}
+                            <button onclick="clearAllResidentsData()" class="bg-red-50 text-red-600 px-4 py-2.5 rounded-xl text-xs font-semibold border border-red-200 hover:bg-red-100 transition flex items-center space-x-1.5">
+                                <i class="fa-solid fa-trash-can"></i>
+                                <span>Reset / Kosongkan Semua Penduduk</span>
+                            </button>
                             <label class="bg-brand-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold shadow hover:bg-brand-700 transition cursor-pointer flex items-center space-x-2">
                                 <i class="fa-solid fa-file-excel"></i>
                                 <span>Impor dari Excel</span>
@@ -1628,10 +1631,13 @@
                                             <th class="p-4">Tempat, Tgl Lahir</th>
                                             <th class="p-4">Pekerjaan</th>
                                             <th class="p-4">Alamat</th>
+                                            <th class="p-4 text-center">Aksi</th>
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y divide-slate-100">
-                                        ${state.residents.map(r => `
+                                        ${state.residents.length === 0 ? `
+                                            <tr><td colspan="7" class="p-8 text-center text-slate-400 italic">Belum ada data penduduk. Silakan impor file Excel atau tambah manual.</td></tr>
+                                        ` : state.residents.map(r => `
                                             <tr class="hover:bg-slate-50">
                                                 <td class="p-4 font-mono text-xs font-bold text-slate-700">${r.nik}</td>
                                                 <td class="p-4 font-semibold text-slate-800">${r.name}</td>
@@ -1639,6 +1645,11 @@
                                                 <td class="p-4 text-slate-600 text-xs">${r.pob}, ${r.dob}</td>
                                                 <td class="p-4 text-slate-600 text-xs">${r.job}</td>
                                                 <td class="p-4 text-slate-600 text-xs">${r.address}</td>
+                                                <td class="p-4 text-center">
+                                                    <button onclick="deleteSingleResident('${r.nik}')" class="bg-red-50 text-red-600 hover:bg-red-100 p-1.5 rounded-lg text-xs font-semibold transition" title="Hapus Data Ini">
+                                                        <i class="fa-solid fa-trash"></i>
+                                                    </button>
+                                                </td>
                                             </tr>
                                         `).join('')}
                                     </tbody>
@@ -1685,12 +1696,38 @@
             reader.readAsArrayBuffer(file);
         }
 
-        async function clearExcelResidents() {
-            if (confirm('Apakah Anda ingin menghapus data Excel dan kembali ke tabel master penduduk default?')) {
-                state.settings.excelResidents = null;
-                await saveSettingsToSupabase();
-                renderActiveTabContent();
-                showModal('Berhasil', 'Tabel dikembalikan ke master penduduk default.', 'success');
+        async function clearAllResidentsData() {
+            if (confirm('Apakah Anda yakin ingin mengosongkan/mereset seluruh data penduduk (termasuk data Excel yang diunggah)?')) {
+                try {
+                    // Kosongkan tabel penduduk di Supabase
+                    await supabaseClient.from('penduduk').delete().neq('nik', '0000000000000000');
+                    state.residents = [];
+                    state.settings.excelResidents = null;
+                    await saveSettingsToSupabase();
+                    renderActiveTabContent();
+                    showModal('Berhasil', 'Semua data penduduk berhasil dibersihkan dan direset.', 'success');
+                } catch (e) {
+                    state.residents = [];
+                    state.settings.excelResidents = null;
+                    await saveSettingsToSupabase();
+                    renderActiveTabContent();
+                    showModal('Berhasil', 'Semua data penduduk dibersihkan.', 'success');
+                }
+            }
+        }
+
+        async function deleteSingleResident(nik) {
+            if (confirm(`Apakah Anda yakin ingin menghapus data penduduk dengan NIK ${nik}?`)) {
+                try {
+                    await supabaseClient.from('penduduk').delete().eq('nik', nik);
+                    state.residents = state.residents.filter(r => r.nik !== nik);
+                    renderActiveTabContent();
+                    showModal('Berhasil', 'Data penduduk berhasil dihapus.', 'success');
+                } catch (e) {
+                    state.residents = state.residents.filter(r => r.nik !== nik);
+                    renderActiveTabContent();
+                    showModal('Berhasil', 'Data penduduk berhasil dihapus.', 'success');
+                }
             }
         }
 
