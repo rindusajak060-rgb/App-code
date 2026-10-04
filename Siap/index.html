@@ -7,6 +7,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Supabase JS Library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- SheetJS Library untuk Impor Excel -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&family=Roboto:wght@300;400;500;700;900&family=Montserrat:wght@300;400;500;600;700;800;900&family=Open+Sans:wght@300;400;600;700;800&family=Lato:wght@300;400;700;900&family=Raleway:wght@300;400;600;700;800;900&family=Nunito:wght@300;400;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Quicksand:wght@300;400;500;600;700&family=Source+Sans+3:wght@300;400;600;700;900&family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=Playfair+Display:wght@400;600;700;900&family=Merriweather:wght@300;400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script>
@@ -97,7 +99,8 @@
             logoWidth: '80',
             headName: 'Admin',
             headTitle: 'Kepala Desa',
-            paperSize: 'A4'
+            paperSize: 'A4',
+            excelResidents: null
         };
 
         let state = {
@@ -123,7 +126,6 @@
         let tempIncomingScanPhoto = null;
         let tempIncomingIsScanned = false;
 
-        // Session Navigation Timing API Check (Refresh aman, buka tab baru logout)
         let sessionSaved = localStorage.getItem('siap_desa_session');
         let isReload = false;
         if (performance.navigation && performance.navigation.type === 1) {
@@ -151,7 +153,6 @@
             }));
         }
 
-        // Kompresi Gambar Otomatis
         function compressImage(file, maxWidth = 900, maxHeight = 900, quality = 0.8) {
             return new Promise((resolve) => {
                 const reader = new FileReader();
@@ -184,7 +185,6 @@
             });
         }
 
-        // Load Data dari Supabase Cloud
         async function loadDataFromSupabase() {
             try {
                 const { data: setRow } = await supabaseClient.from('pengaturan_desa').select('*').eq('id', 1).single();
@@ -577,7 +577,6 @@
                 return;
             }
 
-            // Fungsi bantu untuk menentukan kelas aktif secara dinamis (warna hijau)
             const getNavClass = (tab) => state.activeTab === tab 
                 ? 'flex items-center px-3 py-2.5 rounded-lg transition text-white bg-brand-600 shadow-md' 
                 : 'flex items-center px-3 py-2.5 rounded-lg transition text-slate-300 hover:bg-slate-800 hover:text-white';
@@ -642,7 +641,7 @@
                         <div class="p-4 border-t border-slate-800 space-y-2">
                             <div class="flex justify-between items-center text-xs text-slate-500">
                                 <span id="sidebarFooterVillage">${vName}</span>
-                                <span class="bg-brand-900/50 text-brand-400 px-2 py-0.5 rounded font-mono">v3.8 Supabase</span>
+                                <span class="bg-brand-900/50 text-brand-400 px-2 py-0.5 rounded font-mono">v3.9 Supabase</span>
                             </div>
                             <button onclick="handleLogout()" class="w-full bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white text-xs font-semibold py-2 rounded-lg transition flex items-center justify-center space-x-2">
                                 <i class="fa-solid fa-right-from-bracket"></i>
@@ -1553,49 +1552,140 @@
             renderActiveTabContent();
         }
 
+        // ==========================================
+        // MODUL MASTER DATA PENDUDUK & IMPOR EXCEL DINAMIS
+        // ==========================================
         function renderPendudukView() {
+            const excelData = state.settings.excelResidents;
             return `
                 <div class="space-y-6">
-                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex justify-between items-center">
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col md:flex-row justify-between items-center gap-4">
                         <div>
-                            <h3 class="font-bold text-slate-800 text-lg">Master Data Penduduk Desa</h3>
-                            <p class="text-xs text-slate-500">Daftar warga terdaftar di database Supabase yang dapat mengajukan layanan administrasi surat.</p>
+                            <h3 class="font-bold text-slate-800 text-lg">Master Data Penduduk & Impor Excel Dinamis</h3>
+                            <p class="text-xs text-slate-500">Unggah file Excel (.xlsx / .xls) untuk memuat data penduduk dengan kolom yang otomatis menyesuaikan isi file.</p>
                         </div>
-                        <button onclick="openAddResidentModal()" class="bg-brand-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold shadow hover:bg-brand-700 transition flex items-center space-x-2">
-                            <i class="fa-solid fa-user-plus"></i><span>Tambah Penduduk</span>
-                        </button>
+                        <div class="flex items-center space-x-3">
+                            ${excelData ? `<button onclick="clearExcelResidents()" class="bg-red-50 text-red-600 px-4 py-2.5 rounded-xl text-xs font-semibold border border-red-200 hover:bg-red-100 transition"><i class="fa-solid fa-trash mr-1"></i> Reset Tabel Excel</button>` : ''}
+                            <label class="bg-brand-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold shadow hover:bg-brand-700 transition cursor-pointer flex items-center space-x-2">
+                                <i class="fa-solid fa-file-excel"></i>
+                                <span>Impor dari Excel</span>
+                                <input type="file" accept=".xlsx, .xls, .csv" onchange="handleExcelImport(event)" class="hidden">
+                            </label>
+                        </div>
                     </div>
 
-                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left text-sm">
-                                <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 text-xs uppercase font-semibold">
-                                    <tr>
-                                        <th class="p-4">NIK</th>
-                                        <th class="p-4">Nama Lengkap</th>
-                                        <th class="p-4">Gender</th>
-                                        <th class="p-4">Tempat, Tgl Lahir</th>
-                                        <th class="p-4">Pekerjaan</th>
-                                        <th class="p-4">Alamat</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-slate-100">
-                                    ${state.residents.map(r => `
-                                        <tr class="hover:bg-slate-50">
-                                            <td class="p-4 font-mono text-xs font-bold text-slate-700">${r.nik}</td>
-                                            <td class="p-4 font-semibold text-slate-800">${r.name}</td>
-                                            <td class="p-4 text-slate-600 text-xs">${r.gender}</td>
-                                            <td class="p-4 text-slate-600 text-xs">${r.pob}, ${r.dob}</td>
-                                            <td class="p-4 text-slate-600 text-xs">${r.job}</td>
-                                            <td class="p-4 text-slate-600 text-xs">${r.address}</td>
-                                        </tr>
-                                    `).join('')}
-                                </tbody>
-                            </table>
+                    ${excelData && excelData.columns && excelData.columns.length > 0 ? `
+                        <div class="bg-emerald-50 border border-emerald-200 p-4 rounded-xl flex items-center justify-between text-xs text-emerald-900 shadow-sm">
+                            <div><i class="fa-solid fa-circle-check text-emerald-600 mr-2"></i> Menampilkan data dari file Excel (${excelData.rows.length} baris data, ${excelData.columns.length} kolom aktif).</div>
+                            <span class="font-mono bg-white px-2.5 py-1 rounded-lg border border-emerald-300 font-bold text-emerald-700">Mode Kolom Dinamis</span>
                         </div>
-                    </div>
+
+                        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-sm">
+                                    <thead class="bg-slate-50 border-b border-slate-200 text-slate-700 text-xs uppercase font-semibold">
+                                        <tr>
+                                            <th class="p-3 border-r text-center w-12">No</th>
+                                            ${excelData.columns.map(col => `<th class="p-3 border-r">${col}</th>`).join('')}
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-100">
+                                        ${excelData.rows.map((row, idx) => `
+                                            <tr class="hover:bg-slate-50">
+                                                <td class="p-3 border-r font-mono text-xs text-slate-500 text-center">${idx + 1}</td>
+                                                ${excelData.columns.map(col => `<td class="p-3 border-r text-slate-700 text-xs">${row[col] !== undefined ? row[col] : ''}</td>`).join('')}
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    ` : `
+                        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex justify-between items-center">
+                            <div>
+                                <h4 class="font-bold text-slate-800 text-sm">Daftar Penduduk Default Supabase</h4>
+                                <p class="text-xs text-slate-500">Anda dapat menambahkan data manual atau klik tombol <strong>"Impor dari Excel"</strong> di atas untuk mengubah kolom tabel secara dinamis.</p>
+                            </div>
+                            <button onclick="openAddResidentModal()" class="bg-brand-600 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow hover:bg-brand-700 transition flex items-center space-x-1.5">
+                                <i class="fa-solid fa-user-plus"></i><span>Tambah Penduduk</span>
+                            </button>
+                        </div>
+
+                        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-sm">
+                                    <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 text-xs uppercase font-semibold">
+                                        <tr>
+                                            <th class="p-4">NIK</th>
+                                            <th class="p-4">Nama Lengkap</th>
+                                            <th class="p-4">Gender</th>
+                                            <th class="p-4">Tempat, Tgl Lahir</th>
+                                            <th class="p-4">Pekerjaan</th>
+                                            <th class="p-4">Alamat</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-100">
+                                        ${state.residents.map(r => `
+                                            <tr class="hover:bg-slate-50">
+                                                <td class="p-4 font-mono text-xs font-bold text-slate-700">${r.nik}</td>
+                                                <td class="p-4 font-semibold text-slate-800">${r.name}</td>
+                                                <td class="p-4 text-slate-600 text-xs">${r.gender}</td>
+                                                <td class="p-4 text-slate-600 text-xs">${r.pob}, ${r.dob}</td>
+                                                <td class="p-4 text-slate-600 text-xs">${r.job}</td>
+                                                <td class="p-4 text-slate-600 text-xs">${r.address}</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    `}
                 </div>
             `;
+        }
+
+        async function handleExcelImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    const jsonRows = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+                    
+                    if (jsonRows.length === 0) {
+                        showModal('Peringatan', 'File Excel kosong atau format tidak sesuai.', 'error');
+                        return;
+                    }
+
+                    const columns = Object.keys(jsonRows[0]);
+                    state.settings.excelResidents = {
+                        columns: columns,
+                        rows: jsonRows
+                    };
+
+                    await saveSettingsToSupabase();
+                    showModal('Berhasil!', `File Excel berhasil diimpor dengan <strong>${columns.length} kolom</strong> dan <strong>${jsonRows.length} baris</strong>. Tampilan tabel otomatis menyesuaikan.`, 'success', () => {
+                        renderActiveTabContent();
+                    });
+                } catch (err) {
+                    console.error(err);
+                    showModal('Gagal', 'Terjadi kesalahan saat membaca file Excel.', 'error');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        async function clearExcelResidents() {
+            if (confirm('Apakah Anda ingin menghapus data Excel dan kembali ke tabel master penduduk default?')) {
+                state.settings.excelResidents = null;
+                await saveSettingsToSupabase();
+                renderActiveTabContent();
+                showModal('Berhasil', 'Tabel dikembalikan ke master penduduk default.', 'success');
+            }
         }
 
         function openAddResidentModal() {
