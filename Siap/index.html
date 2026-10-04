@@ -668,9 +668,6 @@
                     <main class="flex-1 flex flex-col h-full overflow-hidden">
                         <header class="bg-white border-b border-slate-200 h-16 flex items-center justify-between px-6 no-print shadow-sm z-10 shrink-0">
                             <div class="flex items-center space-x-3">
-                                <span class="bg-brand-100 text-brand-800 text-xs font-semibold px-2.5 py-1 rounded-full uppercase tracking-wider">
-                                    Cloud Server Connected
-                                </span>
                                 <h2 id="pageTitle" class="text-lg font-bold text-slate-800 truncate">Dashboard Administrator</h2>
                             </div>
                             <div class="flex items-center space-x-4">
@@ -822,7 +819,6 @@
                 <div class="space-y-6">
                     <div class="bg-gradient-to-r from-brand-700 to-brand-900 rounded-2xl p-6 text-white shadow-lg flex flex-col md:flex-row justify-between items-center">
                         <div class="space-y-2 mb-4 md:mb-0">
-                            <span class="bg-brand-500/40 text-brand-100 text-xs px-3 py-1 rounded-full font-medium">Cloud Database Connected</span>
                             <h2 class="text-2xl font-bold">Portal Administrasi Desa ${vName}</h2>
                             <p class="text-slate-200 text-sm max-w-xl">Layanan administrasi pembuatan surat keterangan berukuran standar A4/F4, undangan resmi, buku agenda, arsip digital dengan tangkapan foto/kamera scanner dokumen tersinkronisasi server.</p>
                         </div>
@@ -934,7 +930,6 @@
                             <h3 class="text-lg font-bold text-slate-800"><i class="fa-solid fa-camera-retro text-emerald-600 mr-2"></i> Pemindaian & Arsip Surat Masuk Eksternal</h3>
                             <p class="text-xs text-slate-500">Ambil foto surat fisik dari instansi luar (Kabupaten, Kecamatan, dll) untuk diarsipkan langsung ke database server.</p>
                         </div>
-                        <span class="bg-emerald-50 text-emerald-700 text-xs font-semibold px-3 py-1 rounded-lg border border-emerald-200">Cloud Sync Active</span>
                     </div>
 
                     <form onsubmit="handleSaveIncomingScan(event)" class="space-y-6">
@@ -2361,7 +2356,6 @@
             document.getElementById('customModal').classList.remove('hidden');
         }
 
-        // Fungsi baru pengganti confirm() bawaan browser agar tidak memunculkan link web/GitHub
         function showConfirm(title, message, onConfirm) {
             const html = `
                 <div class="text-center space-y-4 py-4">
