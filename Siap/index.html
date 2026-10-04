@@ -123,7 +123,7 @@
         let tempIncomingScanPhoto = null;
         let tempIncomingIsScanned = false;
 
-        // Cek Session Login dengan Navigation Timing API (Refresh aman, buka tab baru logout)
+        // Session Navigation Timing API Check (Refresh aman, buka tab baru logout)
         let sessionSaved = localStorage.getItem('siap_desa_session');
         let isReload = false;
         if (performance.navigation && performance.navigation.type === 1) {
@@ -151,7 +151,7 @@
             }));
         }
 
-        // --- FUNGSI KOMPRESI GAMBAR ---
+        // Kompresi Gambar Otomatis
         function compressImage(file, maxWidth = 900, maxHeight = 900, quality = 0.8) {
             return new Promise((resolve) => {
                 const reader = new FileReader();
@@ -184,24 +184,20 @@
             });
         }
 
-        // --- LOAD SEMUA DATA DARI SUPABASE ---
+        // Load Data dari Supabase Cloud
         async function loadDataFromSupabase() {
             try {
-                // 1. Pengaturan Desa
                 const { data: setRow } = await supabaseClient.from('pengaturan_desa').select('*').eq('id', 1).single();
                 if (setRow && setRow.config) {
                     state.settings = typeof setRow.config === 'string' ? JSON.parse(setRow.config) : setRow.config;
                 } else {
-                    // Seed default settings jika belum ada
                     await supabaseClient.from('pengaturan_desa').upsert({ id: 1, config: defaultSettings });
                 }
 
-                // 2. Penduduk
                 const { data: resData } = await supabaseClient.from('penduduk').select('*');
                 if (resData && resData.length > 0) {
                     state.residents = resData;
                 } else {
-                    // Seed data penduduk default
                     const defaultResidents = [
                         { nik: '7501011234560001', name: 'Budi Santoso', gender: 'Laki-laki', pob: 'Paguat', dob: '1985-06-12', address: 'Dsn I Desa Kamiiri', job: 'Pegawai Swasta', status: 'Kawin' },
                         { nik: '7501019876540002', name: 'Siti Aminah', gender: 'Perempuan', pob: 'Pohuwato', dob: '1990-11-20', address: 'Dsn II Desa Kamiiri', job: 'Ibu Rumah Tangga', status: 'Kawin' },
@@ -211,7 +207,6 @@
                     state.residents = defaultResidents;
                 }
 
-                // 3. Surat Desa (Arsip Surat)
                 const { data: letterData } = await supabaseClient.from('surat_desa').select('*').order('created_at', { ascending: false });
                 if (letterData && letterData.length > 0) {
                     state.letters = letterData.map(l => ({
@@ -232,16 +227,13 @@
                         isScanned: l.is_scanned
                     }));
                 } else {
-                    // Seed default letters
                     const defaultLetters = [
-                        { id: 'L-2026-001', nik: '7501011234560001', name: 'Budi Santoso', type: 'Surat Keterangan Domisili', code: '474.3', number: '474.3 / 001 / Des.01 / 2026', date: '2026-08-04', purpose: 'Persyaratan pembukaan rekening bank', status: 'Disetujui', signed_by: 'Admin (Kepala Desa)', sifat: 'Penting', lampiran: '-', include_purpose: true, photo: null, is_scanned: false },
-                        { id: 'L-2026-002', nik: '7501019876540002', name: 'Siti Aminah', type: 'Surat Keterangan Usaha', code: '503', number: '503 / 002 / Des.01 / 2026', date: '2026-08-05', purpose: 'Pengajuan modal UMKM BNI', status: 'Disetujui', signed_by: 'Admin (Kepala Desa)', sifat: 'Biasa', lampiran: '-', include_purpose: true, photo: null, is_scanned: false }
+                        { id: 'L-2026-001', nik: '7501011234560001', name: 'Budi Santoso', type: 'Surat Keterangan Domisili', code: '474.3', number: '474.3 / 001 / Des.01 / 2026', date: '2026-08-04', purpose: 'Persyaratan pembukaan rekening bank', status: 'Disetujui', signed_by: 'Admin (Kepala Desa)', sifat: 'Penting', lampiran: '-', include_purpose: true, photo: null, is_scanned: false }
                     ];
                     await supabaseClient.from('surat_desa').upsert(defaultLetters);
                     state.letters = defaultLetters.map(l => ({ ...l, signedBy: l.signed_by, includePurpose: l.include_purpose, isScanned: l.is_scanned }));
                 }
 
-                // 4. Agenda Surat
                 const { data: agendaData } = await supabaseClient.from('agenda_surat').select('*').order('created_at', { ascending: false });
                 if (agendaData && agendaData.length > 0) {
                     state.agenda = agendaData.map(a => ({
@@ -255,22 +247,19 @@
                     }));
                 } else {
                     const defaultAgenda = [
-                        { id: 'AG-01', type: 'Masuk', no_surat: '005/123/Kec-Paguat/2026', surat_from: 'Kecamatan Paguat', date: '2026-08-02', subject: 'Undangan Rapat Koordinasi Bulanan', status: 'Diteruskan ke Sekdes' },
-                        { id: 'AG-02', type: 'Keluar', no_surat: '005 / KMR.PGT / 22 / VIII / 2026', surat_from: 'Kamiiri', date: '2026-08-04', subject: 'Undangan Rapat Persiapan Maulid Nabi', status: 'Terkirim' }
+                        { id: 'AG-01', type: 'Masuk', no_surat: '005/123/Kec-Paguat/2026', surat_from: 'Kecamatan Paguat', date: '2026-08-02', subject: 'Undangan Rapat Koordinasi Bulanan', status: 'Diteruskan ke Sekdes' }
                     ];
                     await supabaseClient.from('agenda_surat').upsert(defaultAgenda);
                     state.agenda = defaultAgenda.map(a => ({ id: a.id, type: a.type, noSurat: a.no_surat, from: a.surat_from, date: a.date, subject: a.subject, status: a.status }));
                 }
 
-                // 5. Staf Desa
                 const { data: staffData } = await supabaseClient.from('staf_desa').select('*');
                 if (staffData && staffData.length > 0) {
                     state.allowedUsers = staffData;
                 } else {
                     const defaultStaff = [
                         { id: 1, name: 'Admin', username: 'admin', role: 'Administrator / Kepala Desa', status: 'Aktif', email: 'admin@pohuwato.desa.id' },
-                        { id: 2, name: 'Operator', username: 'operator', role: 'Operator Administrasi', status: 'Aktif', email: 'operator@pohuwato.desa.id' },
-                        { id: 3, name: 'Staf Pelayanan', username: 'staf', role: 'Staf Pelayanan Kependudukan', status: 'Aktif', email: 'staf@pohuwato.desa.id' }
+                        { id: 2, name: 'Operator', username: 'operator', role: 'Operator Administrasi', status: 'Aktif', email: 'operator@pohuwato.desa.id' }
                     ];
                     await supabaseClient.from('staf_desa').upsert(defaultStaff);
                     state.allowedUsers = defaultStaff;
@@ -294,7 +283,7 @@
             try {
                 await supabaseClient.from('surat_desa').upsert({
                     id: l.id,
-                    nik: l.nik,
+                    nik: l.nik || null,
                     name: l.name,
                     type: l.type,
                     code: l.code,
@@ -310,7 +299,7 @@
                     is_scanned: l.isScanned
                 });
             } catch (err) {
-                console.error('Gagal simpan surat ke Supabase:', err);
+                console.error('Gagal simpan surat:', err);
             }
         }
 
@@ -549,7 +538,6 @@
             const usernameInput = document.getElementById('loginUsername').value.trim();
             const passwordInput = document.getElementById('loginPassword').value;
 
-            // Cek apakah user ada di allowedUsers database
             const matchedUser = state.allowedUsers.find(u => u.username === usernameInput);
 
             if (matchedUser && (passwordInput === 'admin123' || passwordInput === 'password')) {
@@ -577,27 +565,6 @@
 
         function switchTab(tabId) {
             state.activeTab = tabId;
-            
-            document.querySelectorAll('aside nav a').forEach(el => {
-                el.classList.remove('bg-brand-600', 'text-white', 'shadow-md');
-                el.classList.add('hover:bg-slate-800', 'hover:text-white');
-            });
-            const activeNav = document.getElementById('nav-' + tabId);
-            if(activeNav) {
-                activeNav.classList.add('bg-brand-600', 'text-white', 'shadow-md');
-                activeNav.classList.remove('hover:bg-slate-800', 'hover:text-white');
-            }
-
-            document.querySelectorAll('#mobileTabBar button').forEach(btn => {
-                btn.classList.remove('bg-brand-600', 'text-white', 'shadow');
-                btn.classList.add('text-slate-300', 'hover:bg-slate-800');
-            });
-            const activeMobNav = document.getElementById('mob-nav-' + tabId);
-            if(activeMobNav) {
-                activeMobNav.classList.add('bg-brand-600', 'text-white', 'shadow');
-                activeMobNav.classList.remove('text-slate-300', 'hover:bg-slate-800');
-            }
-
             renderView();
         }
 
@@ -609,6 +576,15 @@
                 wrapper.innerHTML = renderLoginView();
                 return;
             }
+
+            // Fungsi bantu untuk menentukan kelas aktif secara dinamis (warna hijau)
+            const getNavClass = (tab) => state.activeTab === tab 
+                ? 'flex items-center px-3 py-2.5 rounded-lg transition text-white bg-brand-600 shadow-md' 
+                : 'flex items-center px-3 py-2.5 rounded-lg transition text-slate-300 hover:bg-slate-800 hover:text-white';
+
+            const getMobClass = (tab) => state.activeTab === tab 
+                ? 'px-3 py-1.5 rounded-lg text-xs font-medium transition bg-brand-600 text-white flex items-center space-x-1.5 shrink-0 shadow' 
+                : 'px-3 py-1.5 rounded-lg text-xs font-medium transition text-slate-300 hover:bg-slate-800 flex items-center space-x-1.5 shrink-0';
 
             wrapper.innerHTML = `
                 <div class="flex h-full overflow-hidden flex-col md:flex-row w-full">
@@ -634,31 +610,31 @@
 
                         <!-- Navigation Links Desktop -->
                         <nav class="flex-1 px-3 py-2 space-y-1 text-sm font-medium overflow-y-auto">
-                            <a href="#" onclick="switchTab('dashboard')" id="nav-dashboard" class="flex items-center px-3 py-2.5 rounded-lg transition text-white bg-brand-600 shadow-md">
+                            <a href="#" onclick="switchTab('dashboard')" id="nav-dashboard" class="${getNavClass('dashboard')}">
                                 <i class="fa-solid fa-chart-pie w-6"></i> Dashboard Utama
                             </a>
-                            <a href="#" onclick="switchTab('scan-masuk')" id="nav-scan-masuk" class="flex items-center px-3 py-2.5 rounded-lg transition hover:bg-slate-800 hover:text-white">
+                            <a href="#" onclick="switchTab('scan-masuk')" id="nav-scan-masuk" class="${getNavClass('scan-masuk')}">
                                 <i class="fa-solid fa-camera-retro w-6 text-emerald-400"></i> Scan & Arsip Surat Masuk
                             </a>
-                            <a href="#" onclick="switchTab('layanan')" id="nav-layanan" class="flex items-center px-3 py-2.5 rounded-lg transition hover:bg-slate-800 hover:text-white">
+                            <a href="#" onclick="switchTab('layanan')" id="nav-layanan" class="${getNavClass('layanan')}">
                                 <i class="fa-solid fa-file-pen w-6"></i> Pembuatan Surat Desa
                             </a>
-                            <a href="#" onclick="switchTab('agenda')" id="nav-agenda" class="flex items-center px-3 py-2.5 rounded-lg transition hover:bg-slate-800 hover:text-white">
+                            <a href="#" onclick="switchTab('agenda')" id="nav-agenda" class="${getNavClass('agenda')}">
                                 <i class="fa-solid fa-book-open w-6"></i> Buku Agenda Surat
                             </a>
-                            <a href="#" onclick="switchTab('arsip')" id="nav-arsip" class="flex items-center px-3 py-2.5 rounded-lg transition hover:bg-slate-800 hover:text-white">
+                            <a href="#" onclick="switchTab('arsip')" id="nav-arsip" class="${getNavClass('arsip')}">
                                 <i class="fa-solid fa-folder-tree w-6"></i> Arsip Digital & Pencarian
                             </a>
-                            <a href="#" onclick="switchTab('laporan')" id="nav-laporan" class="flex items-center px-3 py-2.5 rounded-lg transition hover:bg-slate-800 hover:text-white">
+                            <a href="#" onclick="switchTab('laporan')" id="nav-laporan" class="${getNavClass('laporan')}">
                                 <i class="fa-solid fa-print w-6"></i> Rekapitulasi & Laporan PDF
                             </a>
-                            <a href="#" onclick="switchTab('penduduk')" id="nav-penduduk" class="flex items-center px-3 py-2.5 rounded-lg transition hover:bg-slate-800 hover:text-white">
+                            <a href="#" onclick="switchTab('penduduk')" id="nav-penduduk" class="${getNavClass('penduduk')}">
                                 <i class="fa-solid fa-users w-6"></i> Data Penduduk
                             </a>
-                            <a href="#" onclick="switchTab('pengguna')" id="nav-pengguna" class="flex items-center px-3 py-2.5 rounded-lg transition hover:bg-slate-800 hover:text-white">
+                            <a href="#" onclick="switchTab('pengguna')" id="nav-pengguna" class="${getNavClass('pengguna')}">
                                 <i class="fa-solid fa-user-shield w-6"></i> Manajemen Hak Akses
                             </a>
-                            <a href="#" onclick="switchTab('pengaturan')" id="nav-pengaturan" class="flex items-center px-3 py-2.5 rounded-lg transition hover:bg-slate-800 hover:text-white">
+                            <a href="#" onclick="switchTab('pengaturan')" id="nav-pengaturan" class="${getNavClass('pengaturan')}">
                                 <i class="fa-solid fa-gears w-6"></i> Pengaturan Desa & Kop
                             </a>
                         </nav>
@@ -666,7 +642,7 @@
                         <div class="p-4 border-t border-slate-800 space-y-2">
                             <div class="flex justify-between items-center text-xs text-slate-500">
                                 <span id="sidebarFooterVillage">${vName}</span>
-                                <span class="bg-brand-900/50 text-brand-400 px-2 py-0.5 rounded font-mono">v3.7 Supabase</span>
+                                <span class="bg-brand-900/50 text-brand-400 px-2 py-0.5 rounded font-mono">v3.8 Supabase</span>
                             </div>
                             <button onclick="handleLogout()" class="w-full bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white text-xs font-semibold py-2 rounded-lg transition flex items-center justify-center space-x-2">
                                 <i class="fa-solid fa-right-from-bracket"></i>
@@ -700,31 +676,31 @@
 
                         <!-- MOBILE TOP NAVIGATION BAR -->
                         <div class="md:hidden bg-slate-900 text-white overflow-x-auto flex items-center space-x-1.5 px-3 py-2.5 no-print shrink-0 shadow-md whitespace-nowrap scrollbar-none" id="mobileTabBar">
-                            <button onclick="switchTab('dashboard')" id="mob-nav-dashboard" class="px-3 py-1.5 rounded-lg text-xs font-medium transition bg-brand-600 text-white flex items-center space-x-1.5 shrink-0 shadow">
+                            <button onclick="switchTab('dashboard')" id="mob-nav-dashboard" class="${getMobClass('dashboard')}">
                                 <i class="fa-solid fa-chart-pie"></i><span>Dashboard</span>
                             </button>
-                            <button onclick="switchTab('scan-masuk')" id="mob-nav-scan-masuk" class="px-3 py-1.5 rounded-lg text-xs font-medium transition text-slate-300 hover:bg-slate-800 flex items-center space-x-1.5 shrink-0">
+                            <button onclick="switchTab('scan-masuk')" id="mob-nav-scan-masuk" class="${getMobClass('scan-masuk')}">
                                 <i class="fa-solid fa-camera-retro text-emerald-400"></i><span>Scan Masuk</span>
                             </button>
-                            <button onclick="switchTab('layanan')" id="mob-nav-layanan" class="px-3 py-1.5 rounded-lg text-xs font-medium transition text-slate-300 hover:bg-slate-800 flex items-center space-x-1.5 shrink-0">
+                            <button onclick="switchTab('layanan')" id="mob-nav-layanan" class="${getMobClass('layanan')}">
                                 <i class="fa-solid fa-file-pen"></i><span>Buat Surat</span>
                             </button>
-                            <button onclick="switchTab('agenda')" id="mob-nav-agenda" class="px-3 py-1.5 rounded-lg text-xs font-medium transition text-slate-300 hover:bg-slate-800 flex items-center space-x-1.5 shrink-0">
+                            <button onclick="switchTab('agenda')" id="mob-nav-agenda" class="${getMobClass('agenda')}">
                                 <i class="fa-solid fa-book-open"></i><span>Agenda</span>
                             </button>
-                            <button onclick="switchTab('arsip')" id="mob-nav-arsip" class="px-3 py-1.5 rounded-lg text-xs font-medium transition text-slate-300 hover:bg-slate-800 flex items-center space-x-1.5 shrink-0">
+                            <button onclick="switchTab('arsip')" id="mob-nav-arsip" class="${getMobClass('arsip')}">
                                 <i class="fa-solid fa-folder-tree"></i><span>Arsip</span>
                             </button>
-                            <button onclick="switchTab('laporan')" id="mob-nav-laporan" class="px-3 py-1.5 rounded-lg text-xs font-medium transition text-slate-300 hover:bg-slate-800 flex items-center space-x-1.5 shrink-0">
+                            <button onclick="switchTab('laporan')" id="mob-nav-laporan" class="${getMobClass('laporan')}">
                                 <i class="fa-solid fa-print"></i><span>Laporan</span>
                             </button>
-                            <button onclick="switchTab('penduduk')" id="mob-nav-penduduk" class="px-3 py-1.5 rounded-lg text-xs font-medium transition text-slate-300 hover:bg-slate-800 flex items-center space-x-1.5 shrink-0">
+                            <button onclick="switchTab('penduduk')" id="mob-nav-penduduk" class="${getMobClass('penduduk')}">
                                 <i class="fa-solid fa-users"></i><span>Penduduk</span>
                             </button>
-                            <button onclick="switchTab('pengguna')" id="mob-nav-pengguna" class="px-3 py-1.5 rounded-lg text-xs font-medium transition text-slate-300 hover:bg-slate-800 flex items-center space-x-1.5 shrink-0">
+                            <button onclick="switchTab('pengguna')" id="mob-nav-pengguna" class="${getMobClass('pengguna')}">
                                 <i class="fa-solid fa-user-shield"></i><span>Akses</span>
                             </button>
-                            <button onclick="switchTab('pengaturan')" id="mob-nav-pengaturan" class="px-3 py-1.5 rounded-lg text-xs font-medium transition text-slate-300 hover:bg-slate-800 flex items-center space-x-1.5 shrink-0">
+                            <button onclick="switchTab('pengaturan')" id="mob-nav-pengaturan" class="${getMobClass('pengaturan')}">
                                 <i class="fa-solid fa-gears"></i><span>Pengaturan</span>
                             </button>
                         </div>
@@ -934,7 +910,7 @@
         }
 
         // ==========================================
-        // MODUL: SCAN & ARSIP SURAT MASUK EKSTERNAL (SUPABASE)
+        // MODUL: SCAN & ARSIP SURAT MASUK EKSTERNAL
         // ==========================================
         function renderScanMasukView() {
             const vName = getVillageName();
@@ -1108,11 +1084,9 @@
                 status: 'Diterima & Diarsipkan'
             };
 
-            // Simpan ke Supabase Tables
             await saveLetterToSupabase(newLetterObj);
             await saveAgendaToSupabase(newAgendaObj);
 
-            // Perbarui state lokal
             state.letters.unshift(newLetterObj);
             state.agenda.unshift(newAgendaObj);
 
@@ -2239,7 +2213,7 @@
             document.getElementById('customModal').classList.add('hidden');
         }
 
-        // Inisialisasi awal saat halaman dimuat (Ambil data dari Supabase)
+        // Inisialisasi awal saat halaman dimuat
         document.addEventListener('DOMContentLoaded', async () => {
             await loadDataFromSupabase();
         });
