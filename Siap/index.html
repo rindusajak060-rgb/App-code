@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistem Administrasi Desa & Arsip Digital (SIAP-Desa)</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Supabase JS Library -->
+    <!-- Supabase JS Library (Backend Engine) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- SheetJS Library untuk Impor Excel -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -42,7 +42,7 @@
         }
     </script>
     <script>
-    // Konfigurasi Supabase
+    // Konfigurasi Database Server
     const SUPABASE_URL = 'https://isrdibmvxafmnpldbgdg.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_A_j5NU-O8HbCSof5mzfAWQ_1BPufFl3';
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -271,7 +271,7 @@
                 }
 
             } catch (e) {
-                console.error('Error memuat data dari Supabase:', e);
+                console.error('Error memuat data:', e);
             }
             renderView();
         }
@@ -329,6 +329,14 @@
                 });
             } catch (err) {
                 console.error('Gagal simpan agenda:', err);
+            }
+        }
+
+        async function deleteAgendaFromSupabase(id) {
+            try {
+                await supabaseClient.from('agenda_surat').delete().eq('id', id);
+            } catch (err) {
+                console.error('Gagal hapus agenda:', err);
             }
         }
 
@@ -647,7 +655,7 @@
                         <div class="p-4 border-t border-slate-800 space-y-2">
                             <div class="flex justify-between items-center text-xs text-slate-500">
                                 <span id="sidebarFooterVillage">${vName}</span>
-                                <span class="bg-brand-900/50 text-brand-400 px-2 py-0.5 rounded font-mono">v4.1 Supabase</span>
+                                <span class="bg-brand-900/50 text-brand-400 px-2 py-0.5 rounded font-mono">v1.0</span>
                             </div>
                             <button onclick="handleLogout()" class="w-full bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white text-xs font-semibold py-2 rounded-lg transition flex items-center justify-center space-x-2">
                                 <i class="fa-solid fa-right-from-bracket"></i>
@@ -661,7 +669,7 @@
                         <header class="bg-white border-b border-slate-200 h-16 flex items-center justify-between px-6 no-print shadow-sm z-10 shrink-0">
                             <div class="flex items-center space-x-3">
                                 <span class="bg-brand-100 text-brand-800 text-xs font-semibold px-2.5 py-1 rounded-full uppercase tracking-wider">
-                                    Supabase Cloud
+                                    Cloud Server Connected
                                 </span>
                                 <h2 id="pageTitle" class="text-lg font-bold text-slate-800 truncate">Dashboard Administrator</h2>
                             </div>
@@ -814,7 +822,7 @@
                 <div class="space-y-6">
                     <div class="bg-gradient-to-r from-brand-700 to-brand-900 rounded-2xl p-6 text-white shadow-lg flex flex-col md:flex-row justify-between items-center">
                         <div class="space-y-2 mb-4 md:mb-0">
-                            <span class="bg-brand-500/40 text-brand-100 text-xs px-3 py-1 rounded-full font-medium">Database Supabase Cloud Connected</span>
+                            <span class="bg-brand-500/40 text-brand-100 text-xs px-3 py-1 rounded-full font-medium">Cloud Database Connected</span>
                             <h2 class="text-2xl font-bold">Portal Administrasi Desa ${vName}</h2>
                             <p class="text-slate-200 text-sm max-w-xl">Layanan administrasi pembuatan surat keterangan berukuran standar A4/F4, undangan resmi, buku agenda, arsip digital dengan tangkapan foto/kamera scanner dokumen tersinkronisasi server.</p>
                         </div>
@@ -924,9 +932,9 @@
                     <div class="border-b border-slate-100 pb-4 flex justify-between items-center">
                         <div>
                             <h3 class="text-lg font-bold text-slate-800"><i class="fa-solid fa-camera-retro text-emerald-600 mr-2"></i> Pemindaian & Arsip Surat Masuk Eksternal</h3>
-                            <p class="text-xs text-slate-500">Ambil foto surat fisik dari instansi luar (Kabupaten, Kecamatan, dll) untuk diarsipkan langsung ke database Supabase.</p>
+                            <p class="text-xs text-slate-500">Ambil foto surat fisik dari instansi luar (Kabupaten, Kecamatan, dll) untuk diarsipkan langsung ke database server.</p>
                         </div>
-                        <span class="bg-emerald-50 text-emerald-700 text-xs font-semibold px-3 py-1 rounded-lg border border-emerald-200">Supabase Cloud Sync</span>
+                        <span class="bg-emerald-50 text-emerald-700 text-xs font-semibold px-3 py-1 rounded-lg border border-emerald-200">Cloud Sync Active</span>
                     </div>
 
                     <form onsubmit="handleSaveIncomingScan(event)" class="space-y-6">
@@ -968,7 +976,7 @@
                                 <i class="fa-solid fa-camera"></i>
                                 <span>Ambil Foto / Pindai Dokumen Fisik Surat Masuk</span>
                             </div>
-                            <p class="text-xs text-emerald-700">Gunakan kamera HP atau tablet untuk memotret dokumen. Gambar dikompres secara otomatis dan disimpan permanen di database Supabase agar dapat dilihat dari perangkat lain.</p>
+                            <p class="text-xs text-emerald-700">Gunakan kamera HP atau tablet untuk memotret dokumen. Gambar dikompres secara otomatis dan disimpan permanen di database server agar dapat dilihat dari perangkat lain.</p>
                             
                             <input type="file" id="incomingPhotoInput" accept="image/*" capture="environment" onchange="handleIncomingPhotoUpload(event)" required class="w-full bg-white border border-emerald-300 rounded-xl px-4 py-2.5 text-sm file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700">
 
@@ -995,7 +1003,7 @@
                             <button type="button" onclick="switchTab('dashboard')" class="px-5 py-2.5 rounded-xl border border-slate-300 text-slate-600 text-sm font-semibold hover:bg-slate-50 transition">Batal</button>
                             <button type="submit" class="px-6 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-semibold shadow hover:bg-emerald-700 transition flex items-center space-x-2">
                                 <i class="fa-solid fa-cloud-arrow-up"></i>
-                                <span>Simpan ke Database Supabase</span>
+                                <span>Simpan ke Database Server</span>
                             </button>
                         </div>
                     </form>
@@ -1098,7 +1106,7 @@
             tempIncomingScanPhoto = null;
             tempIncomingIsScanned = false;
 
-            showModal('Berhasil!', `Dokumen surat masuk dari <strong>${from}</strong> berhasil dipindai dan disimpan permanen di database Supabase.`, 'success', () => {
+            showModal('Berhasil!', `Dokumen surat masuk dari <strong>${from}</strong> berhasil dipindai dan disimpan permanen di database server.`, 'success', () => {
                 switchTab('arsip');
             });
         }
@@ -1188,7 +1196,7 @@
                             <button type="button" onclick="switchTab('dashboard')" class="px-5 py-2.5 rounded-xl border border-slate-300 text-slate-600 text-sm font-semibold hover:bg-slate-50 transition">Batal</button>
                             <button type="submit" class="px-6 py-2.5 rounded-xl bg-brand-600 text-white text-sm font-semibold shadow hover:bg-brand-700 transition flex items-center space-x-2">
                                 <i class="fa-solid fa-file-circle-plus"></i>
-                                <span>Generate & Simpan ke Supabase</span>
+                                <span>Generate & Simpan ke Server</span>
                             </button>
                         </div>
                     </form>
@@ -1269,7 +1277,7 @@
             state.letters.unshift(newLetter);
             state.agenda.unshift(newAgenda);
 
-            showModal('Sukses!', `Surat berhasil digenerate & tersimpan di database Supabase dengan Nomor: <br><strong class="font-mono text-brand-700">${newNo}</strong>`, 'success', () => {
+            showModal('Sukses!', `Surat berhasil digenerate & tersimpan di database server dengan Nomor: <br><strong class="font-mono text-brand-700">${newNo}</strong>`, 'success', () => {
                 previewLetter(newId);
             });
         }
@@ -1304,10 +1312,13 @@
                                         <th class="p-4">Tanggal</th>
                                         <th class="p-4">Perihal / Subjek</th>
                                         <th class="p-4">Status / Disposisi</th>
+                                        <th class="p-4 text-center">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-100">
-                                    ${state.agenda.map(a => `
+                                    ${state.agenda.length === 0 ? `
+                                        <tr><td colspan="7" class="p-8 text-center text-slate-400 italic">Belum ada catatan di buku agenda.</td></tr>
+                                    ` : state.agenda.map(a => `
                                         <tr class="hover:bg-slate-50">
                                             <td class="p-4">
                                                 <span class="px-2.5 py-1 text-xs font-semibold rounded-full ${a.type === 'Masuk' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}">
@@ -1319,6 +1330,11 @@
                                             <td class="p-4 text-slate-600 text-xs">${a.date}</td>
                                             <td class="p-4 text-slate-600">${a.subject}</td>
                                             <td class="p-4"><span class="text-xs text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg">${a.status}</span></td>
+                                            <td class="p-4 text-center">
+                                                <button onclick="deleteAgendaItem('${a.id}')" class="bg-red-50 text-red-600 hover:bg-red-100 p-1.5 rounded-lg text-xs font-semibold transition" title="Hapus Agenda">
+                                                    <i class="fa-solid fa-trash"></i>
+                                                </button>
+                                            </td>
                                         </tr>
                                     `).join('')}
                                 </tbody>
@@ -1327,6 +1343,15 @@
                     </div>
                 </div>
             `;
+        }
+
+        async function deleteAgendaItem(id) {
+            if (confirm('Apakah Anda yakin ingin menghapus agenda surat ini?')) {
+                await deleteAgendaFromSupabase(id);
+                state.agenda = state.agenda.filter(a => a.id !== id);
+                renderActiveTabContent();
+                showModal('Berhasil', 'Agenda surat berhasil dihapus dari database.', 'success');
+            }
         }
 
         function openAddAgendaModal() {
@@ -1389,7 +1414,7 @@
             await saveAgendaToSupabase(agObj);
             state.agenda.unshift(agObj);
             closeModal();
-            showModal('Sukses', 'Agenda surat berhasil dicatat dalam buku agenda Supabase.', 'success', () => renderView());
+            showModal('Sukses', 'Agenda surat berhasil dicatat dalam buku agenda server.', 'success', () => renderView());
         }
 
         function renderArsipView(searchQuery = '') {
@@ -1404,7 +1429,7 @@
                 <div class="space-y-6">
                     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col md:flex-row justify-between items-center gap-4">
                         <div>
-                            <h3 class="font-bold text-slate-800 text-lg">Arsip Digital & Pencarian Instan (Supabase Cloud)</h3>
+                            <h3 class="font-bold text-slate-800 text-lg">Arsip Digital & Pencarian Instan</h3>
                             <p class="text-xs text-slate-500">Semua arsip surat keluar dan surat masuk beserta foto hasil scan tersimpan di server dan dapat diakses dari perangkat berbeda.</p>
                         </div>
                         <div class="w-full md:w-80">
@@ -1612,7 +1637,7 @@
                     ` : `
                         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex justify-between items-center">
                             <div>
-                                <h4 class="font-bold text-slate-800 text-sm">Daftar Penduduk Default Supabase</h4>
+                                <h4 class="font-bold text-slate-800 text-sm">Daftar Penduduk Default Server</h4>
                                 <p class="text-xs text-slate-500">Anda dapat menambahkan data manual atau klik tombol <strong>"Impor dari Excel"</strong> di atas untuk mengubah kolom tabel secara dinamis.</p>
                             </div>
                             <button onclick="openAddResidentModal()" class="bg-brand-600 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow hover:bg-brand-700 transition flex items-center space-x-1.5">
@@ -1699,7 +1724,6 @@
         async function clearAllResidentsData() {
             if (confirm('Apakah Anda yakin ingin mengosongkan/mereset seluruh data penduduk (termasuk data Excel yang diunggah)?')) {
                 try {
-                    // Kosongkan tabel penduduk di Supabase
                     await supabaseClient.from('penduduk').delete().neq('nik', '0000000000000000');
                     state.residents = [];
                     state.settings.excelResidents = null;
@@ -1797,7 +1821,7 @@
             await supabaseClient.from('penduduk').upsert(newRes);
             state.residents.unshift(newRes);
             closeModal();
-            showModal('Sukses', 'Data penduduk berhasil ditambahkan ke database Supabase.', 'success', () => renderView());
+            showModal('Sukses', 'Data penduduk berhasil ditambahkan ke database server.', 'success', () => renderView());
         }
 
         function renderPenggunaView() {
@@ -1807,7 +1831,7 @@
                         <div class="border-b border-slate-100 pb-4 mb-6 flex justify-between items-center">
                             <div>
                                 <h3 class="text-lg font-bold text-slate-800">Manajemen Hak Akses & Staf Desa</h3>
-                                <p class="text-xs text-slate-500">Kelola staf yang memiliki akses login ke sistem administrasi desa via Supabase.</p>
+                                <p class="text-xs text-slate-500">Kelola staf yang memiliki akses login ke sistem administrasi desa via server.</p>
                             </div>
                             <button onclick="openAddUserModal()" class="bg-brand-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold shadow hover:bg-brand-700 transition flex items-center space-x-2">
                                 <i class="fa-solid fa-user-plus"></i><span>Tambah Staf Akses</span>
@@ -1894,7 +1918,7 @@
             await saveUserToSupabase(newUser);
             state.allowedUsers.push(newUser);
             closeModal();
-            showModal('Sukses', 'Akses staf berhasil ditambahkan ke Supabase.', 'success', () => renderView());
+            showModal('Sukses', 'Akses staf berhasil ditambahkan ke server.', 'success', () => renderView());
         }
 
         async function removeUser(id) {
@@ -1918,7 +1942,7 @@
                         <div class="border-b border-slate-100 pb-4 mb-6 flex justify-between items-center">
                             <div>
                                 <h3 class="text-lg font-bold text-slate-800">Pengaturan Standar Kertas (A4 / F4), Penandatangan & Kop Surat</h3>
-                                <p class="text-xs text-slate-500">Pilih ukuran kertas resmi, atur kop surat, dan simpan langsung ke database Supabase.</p>
+                                <p class="text-xs text-slate-500">Pilih ukuran kertas resmi, atur kop surat, dan simpan langsung ke database server.</p>
                             </div>
                             <button type="button" onclick="resetToDefaultState()" class="px-3 py-1.5 bg-red-50 text-red-600 hover:bg-red-100 text-xs font-semibold rounded-xl border border-red-200 transition">
                                 <i class="fa-solid fa-rotate-right mr-1"></i> Reset Default
@@ -2116,7 +2140,7 @@
                             <div class="pt-6 border-t border-slate-100 flex justify-end">
                                 <button type="submit" class="px-6 py-2.5 rounded-xl bg-brand-600 text-white text-sm font-semibold shadow hover:bg-brand-700 transition flex items-center space-x-2">
                                     <i class="fa-solid fa-floppy-disk"></i>
-                                    <span>Simpan ke Database Supabase</span>
+                                    <span>Simpan ke Database Server</span>
                                 </button>
                             </div>
                         </form>
@@ -2165,7 +2189,7 @@
             state.settings.logoWidth = document.getElementById('setLogoWidth').value;
 
             await saveSettingsToSupabase();
-            showModal('Berhasil', 'Pengaturan berhasil disimpan permanen ke Supabase!', 'success', () => renderActiveTabContent());
+            showModal('Berhasil', 'Pengaturan berhasil disimpan permanen ke server!', 'success', () => renderActiveTabContent());
         }
 
         function toggleLogoInputs(val) {
@@ -2280,7 +2304,7 @@
                         ${l.photo ? `
                             <div class="pt-4 border-t border-slate-200 mt-4">
                                 <div class="flex items-center justify-between mb-2">
-                                    <p class="text-xs font-bold text-slate-700"><i class="fa-solid fa-camera mr-1 text-emerald-600"></i> Tangkapan Foto Dokumen / Hasil Scan (Supabase Cloud):</p>
+                                    <p class="text-xs font-bold text-slate-700"><i class="fa-solid fa-camera mr-1 text-emerald-600"></i> Tangkapan Foto Dokumen / Hasil Scan:</p>
                                     ${l.isScanned ? '<span class="text-[10px] bg-slate-900 text-white px-2 py-0.5 rounded font-mono">Mode Scan Aktif</span>' : ''}
                                 </div>
                                 <img src="${l.photo}" class="w-64 h-64 object-cover rounded-xl border shadow-md ${l.isScanned ? 'scan-effect' : ''}" alt="Foto Scan Dokumen">
