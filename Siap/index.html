@@ -99,15 +99,13 @@
             logoWidth: '80',
             headName: 'Admin',
             headTitle: 'Kepala Desa',
-            headSignature: null,
             paperSize: 'A4',
-            excelResidents: null,
-            secretaryHiddenTabs: ['pengguna', 'pengaturan']
+            excelResidents: null
         };
 
         let state = {
             isLoggedIn: false,
-            currentUser: { name: 'Admin', role: 'Kepala Desa', username: 'admin' },
+            currentUser: { name: 'Admin', role: 'Administrator Utama', username: 'admin' },
             activeTab: 'dashboard',
             allowedUsers: [],
             settings: defaultSettings,
@@ -116,6 +114,19 @@
             agenda: []
         };
 
+        const classificationCodes = [
+            { code: '474.3', desc: 'Kependudukan & Catatan Sipil (Domisili, Pindah, Datang)' },
+            { code: '503', desc: 'Perekonomian & Perizinan Usaha (SKU, Izin Keramaian)' },
+            { code: '401', desc: 'Kesejahteraan Rakyat & Sosial (SKTM, Bantuan Sosial)' },
+            { code: '005', desc: 'Ketatausahaan & Undangan Resmi Kedinasan' }
+        ];
+
+        let tempLetterPhoto = null;
+        let tempIsScanned = false;
+        let tempIncomingScanPhoto = null;
+        let tempIncomingIsScanned = false;
+
+        // Memulihkan sesi dan tab aktif saat halaman di-refresh
         let sessionSaved = localStorage.getItem('siap_desa_session');
         let isReload = false;
         if (performance.navigation && performance.navigation.type === 1) {
@@ -179,31 +190,16 @@
             });
         }
 
-        function isUserHeadVillage() {
-            if (!state.currentUser) return false;
-            const r = (state.currentUser.role || '').toLowerCase();
-            const u = (state.currentUser.username || '').toLowerCase();
-            return r.includes('kepala desa') || u === 'admin';
-        }
-
-        function isTabVisible(tabId) {
-            if (isUserHeadVillage()) return true;
-            const hiddenTabs = state.settings.secretaryHiddenTabs || ['pengguna', 'pengaturan'];
-            return !hiddenTabs.includes(tabId);
-        }
-
         async function loadDataFromSupabase() {
             try {
                 const { data: setRow } = await supabaseClient.from('pengaturan_desa').select('*').eq('id', 1).single();
                 if (setRow && setRow.config) {
                     state.settings = typeof setRow.config === 'string' ? JSON.parse(setRow.config) : setRow.config;
-                    if(!state.settings.secretaryHiddenTabs) {
-                        state.settings.secretaryHiddenTabs = ['pengguna', 'pengaturan'];
-                    }
                 } else {
                     await supabaseClient.from('pengaturan_desa').upsert({ id: 1, config: defaultSettings });
                 }
 
+                // Memuat data penduduk dari server tanpa fallback data default agar dapat dikosongkan total
                 const { data: resData } = await supabaseClient.from('penduduk').select('*');
                 state.residents = resData || [];
 
@@ -217,13 +213,7 @@
                         code: l.code,
                         number: l.number,
                         date: l.date,
-                        location: l.location || state.settings.desaShort || 'Kamiiri',
                         purpose: l.purpose,
-                        invDayDate: l.inv_day_date || '',
-                        invTime: l.inv_time || '',
-                        invPlace: l.inv_place || '',
-                        signMode: l.sign_mode || 'kades',
-                        secretaryName: l.secretary_name || 'Sekretaris Desa',
                         status: l.status,
                         signedBy: l.signed_by,
                         sifat: l.sifat,
@@ -234,10 +224,10 @@
                     }));
                 } else {
                     const defaultLetters = [
-                        { id: 'L-2026-001', nik: '7501011234560001', name: 'Budi Santoso', type: 'Surat Keterangan Domisili', code: '474.3', number: '474.3 / 001 / Des.01 / 2026', date: '2026-10-06', location: 'Kamiiri', purpose: 'Persyaratan pembukaan rekening bank', inv_day_date: '', inv_time: '', inv_place: '', sign_mode: 'kades', secretary_name: 'Sekretaris Desa', status: 'Disetujui', signed_by: 'Admin (Kepala Desa)', sifat: 'Penting', lampiran: '-', include_purpose: true, photo: null, is_scanned: false }
+                        { id: 'L-2026-001', nik: '7501011234560001', name: 'Budi Santoso', type: 'Surat Keterangan Domisili', code: '474.3', number: '474.3 / 001 / Des.01 / 2026', date: '2026-08-04', purpose: 'Persyaratan pembukaan rekening bank', status: 'Disetujui', signed_by: 'Admin (Kepala Desa)', sifat: 'Penting', lampiran: '-', include_purpose: true, photo: null, is_scanned: false }
                     ];
                     await supabaseClient.from('surat_desa').upsert(defaultLetters);
-                    state.letters = defaultLetters.map(l => ({ ...l, signedBy: l.signed_by, includePurpose: l.include_purpose, isScanned: l.is_scanned, invDayDate: l.inv_day_date, invTime: l.inv_time, invPlace: l.inv_place, signMode: l.sign_mode, secretaryName: l.secretary_name }));
+                    state.letters = defaultLetters.map(l => ({ ...l, signedBy: l.signed_by, includePurpose: l.include_purpose, isScanned: l.is_scanned }));
                 }
 
                 const { data: agendaData } = await supabaseClient.from('agenda_surat').select('*').order('created_at', { ascending: false });
@@ -253,7 +243,7 @@
                     }));
                 } else {
                     const defaultAgenda = [
-                        { id: 'AG-01', type: 'Masuk', no_surat: '005/123/Kec-Paguat/2026', surat_from: 'Kecamatan Paguat', date: '2026-10-02', subject: 'Undangan Rapat Koordinasi Bulanan', status: 'Diteruskan ke Sekdes' }
+                        { id: 'AG-01', type: 'Masuk', no_surat: '005/123/Kec-Paguat/2026', surat_from: 'Kecamatan Paguat', date: '2026-08-02', subject: 'Undangan Rapat Koordinasi Bulanan', status: 'Diteruskan ke Sekdes' }
                     ];
                     await supabaseClient.from('agenda_surat').upsert(defaultAgenda);
                     state.agenda = defaultAgenda.map(a => ({ id: a.id, type: a.type, noSurat: a.no_surat, from: a.surat_from, date: a.date, subject: a.subject, status: a.status }));
@@ -264,8 +254,8 @@
                     state.allowedUsers = staffData;
                 } else {
                     const defaultStaff = [
-                        { id: 1, name: 'Admin', username: 'admin', role: 'Kepala Desa', status: 'Aktif', email: 'admin@pohuwato.desa.id' },
-                        { id: 2, name: 'Sekretaris Desa', username: 'sekdes', role: 'Sekretaris Desa', status: 'Aktif', email: 'sekdes@pohuwato.desa.id' }
+                        { id: 1, name: 'Admin', username: 'admin', role: 'Administrator / Kepala Desa', status: 'Aktif', email: 'admin@pohuwato.desa.id' },
+                        { id: 2, name: 'Operator', username: 'operator', role: 'Operator Administrasi', status: 'Aktif', email: 'operator@pohuwato.desa.id' }
                     ];
                     await supabaseClient.from('staf_desa').upsert(defaultStaff);
                     state.allowedUsers = defaultStaff;
@@ -295,13 +285,7 @@
                     code: l.code,
                     number: l.number,
                     date: l.date,
-                    location: l.location,
                     purpose: l.purpose,
-                    inv_day_date: l.invDayDate,
-                    inv_time: l.invTime,
-                    inv_place: l.invPlace,
-                    sign_mode: l.signMode,
-                    secretary_name: l.secretaryName,
                     status: l.status,
                     signed_by: l.signedBy,
                     sifat: l.sifat,
@@ -420,6 +404,7 @@
             if(file) {
                 const compressedDataUrl = await compressImage(file, 250, 250, 0.85);
                 state.settings[fieldName] = compressedDataUrl;
+
                 if(fieldName === 'appLogo') {
                     const el = document.getElementById('setAppLogo');
                     if(el) el.value = compressedDataUrl;
@@ -430,20 +415,48 @@
                     const el = document.getElementById('setLogo2');
                     if(el) el.value = compressedDataUrl;
                 }
+
                 const kp = document.getElementById('liveKopPreview');
                 if(kp) kp.innerHTML = renderKopSuratHtml(state.settings);
+
                 await saveSettingsToSupabase();
             }
         }
 
-        async function uploadSignatureFile(event) {
-            const file = event.target.files[0];
-            if(file) {
-                const compressedDataUrl = await compressImage(file, 400, 200, 0.9);
-                state.settings.headSignature = compressedDataUrl;
-                await saveSettingsToSupabase();
-                showModal('Berhasil', 'Tanda tangan digital Kepala Desa berhasil diunggah!', 'success', () => renderActiveTabContent());
-            }
+        function renderFontOptions(current) {
+            const fonts = [
+                { val: 'font-sans', label: 'Inter' },
+                { val: 'font-poppins', label: 'Poppins' },
+                { val: 'font-roboto', label: 'Roboto' },
+                { val: 'font-montserrat', label: 'Montserrat' },
+                { val: 'font-opensans', label: 'Open Sans' },
+                { val: 'font-lato', label: 'Lato' },
+                { val: 'font-raleway', label: 'Raleway' },
+                { val: 'font-nunito', label: 'Nunito' },
+                { val: 'font-jakartasans', label: 'Plus Jakarta Sans' },
+                { val: 'font-quicksand', label: 'Quicksand' },
+                { val: 'font-sourcesans', label: 'Source Sans 3' },
+                { val: 'font-lora', label: 'Lora (Serif)' },
+                { val: 'font-playfair', label: 'Playfair Display (Serif)' },
+                { val: 'font-merriweather', label: 'Merriweather (Serif)' },
+                { val: 'font-arial', label: 'Arial (Sans-Serif)' },
+                { val: 'font-serif', label: 'Times New Roman (Serif)' },
+                { val: 'font-mono', label: 'Courier New (Mono)' }
+            ];
+            return fonts.map(f => `<option value="${f.val}" ${current === f.val ? 'selected' : ''}>${f.label}</option>`).join('');
+        }
+
+        function renderWeightOptions(current) {
+            const weights = [
+                { val: 'font-light', label: 'Light (Tipis - 300)' },
+                { val: 'font-normal', label: 'Regular (Normal - 400)' },
+                { val: 'font-medium', label: 'Medium (Sedang - 500)' },
+                { val: 'font-semibold', label: 'Semi Bold (Agak Tebal - 600)' },
+                { val: 'font-bold', label: 'Bold (Tebal - 700)' },
+                { val: 'font-extrabold', label: 'Extra Bold (Sangat Tebal - 800)' },
+                { val: 'font-black', label: 'Black (Paling Tebal / Hitam - 900)' }
+            ];
+            return weights.map(w => `<option value="${w.val}" ${current === w.val ? 'selected' : ''}>${w.label}</option>`).join('');
         }
 
         function renderKopSuratHtml(s) {
@@ -538,7 +551,7 @@
                 renderView();
             } else if (usernameInput === 'admin' && passwordInput === 'admin123') {
                 state.isLoggedIn = true;
-                state.currentUser = { name: 'Admin', role: 'Kepala Desa', username: 'admin' };
+                state.currentUser = { name: 'Admin', role: 'Administrator Utama', username: 'admin' };
                 saveSession();
                 renderView();
             } else {
@@ -558,12 +571,6 @@
             state.activeTab = tabId;
             saveSession();
             renderView();
-        }
-
-        function sendWhatsAppToKades(letterData) {
-            const phoneKades = "6285241431377";
-            const message = `Halo Bapak Kepala Desa,\n\nAda permohonan surat baru yang perlu validasi:\n- No: ${letterData.number}\n- Nama: ${letterData.name}\n- Jenis: ${letterData.type}\n\nMohon untuk segera dicek dan divalidasi tanda tangannya di aplikasi SIAP-Desa. Terima kasih.`;
-            window.open(`https://wa.me/${phoneKades}?text=${encodeURIComponent(message)}`, '_blank');
         }
 
         function renderView() {
@@ -602,21 +609,38 @@
                             <div class="overflow-hidden">
                                 <p class="text-[11px] font-semibold text-slate-400">Login Sebagai:</p>
                                 <p class="text-xs font-bold text-white truncate">${state.currentUser.name}</p>
-                                <p class="text-[10px] text-brand-400">${state.currentUser.role}</p>
                             </div>
                         </div>
 
                         <!-- Navigation Links Desktop -->
                         <nav class="flex-1 px-3 py-2 space-y-1 text-sm font-medium overflow-y-auto">
-                            ${isTabVisible('dashboard') ? `<a href="#" onclick="switchTab('dashboard')" id="nav-dashboard" class="${getNavClass('dashboard')}"><i class="fa-solid fa-chart-pie w-6"></i> Dashboard Utama</a>` : ''}
-                            ${isTabVisible('scan-masuk') ? `<a href="#" onclick="switchTab('scan-masuk')" id="nav-scan-masuk" class="${getNavClass('scan-masuk')}"><i class="fa-solid fa-camera-retro w-6 text-emerald-400"></i> Scan & Arsip Surat Masuk</a>` : ''}
-                            ${isTabVisible('layanan') ? `<a href="#" onclick="switchTab('layanan')" id="nav-layanan" class="${getNavClass('layanan')}"><i class="fa-solid fa-file-pen w-6"></i> Pembuatan Surat Desa</a>` : ''}
-                            ${isTabVisible('agenda') ? `<a href="#" onclick="switchTab('agenda')" id="nav-agenda" class="${getNavClass('agenda')}"><i class="fa-solid fa-book-open w-6"></i> Buku Agenda Surat</a>` : ''}
-                            ${isTabVisible('arsip') ? `<a href="#" onclick="switchTab('arsip')" id="nav-arsip" class="${getNavClass('arsip')}"><i class="fa-solid fa-folder-tree w-6"></i> Arsip Digital & Validasi</a>` : ''}
-                            ${isTabVisible('laporan') ? `<a href="#" onclick="switchTab('laporan')" id="nav-laporan" class="${getNavClass('laporan')}"><i class="fa-solid fa-print w-6"></i> Rekapitulasi & Laporan PDF</a>` : ''}
-                            ${isTabVisible('penduduk') ? `<a href="#" onclick="switchTab('penduduk')" id="nav-penduduk" class="${getNavClass('penduduk')}"><i class="fa-solid fa-users w-6"></i> Data Penduduk</a>` : ''}
-                            ${isTabVisible('pengguna') ? `<a href="#" onclick="switchTab('pengguna')" id="nav-pengguna" class="${getNavClass('pengguna')}"><i class="fa-solid fa-user-shield w-6"></i> Manajemen Hak Akses</a>` : ''}
-                            ${isTabVisible('pengaturan') ? `<a href="#" onclick="switchTab('pengaturan')" id="nav-pengaturan" class="${getNavClass('pengaturan')}"><i class="fa-solid fa-gears w-6"></i> Pengaturan Desa & Kop</a>` : ''}
+                            <a href="#" onclick="switchTab('dashboard')" id="nav-dashboard" class="${getNavClass('dashboard')}">
+                                <i class="fa-solid fa-chart-pie w-6"></i> Dashboard Utama
+                            </a>
+                            <a href="#" onclick="switchTab('scan-masuk')" id="nav-scan-masuk" class="${getNavClass('scan-masuk')}">
+                                <i class="fa-solid fa-camera-retro w-6 text-emerald-400"></i> Scan & Arsip Surat Masuk
+                            </a>
+                            <a href="#" onclick="switchTab('layanan')" id="nav-layanan" class="${getNavClass('layanan')}">
+                                <i class="fa-solid fa-file-pen w-6"></i> Pembuatan Surat Desa
+                            </a>
+                            <a href="#" onclick="switchTab('agenda')" id="nav-agenda" class="${getNavClass('agenda')}">
+                                <i class="fa-solid fa-book-open w-6"></i> Buku Agenda Surat
+                            </a>
+                            <a href="#" onclick="switchTab('arsip')" id="nav-arsip" class="${getNavClass('arsip')}">
+                                <i class="fa-solid fa-folder-tree w-6"></i> Arsip Digital & Pencarian
+                            </a>
+                            <a href="#" onclick="switchTab('laporan')" id="nav-laporan" class="${getNavClass('laporan')}">
+                                <i class="fa-solid fa-print w-6"></i> Rekapitulasi & Laporan PDF
+                            </a>
+                            <a href="#" onclick="switchTab('penduduk')" id="nav-penduduk" class="${getNavClass('penduduk')}">
+                                <i class="fa-solid fa-users w-6"></i> Data Penduduk
+                            </a>
+                            <a href="#" onclick="switchTab('pengguna')" id="nav-pengguna" class="${getNavClass('pengguna')}">
+                                <i class="fa-solid fa-user-shield w-6"></i> Manajemen Hak Akses
+                            </a>
+                            <a href="#" onclick="switchTab('pengaturan')" id="nav-pengaturan" class="${getNavClass('pengaturan')}">
+                                <i class="fa-solid fa-gears w-6"></i> Pengaturan Desa & Kop
+                            </a>
                         </nav>
 
                         <div class="p-4 border-t border-slate-800 space-y-2">
@@ -653,15 +677,33 @@
 
                         <!-- MOBILE TOP NAVIGATION BAR -->
                         <div class="md:hidden bg-slate-900 text-white overflow-x-auto flex items-center space-x-1.5 px-3 py-2.5 no-print shrink-0 shadow-md whitespace-nowrap scrollbar-none" id="mobileTabBar">
-                            ${isTabVisible('dashboard') ? `<button onclick="switchTab('dashboard')" id="mob-nav-dashboard" class="${getMobClass('dashboard')}"><i class="fa-solid fa-chart-pie"></i><span>Dashboard</span></button>` : ''}
-                            ${isTabVisible('scan-masuk') ? `<button onclick="switchTab('scan-masuk')" id="mob-nav-scan-masuk" class="${getMobClass('scan-masuk')}"><i class="fa-solid fa-camera-retro text-emerald-400"></i><span>Scan Masuk</span></button>` : ''}
-                            ${isTabVisible('layanan') ? `<button onclick="switchTab('layanan')" id="mob-nav-layanan" class="${getMobClass('layanan')}"><i class="fa-solid fa-file-pen"></i><span>Buat Surat</span></button>` : ''}
-                            ${isTabVisible('agenda') ? `<button onclick="switchTab('agenda')" id="mob-nav-agenda" class="${getMobClass('agenda')}"><i class="fa-solid fa-book-open"></i><span>Agenda</span></button>` : ''}
-                            ${isTabVisible('arsip') ? `<button onclick="switchTab('arsip')" id="mob-nav-arsip" class="${getMobClass('arsip')}"><i class="fa-solid fa-folder-tree"></i><span>Arsip</span></button>` : ''}
-                            ${isTabVisible('laporan') ? `<button onclick="switchTab('laporan')" id="mob-nav-laporan" class="${getMobClass('laporan')}"><i class="fa-solid fa-print"></i><span>Laporan</span></button>` : ''}
-                            ${isTabVisible('penduduk') ? `<button onclick="switchTab('penduduk')" id="mob-nav-penduduk" class="${getMobClass('penduduk')}"><i class="fa-solid fa-users"></i><span>Penduduk</span></button>` : ''}
-                            ${isTabVisible('pengguna') ? `<button onclick="switchTab('pengguna')" id="mob-nav-pengguna" class="${getMobClass('pengguna')}"><i class="fa-solid fa-user-shield"></i><span>Akses</span></button>` : ''}
-                            ${isTabVisible('pengaturan') ? `<button onclick="switchTab('pengaturan')" id="mob-nav-pengaturan" class="${getMobClass('pengaturan')}"><i class="fa-solid fa-gears"></i><span>Pengaturan</span></button>` : ''}
+                            <button onclick="switchTab('dashboard')" id="mob-nav-dashboard" class="${getMobClass('dashboard')}">
+                                <i class="fa-solid fa-chart-pie"></i><span>Dashboard</span>
+                            </button>
+                            <button onclick="switchTab('scan-masuk')" id="mob-nav-scan-masuk" class="${getMobClass('scan-masuk')}">
+                                <i class="fa-solid fa-camera-retro text-emerald-400"></i><span>Scan Masuk</span>
+                            </button>
+                            <button onclick="switchTab('layanan')" id="mob-nav-layanan" class="${getMobClass('layanan')}">
+                                <i class="fa-solid fa-file-pen"></i><span>Buat Surat</span>
+                            </button>
+                            <button onclick="switchTab('agenda')" id="mob-nav-agenda" class="${getMobClass('agenda')}">
+                                <i class="fa-solid fa-book-open"></i><span>Agenda</span>
+                            </button>
+                            <button onclick="switchTab('arsip')" id="mob-nav-arsip" class="${getMobClass('arsip')}">
+                                <i class="fa-solid fa-folder-tree"></i><span>Arsip</span>
+                            </button>
+                            <button onclick="switchTab('laporan')" id="mob-nav-laporan" class="${getMobClass('laporan')}">
+                                <i class="fa-solid fa-print"></i><span>Laporan</span>
+                            </button>
+                            <button onclick="switchTab('penduduk')" id="mob-nav-penduduk" class="${getMobClass('penduduk')}">
+                                <i class="fa-solid fa-users"></i><span>Penduduk</span>
+                            </button>
+                            <button onclick="switchTab('pengguna')" id="mob-nav-pengguna" class="${getMobClass('pengguna')}">
+                                <i class="fa-solid fa-user-shield"></i><span>Akses</span>
+                            </button>
+                            <button onclick="switchTab('pengaturan')" id="mob-nav-pengaturan" class="${getMobClass('pengaturan')}">
+                                <i class="fa-solid fa-gears"></i><span>Pengaturan</span>
+                            </button>
                         </div>
 
                         <div id="content-area" class="flex-1 overflow-y-auto p-6 bg-slate-50">
@@ -689,10 +731,10 @@
 
                         <form onsubmit="handleLogin(event)" class="space-y-4">
                             <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1">Username Staf / Kepala Desa:</label>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Username Administrator:</label>
                                 <div class="relative">
                                     <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400"><i class="fa-solid fa-user"></i></span>
-                                    <input type="text" id="loginUsername" required class="w-full bg-slate-50 border border-slate-300 rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 font-mono" placeholder="admin / sekdes">
+                                    <input type="text" id="loginUsername" required class="w-full bg-slate-50 border border-slate-300 rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 font-mono" placeholder="admin">
                                 </div>
                             </div>
                             <div>
@@ -730,13 +772,13 @@
                 if(titleEl) titleEl.innerText = 'Modul Pemindaian & Arsip Surat Masuk Eksternal';
                 container.innerHTML = renderScanMasukView();
             } else if(state.activeTab === 'layanan') {
-                if(titleEl) titleEl.innerText = 'Modul Pembuatan Surat & Undangan Desa';
+                if(titleEl) titleEl.innerText = 'Modul Pembuatan Surat Keterangan Warga';
                 container.innerHTML = renderLayananView();
             } else if(state.activeTab === 'agenda') {
                 if(titleEl) titleEl.innerText = 'Buku Agenda Surat Masuk & Keluar';
                 container.innerHTML = renderAgendaView();
             } else if(state.activeTab === 'arsip') {
-                if(titleEl) titleEl.innerText = 'Arsip Digital & Validasi Surat';
+                if(titleEl) titleEl.innerText = 'Arsip Digital & Pencarian Instan';
                 container.innerHTML = renderArsipView();
             } else if(state.activeTab === 'laporan') {
                 if(titleEl) titleEl.innerText = 'Rekapitulasi Bulanan & Laporan Arsip PDF';
@@ -748,7 +790,7 @@
                 if(titleEl) titleEl.innerText = 'Manajemen Hak Akses & Pengguna Sistem';
                 container.innerHTML = renderPenggunaView();
             } else if(state.activeTab === 'pengaturan') {
-                if(titleEl) titleEl.innerText = 'Pengaturan Nama Desa, Kop & Pembatasan Menu Sekretaris';
+                if(titleEl) titleEl.innerText = 'Pengaturan Nama Desa, Kop & Ukuran Kertas';
                 container.innerHTML = renderPengaturanView();
                 setTimeout(() => {
                     const kp = document.getElementById('liveKopPreview');
@@ -760,7 +802,7 @@
         function renderDashboardView() {
             const totalSurat = state.letters.length;
             const suratDisetujui = state.letters.filter(l => l.status === 'Disetujui').length;
-            const suratMenunggu = state.letters.filter(l => l.status === 'Menunggu' || l.status === 'Menunggu Validasi').length;
+            const suratMenunggu = state.letters.filter(l => l.status === 'Menunggu').length;
             const suratMasuk = state.agenda.filter(a => a.type === 'Masuk').length;
             const vName = getVillageName();
 
@@ -769,7 +811,7 @@
                     <div class="bg-gradient-to-r from-brand-700 to-brand-900 rounded-2xl p-6 text-white shadow-lg flex flex-col md:flex-row justify-between items-center">
                         <div class="space-y-2 mb-4 md:mb-0">
                             <h2 class="text-2xl font-bold">Portal Administrasi Desa ${vName}</h2>
-                            <p class="text-slate-200 text-sm max-w-xl">Layanan pembuatan surat keterangan & undangan resmi, pengaturan waktu/lokasi acara, opsi tanda tangan a.n. Kepala Desa oleh Sekretaris, serta notifikasi WhatsApp ke 085241431377.</p>
+                            <p class="text-slate-200 text-sm max-w-xl">Layanan administrasi pembuatan surat keterangan berukuran standar A4/F4, undangan resmi, buku agenda, arsip digital dengan tangkapan foto/kamera scanner dokumen tersinkronisasi server.</p>
                         </div>
                         <div class="flex items-center space-x-3">
                             <button onclick="switchTab('scan-masuk')" class="bg-emerald-500 text-white font-semibold px-4 py-2.5 rounded-xl shadow hover:bg-emerald-600 transition flex items-center space-x-2 text-sm">
@@ -801,7 +843,7 @@
                         <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center space-x-4">
                             <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center text-xl shadow-inner"><i class="fa-solid fa-clock"></i></div>
                             <div>
-                                <p class="text-xs text-slate-500 font-medium">Menunggu Validasi Kades</p>
+                                <p class="text-xs text-slate-500 font-medium">Menunggu Verifikasi</p>
                                 <h3 class="text-2xl font-bold text-slate-800">${suratMenunggu}</h3>
                             </div>
                         </div>
@@ -817,7 +859,7 @@
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
                             <div class="flex justify-between items-center mb-4">
-                                <h3 class="font-bold text-slate-800 text-base">Arsip Permohonan & Validasi Terbaru</h3>
+                                <h3 class="font-bold text-slate-800 text-base">Arsip Permohonan & Surat Masuk Terbaru</h3>
                                 <button onclick="switchTab('arsip')" class="text-xs text-brand-600 font-semibold hover:underline">Lihat Semua Arsip</button>
                             </div>
                             <div class="overflow-x-auto">
@@ -837,7 +879,7 @@
                                                 <td class="py-3 font-semibold text-slate-800">${l.name}</td>
                                                 <td class="py-3 text-slate-600">${l.type}</td>
                                                 <td class="py-3">
-                                                    <span class="px-2.5 py-1 text-xs rounded-full font-medium ${l.status === 'Disetujui' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">
+                                                    <span class="px-2.5 py-1 text-xs rounded-full font-medium ${l.status === 'Disetujui' || l.status === 'Diterima' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">
                                                         ${l.status}
                                                     </span>
                                                 </td>
@@ -849,11 +891,17 @@
                         </div>
 
                         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-                            <h3 class="font-bold text-slate-800 text-base mb-3">Informasi Akun & WhatsApp Kades</h3>
-                            <div class="p-4 bg-slate-50 rounded-xl space-y-2 text-xs border border-slate-100">
-                                <p><strong>Login Saat Ini:</strong> ${state.currentUser.name} (${state.currentUser.role})</p>
-                                <p><strong>No WA Validasi Kades:</strong> <span class="font-mono text-brand-700 font-bold">085241431377</span></p>
-                                <p class="text-slate-500 pt-2">Dukungan opsi tanda tangan Kepala Desa langsung maupun atas nama (`a.n.`) Sekretaris Desa.</p>
+                            <h3 class="font-bold text-slate-800 text-base mb-3">Klasifikasi Surat Resmi</h3>
+                            <p class="text-xs text-slate-500 mb-4">Format dokumen otomatis dikonfigurasi ke ukuran ${state.settings.paperSize || 'A4'} resmi.</p>
+                            <div class="space-y-3">
+                                ${classificationCodes.map(c => `
+                                    <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                                        <div class="flex justify-between items-center mb-1">
+                                            <span class="font-mono text-xs font-bold text-brand-700 bg-brand-50 px-2 py-0.5 rounded">${c.code}</span>
+                                        </div>
+                                        <p class="text-xs text-slate-600 font-medium">${c.desc}</p>
+                                    </div>
+                                `).join('')}
                             </div>
                         </div>
                     </div>
@@ -861,32 +909,36 @@
             `;
         }
 
+        // ==========================================
+        // MODUL: SCAN & ARSIP SURAT MASUK EKSTERNAL
+        // ==========================================
         function renderScanMasukView() {
+            const vName = getVillageName();
             return `
                 <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-sm border border-slate-200 p-8 space-y-6">
                     <div class="border-b border-slate-100 pb-4 flex justify-between items-center">
                         <div>
                             <h3 class="text-lg font-bold text-slate-800"><i class="fa-solid fa-camera-retro text-emerald-600 mr-2"></i> Pemindaian & Arsip Surat Masuk Eksternal</h3>
-                            <p class="text-xs text-slate-500">Ambil foto surat fisik dari instansi luar untuk diarsipkan ke database server.</p>
+                            <p class="text-xs text-slate-500">Ambil foto surat fisik dari instansi luar (Kabupaten, Kecamatan, dll) untuk diarsipkan langsung ke database server.</p>
                         </div>
                     </div>
 
                     <form onsubmit="handleSaveIncomingScan(event)" class="space-y-6">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-2">Nomor Surat Masuk:</label>
+                                <label class="block text-xs font-semibold text-slate-700 mb-2">Nomor Surat Masuk (Dari Instansi Asal):</label>
                                 <input type="text" id="incomingNo" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Contoh: 400/45/Dinkes/2026">
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-2">Asal Instansi / Pengirim:</label>
-                                <input type="text" id="incomingFrom" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Contoh: Dinas Kesehatan">
+                                <label class="block text-xs font-semibold text-slate-700 mb-2">Asal Instansi / Pengirim Surat:</label>
+                                <input type="text" id="incomingFrom" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Contoh: Dinas Kesehatan Kabupaten">
                             </div>
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 mb-2">Tanggal Surat:</label>
-                                <input type="date" id="incomingDate" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm" value="2026-10-06">
+                                <input type="date" id="incomingDate" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm" value="2026-08-04">
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 mb-2">Sifat Surat:</label>
@@ -901,33 +953,43 @@
 
                         <div>
                             <label class="block text-xs font-semibold text-slate-700 mb-2">Perihal / Subjek Surat Masuk:</label>
-                            <textarea id="incomingSubject" rows="3" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm" placeholder="Perihal surat..."></textarea>
+                            <textarea id="incomingSubject" rows="3" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Contoh: Undangan rapat koordinasi..."></textarea>
                         </div>
 
+                        <!-- KAMERA / FILE SCANNER -->
                         <div class="p-5 bg-emerald-50/70 rounded-2xl border border-emerald-200 space-y-4">
                             <div class="flex items-center space-x-2 text-emerald-900 font-bold text-xs uppercase tracking-wider">
                                 <i class="fa-solid fa-camera"></i>
-                                <span>Ambil Foto / Pindai Dokumen Fisik</span>
+                                <span>Ambil Foto / Pindai Dokumen Fisik Surat Masuk</span>
                             </div>
+                            <p class="text-xs text-emerald-700">Gunakan kamera HP atau tablet untuk memotret dokumen. Gambar dikompres secara otomatis dan disimpan permanen di database server agar dapat dilihat dari perangkat lain.</p>
+                            
                             <input type="file" id="incomingPhotoInput" accept="image/*" capture="environment" onchange="handleIncomingPhotoUpload(event)" required class="w-full bg-white border border-emerald-300 rounded-xl px-4 py-2.5 text-sm file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700">
 
                             <div id="incomingPhotoPreviewContainer" class="hidden mt-4 space-y-3">
                                 <div class="flex items-center justify-between">
-                                    <p class="text-xs font-semibold text-slate-700">Pratinjau Foto:</p>
+                                    <p class="text-xs font-semibold text-slate-700">Pratinjau Hasil Tangkapan / Scan Dokumen:</p>
                                     <div class="flex items-center space-x-2">
-                                        <button type="button" onclick="toggleIncomingScanFilter()" id="incomingScanFilterBtn" class="px-3 py-1.5 bg-slate-800 text-white text-xs font-semibold rounded-lg shadow">Efek Scan</button>
-                                        <button type="button" onclick="clearIncomingPhoto()" class="bg-red-600 text-white rounded-lg px-2.5 py-1.5 text-xs font-semibold shadow">Hapus</button>
+                                        <button type="button" onclick="toggleIncomingScanFilter()" id="incomingScanFilterBtn" class="px-3 py-1.5 bg-slate-800 text-white text-xs font-semibold rounded-lg shadow hover:bg-slate-700 transition flex items-center space-x-1.5">
+                                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                                            <span id="incomingScanFilterText">Aktifkan Efek Scan</span>
+                                        </button>
+                                        <button type="button" onclick="clearIncomingPhoto()" class="bg-red-600 text-white rounded-lg px-2.5 py-1.5 text-xs font-semibold shadow hover:bg-red-700 flex items-center space-x-1">
+                                            <i class="fa-solid fa-xmark"></i><span>Hapus Foto</span>
+                                        </button>
                                     </div>
                                 </div>
-                                <img id="incomingPhotoImg" src="" alt="Pratinjau" class="w-52 h-52 object-cover rounded-xl border-2 border-emerald-500 shadow-md">
+                                <div class="relative inline-block">
+                                    <img id="incomingPhotoImg" src="" alt="Pratinjau Surat Masuk" class="w-52 h-52 object-cover rounded-xl border-2 border-emerald-500 shadow-md transition-all">
+                                </div>
                             </div>
                         </div>
 
                         <div class="pt-4 border-t border-slate-100 flex justify-end space-x-3">
-                            <button type="button" onclick="switchTab('dashboard')" class="px-5 py-2.5 rounded-xl border border-slate-300 text-slate-600 text-sm font-semibold">Batal</button>
+                            <button type="button" onclick="switchTab('dashboard')" class="px-5 py-2.5 rounded-xl border border-slate-300 text-slate-600 text-sm font-semibold hover:bg-slate-50 transition">Batal</button>
                             <button type="submit" class="px-6 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-semibold shadow hover:bg-emerald-700 transition flex items-center space-x-2">
                                 <i class="fa-solid fa-cloud-arrow-up"></i>
-                                <span>Simpan & Arsipkan</span>
+                                <span>Simpan ke Database Server</span>
                             </button>
                         </div>
                     </form>
@@ -943,9 +1005,11 @@
                 tempIncomingIsScanned = false;
                 const container = document.getElementById('incomingPhotoPreviewContainer');
                 const img = document.getElementById('incomingPhotoImg');
+                const btnText = document.getElementById('incomingScanFilterText');
                 if(container && img) {
                     img.src = tempIncomingScanPhoto;
                     img.classList.remove('scan-effect');
+                    if(btnText) btnText.innerText = 'Aktifkan Efek Scan';
                     container.classList.remove('hidden');
                 }
             }
@@ -954,17 +1018,25 @@
         function toggleIncomingScanFilter() {
             tempIncomingIsScanned = !tempIncomingIsScanned;
             const img = document.getElementById('incomingPhotoImg');
+            const btnText = document.getElementById('incomingScanFilterText');
             if(img) {
-                if(tempIncomingIsScanned) img.classList.add('scan-effect');
-                else img.classList.remove('scan-effect');
+                if(tempIncomingIsScanned) {
+                    img.classList.add('scan-effect');
+                    if(btnText) btnText.innerText = 'Nonaktifkan Efek Scan';
+                } else {
+                    img.classList.remove('scan-effect');
+                    if(btnText) btnText.innerText = 'Aktifkan Efek Scan';
+                }
             }
         }
 
         function clearIncomingPhoto() {
             tempIncomingScanPhoto = null;
             tempIncomingIsScanned = false;
-            document.getElementById('incomingPhotoPreviewContainer').classList.add('hidden');
-            document.getElementById('incomingPhotoInput').value = '';
+            const container = document.getElementById('incomingPhotoPreviewContainer');
+            const fileInput = document.getElementById('incomingPhotoInput');
+            if(container) container.classList.add('hidden');
+            if(fileInput) fileInput.value = '';
         }
 
         async function handleSaveIncomingScan(event) {
@@ -976,7 +1048,7 @@
             const subject = document.getElementById('incomingSubject').value;
 
             if(!tempIncomingScanPhoto) {
-                showModal('Peringatan', 'Silakan unggah foto dokumen surat masuk!', 'error');
+                showModal('Peringatan', 'Silakan ambil atau unggah foto dokumen surat masuk terlebih dahulu!', 'error');
                 return;
             }
 
@@ -991,14 +1063,8 @@
                 code: '005',
                 number: noSurat,
                 date: date,
-                location: getVillageName(),
                 purpose: subject,
-                invDayDate: '',
-                invTime: '',
-                invPlace: '',
-                signMode: 'kades',
-                secretaryName: 'Sekretaris Desa',
-                status: 'Disetujui',
+                status: 'Diterima',
                 signedBy: from,
                 sifat: sifat,
                 lampiran: '1 Berkas',
@@ -1026,104 +1092,46 @@
             tempIncomingScanPhoto = null;
             tempIncomingIsScanned = false;
 
-            showModal('Berhasil!', `Surat masuk dari <strong>${from}</strong> berhasil dipindai dan disimpan.`, 'success', () => {
+            showModal('Berhasil!', `Dokumen surat masuk dari <strong>${from}</strong> berhasil dipindai dan disimpan permanen di database server.`, 'success', () => {
                 switchTab('arsip');
             });
         }
 
-        function getResidentOptionsHtml() {
-            let options = '<option value="">-- Pilih Warga Penduduk --</option>';
-            if (state.residents && state.residents.length > 0) {
-                options += state.residents.map(r => `<option value="${r.nik}">${r.nik} - ${r.name}</option>`).join('');
-            }
-            if (state.settings.excelResidents && state.settings.excelResidents.rows) {
-                state.settings.excelResidents.rows.forEach(row => {
-                    const keys = Object.keys(row);
-                    const nikKey = keys.find(k => k.toLowerCase().includes('nik')) || keys[0];
-                    const nameKey = keys.find(k => k.toLowerCase().includes('nama')) || keys[1];
-                    const nik = row[nikKey] || '';
-                    const name = row[nameKey] || '';
-                    if (nik) {
-                        options += `<option value="${nik}">${nik} - ${name}</option>`;
-                    }
-                });
-            }
-            return options;
-        }
-
+        // ==========================================
+        // MODUL PEMBUATAN SURAT KETERANGAN WARGA
+        // ==========================================
         function renderLayananView() {
-            const vName = getVillageName();
             return `
                 <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
                     <div class="border-b border-slate-100 pb-4 mb-6 flex justify-between items-center">
                         <div>
-                            <h3 class="text-lg font-bold text-slate-800">Formulir Pembuatan Surat & Undangan Desa</h3>
-                            <p class="text-xs text-slate-500">Atur waktu surat, opsi penandatangan (Kepala Desa atau a.n. Sekretaris Desa), dan jadwal acara untuk undangan.</p>
+                            <h3 class="text-lg font-bold text-slate-800">Formulir Pembuatan Surat Keterangan Warga</h3>
+                            <p class="text-xs text-slate-500">Pilih jenis layanan surat keterangan penduduk, surat usaha, atau undangan resmi desa.</p>
                         </div>
                         <span class="bg-blue-50 text-blue-700 text-xs font-semibold px-3 py-1 rounded-lg">Paper: ${state.settings.paperSize || 'A4'}</span>
                     </div>
 
                     <form onsubmit="handleGenerateLetter(event)" class="space-y-6">
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-600 mb-2">Lokasi Terbit:</label>
-                                <input type="text" id="inputLocation" value="${vName}" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm font-semibold">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-600 mb-2">Tanggal Surat:</label>
-                                <input type="date" id="inputDate" value="2026-10-06" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-600 mb-2">Penandatangan Surat:</label>
-                                <select id="inputSignMode" onchange="toggleSignModeSelection(this.value)" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm font-semibold text-brand-800">
-                                    <option value="kades">Kepala Desa Langsung</option>
-                                    <option value="sekdes_an">a.n. Kepala Desa (Sekretaris Desa)</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <!-- Nama Sekretaris jika mode a.n. -->
-                        <div id="secretaryNameBox" class="hidden p-4 bg-emerald-50 rounded-xl border border-emerald-200">
-                            <label class="block text-xs font-semibold text-emerald-900 mb-2">Nama Sekretaris Desa (Atas Nama):</label>
-                            <input type="text" id="inputSecretaryName" value="Sekretaris Desa" class="w-full bg-white border border-emerald-300 rounded-xl px-4 py-2 text-sm" placeholder="Nama Sekretaris Desa">
-                        </div>
-
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label class="block text-xs font-semibold text-slate-600 mb-2">Pilih Jenis Layanan Surat:</label>
-                                <select id="letterType" onchange="updateClassificationCode()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm">
+                                <select id="letterType" onchange="updateClassificationCode()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
                                     <option value="Surat Keterangan Domisili|474.3">Surat Keterangan Domisili (Kode: 474.3)</option>
                                     <option value="Surat Keterangan Usaha|503">Surat Keterangan Usaha / SKU (Kode: 503)</option>
                                     <option value="Surat Keterangan Tidak Mampu|401">Surat Keterangan Tidak Mampu / SKTM (Kode: 401)</option>
                                     <option value="Undangan Rapat|005">Undangan Resmi Kedinasan (Kode: 005)</option>
                                     <option value="Surat Keterangan Kelahiran|474.1">Surat Keterangan Kelahiran (Kode: 474.1)</option>
                                     <option value="Surat Keterangan Kematian|474.2">Surat Keterangan Kematian (Kode: 474.2)</option>
+                                    <option value="Surat Pengantar Nikah (N1-N4)|474.2">Surat Pengantar Perkawinan / Nikah (Kode: 474.2)</option>
+                                    <option value="Surat Pengantar SKCK (Kelakuan Baik)|331">Surat Pengantar SKCK / Kelakuan Baik (Kode: 331)</option>
                                 </select>
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-slate-600 mb-2">Pilih Warga (NIK / Nama):</label>
-                                <select id="selectNik" onchange="autofillResident(this.value)" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm">
-                                    ${getResidentOptionsHtml()}
+                                <select id="selectNik" onchange="autofillResident(this.value)" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                                    <option value="">-- Pilih Warga Penduduk --</option>
+                                    ${state.residents.map(r => `<option value="${r.nik}">${r.nik} - ${r.name}</option>`).join('')}
                                 </select>
-                            </div>
-                        </div>
-
-                        <!-- KOTAK KHUSUS UNDANGAN (Hari, Jam, Tempat) -->
-                        <div id="invitationFields" class="hidden p-5 bg-purple-50/80 rounded-2xl border border-purple-200 space-y-4 shadow-sm">
-                            <h4 class="font-bold text-purple-900 text-xs uppercase tracking-wider"><i class="fa-solid fa-calendar-days mr-1"></i> Rincian Jadwal & Tempat Acara Undangan</h4>
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div>
-                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Hari / Tanggal Acara:</label>
-                                    <input type="text" id="invDayDate" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs" placeholder="Contoh: Rabu, 07 Okt 2026">
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Pukul / Waktu:</label>
-                                    <input type="text" id="invTime" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs" placeholder="Contoh: 09.00 WITA - Selesai">
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Tempat Acara:</label>
-                                    <input type="text" id="invPlace" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs" placeholder="Contoh: Aula Kantor Desa">
-                                </div>
                             </div>
                         </div>
 
@@ -1137,7 +1145,7 @@
                                 <input type="text" id="inputName" readonly class="w-full bg-slate-100 border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-600 font-semibold" placeholder="Otomatis terisi">
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold text-slate-600 mb-2">Kode Klasifikasi:</label>
+                                <label class="block text-xs font-semibold text-slate-600 mb-2">Kode Klasifikasi Arsip:</label>
                                 <input type="text" id="inputCode" readonly class="w-full bg-slate-100 border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-brand-700 font-mono font-bold" value="474.3">
                             </div>
                         </div>
@@ -1159,73 +1167,31 @@
                         </div>
 
                         <div>
-                            <label class="block text-xs font-semibold text-slate-600 mb-2">Keperluan / Perihal / Agenda Acara:</label>
-                            <textarea id="inputPurpose" rows="3" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm" placeholder="Contoh: Rapat Koordinasi Pembangunan Desa..."></textarea>
+                            <label class="block text-xs font-semibold text-slate-600 mb-2">Keperluan / Perihal Surat:</label>
+                            <textarea id="inputPurpose" rows="3" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" placeholder="Contoh: Pengajuan modal UMKM..."></textarea>
                         </div>
 
                         <div class="flex items-center space-x-3 p-4 bg-brand-50/60 rounded-xl border border-brand-200">
-                            <input type="checkbox" id="inputIncludePurpose" checked class="w-4 h-4 text-brand-600 rounded border-slate-300">
+                            <input type="checkbox" id="inputIncludePurpose" checked class="w-4 h-4 text-brand-600 rounded border-slate-300 focus:ring-brand-500">
                             <label for="inputIncludePurpose" class="text-xs font-semibold text-slate-700 cursor-pointer">
-                                Muat rincian keperluan secara eksplisit ke dalam paragraf isi teks surat
+                                Muat rincian keperluan / perihal ini secara eksplisit ke dalam paragraf isi teks surat
                             </label>
                         </div>
 
-                        <div class="pt-4 border-t border-slate-100 flex justify-between items-center">
-                            <button type="button" onclick="sendWhatsAppToKades({number: 'Draft', name: document.getElementById('inputName').value || 'Warga', type: document.getElementById('letterType').value.split('|')[0]})" class="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-semibold shadow hover:bg-emerald-700 transition flex items-center space-x-1.5">
-                                <i class="fa-brands fa-whatsapp text-sm"></i><span>Kirim WA Notifikasi ke Kades (085241431377)</span>
+                        <div class="pt-4 border-t border-slate-100 flex justify-end space-x-3">
+                            <button type="button" onclick="switchTab('dashboard')" class="px-5 py-2.5 rounded-xl border border-slate-300 text-slate-600 text-sm font-semibold hover:bg-slate-50 transition">Batal</button>
+                            <button type="submit" class="px-6 py-2.5 rounded-xl bg-brand-600 text-white text-sm font-semibold shadow hover:bg-brand-700 transition flex items-center space-x-2">
+                                <i class="fa-solid fa-file-circle-plus"></i>
+                                <span>Generate & Simpan ke Server</span>
                             </button>
-                            <div class="flex space-x-3">
-                                <button type="button" onclick="switchTab('dashboard')" class="px-5 py-2.5 rounded-xl border border-slate-300 text-slate-600 text-sm font-semibold">Batal</button>
-                                <button type="submit" class="px-6 py-2.5 rounded-xl bg-brand-600 text-white text-sm font-semibold shadow hover:bg-brand-700 transition flex items-center space-x-2">
-                                    <i class="fa-solid fa-file-circle-plus"></i>
-                                    <span>Generate Surat</span>
-                                </button>
-                            </div>
                         </div>
                     </form>
                 </div>
             `;
         }
 
-        function toggleSignModeSelection(val) {
-            const box = document.getElementById('secretaryNameBox');
-            if(val === 'sekdes_an') {
-                box.classList.remove('hidden');
-            } else {
-                box.classList.add('hidden');
-            }
-        }
-
         function autofillResident(nik) {
-            let res = state.residents.find(r => r.nik === nik);
-            if (!res && state.settings.excelResidents && state.settings.excelResidents.rows) {
-                const row = state.settings.excelResidents.rows.find(r => {
-                    const keys = Object.keys(r);
-                    const nikKey = keys.find(k => k.toLowerCase().includes('nik')) || keys[0];
-                    return String(r[nikKey]) === String(nik);
-                });
-                if (row) {
-                    const keys = Object.keys(row);
-                    const nikKey = keys.find(k => k.toLowerCase().includes('nik')) || keys[0];
-                    const nameKey = keys.find(k => k.toLowerCase().includes('nama')) || keys[1];
-                    const pobKey = keys.find(k => k.toLowerCase().includes('tempat') || k.toLowerCase().includes('pob')) || '';
-                    const dobKey = keys.find(k => k.toLowerCase().includes('tanggal') || k.toLowerCase().includes('lahir')) || '';
-                    const jobKey = keys.find(k => k.toLowerCase().includes('pekerjaan') || k.toLowerCase().includes('job')) || '';
-                    const addrKey = keys.find(k => k.toLowerCase().includes('alamat') || k.toLowerCase().includes('address')) || '';
-                    const genderKey = keys.find(k => k.toLowerCase().includes('kelamin') || k.toLowerCase().includes('gender')) || '';
-
-                    res = {
-                        nik: row[nikKey] || nik,
-                        name: row[nameKey] || 'Warga',
-                        pob: pobKey ? row[pobKey] : 'Paguat',
-                        dob: dobKey ? row[dobKey] : '1990-01-01',
-                        job: jobKey ? row[jobKey] : 'Warga',
-                        gender: genderKey ? row[genderKey] : 'Laki-laki',
-                        address: addrKey ? row[addrKey] : 'Desa'
-                    };
-                }
-            }
-
+            const res = state.residents.find(r => r.nik === nik);
             if(res) {
                 document.getElementById('inputNik').value = res.nik;
                 document.getElementById('inputName').value = res.name;
@@ -1239,13 +1205,6 @@
             const val = document.getElementById('letterType').value;
             const code = val.split('|')[1];
             document.getElementById('inputCode').value = code;
-
-            const invFields = document.getElementById('invitationFields');
-            if (val.includes('Undangan')) {
-                invFields.classList.remove('hidden');
-            } else {
-                invFields.classList.add('hidden');
-            }
         }
 
         async function handleGenerateLetter(event) {
@@ -1258,15 +1217,6 @@
             const sifat = document.getElementById('inputSifat').value;
             const lampiran = document.getElementById('inputLampiran').value;
             const includePurpose = document.getElementById('inputIncludePurpose').checked;
-            const letterLocation = document.getElementById('inputLocation').value;
-            const letterDate = document.getElementById('inputDate').value;
-            const signMode = document.getElementById('inputSignMode').value;
-            const secretaryName = document.getElementById('inputSecretaryName') ? document.getElementById('inputSecretaryName').value : 'Sekretaris Desa';
-
-            const invDayDate = document.getElementById('invDayDate') ? document.getElementById('invDayDate').value : '';
-            const invTime = document.getElementById('invTime') ? document.getElementById('invTime').value : '';
-            const invPlace = document.getElementById('invPlace') ? document.getElementById('invPlace').value : '';
-
             const vName = getVillageName();
 
             if(!nik && !typeName.includes('Undangan')) {
@@ -1277,8 +1227,7 @@
             const newId = 'L-2026-' + String(state.letters.length + 1).padStart(3, '0');
             const agId = 'AG-' + Date.now().toString().slice(-4);
             const newNo = `${typeCode} / 0${state.letters.length + 1} / KMR.PGT / VIII / 2026`;
-
-            const initialStatus = isUserHeadVillage() ? 'Disetujui' : 'Menunggu Validasi';
+            const today = '2026-08-04';
 
             const newLetter = {
                 id: newId,
@@ -1287,16 +1236,10 @@
                 type: typeName,
                 code: typeCode,
                 number: newNo,
-                date: letterDate,
-                location: letterLocation,
+                date: today,
                 purpose: purpose,
-                invDayDate: invDayDate,
-                invTime: invTime,
-                invPlace: invPlace,
-                signMode: signMode,
-                secretaryName: secretaryName,
-                status: initialStatus,
-                signedBy: signMode === 'sekdes_an' ? secretaryName + ' (a.n. Kades)' : state.settings.headName + ' (' + state.settings.headTitle + ')',
+                status: 'Disetujui',
+                signedBy: state.settings.headName + ' (' + state.settings.headTitle + ')',
                 sifat: sifat,
                 lampiran: lampiran,
                 includePurpose: includePurpose,
@@ -1309,9 +1252,9 @@
                 type: 'Keluar',
                 noSurat: newNo,
                 from: vName,
-                date: letterDate,
+                date: today,
                 subject: purpose,
-                status: initialStatus === 'Disetujui' ? 'Terkirim' : 'Menunggu Validasi Kades'
+                status: 'Terkirim'
             };
 
             await saveLetterToSupabase(newLetter);
@@ -1320,11 +1263,7 @@
             state.letters.unshift(newLetter);
             state.agenda.unshift(newAgenda);
 
-            if (!isUserHeadVillage()) {
-                sendWhatsAppToKades(newLetter);
-            }
-
-            showModal('Sukses!', `Surat berhasil digenerate dengan status: <strong>${initialStatus}</strong>. Nomor: <br><strong class="font-mono text-brand-700">${newNo}</strong>`, 'success', () => {
+            showModal('Sukses!', `Surat berhasil digenerate & tersimpan di database server dengan Nomor: <br><strong class="font-mono text-brand-700">${newNo}</strong>`, 'success', () => {
                 previewLetter(newId);
             });
         }
@@ -1336,11 +1275,15 @@
                     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col md:flex-row justify-between items-center gap-4">
                         <div>
                             <h3 class="font-bold text-slate-800 text-lg">Buku Agenda Surat Masuk & Keluar</h3>
-                            <p class="text-xs text-slate-500">Pencatatan resmi arus surat masuk dan keluar desa ${vName}.</p>
+                            <p class="text-xs text-slate-500">Pencatatan resmi arus surat masuk instansi lain dan surat keluar desa ${vName}.</p>
                         </div>
                         <div class="flex items-center space-x-3">
-                            <button onclick="switchTab('scan-masuk')" class="bg-emerald-600 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow">Scan Masuk</button>
-                            <button onclick="openAddAgendaModal()" class="bg-brand-600 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow">Catat Manual</button>
+                            <button onclick="switchTab('scan-masuk')" class="bg-emerald-600 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow hover:bg-emerald-700 transition flex items-center space-x-1.5">
+                                <i class="fa-solid fa-camera-retro"></i><span>Scan Surat Masuk Baru</span>
+                            </button>
+                            <button onclick="openAddAgendaModal()" class="bg-brand-600 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow hover:bg-brand-700 transition flex items-center space-x-1.5">
+                                <i class="fa-solid fa-plus"></i><span>Catat Manual</span>
+                            </button>
                         </div>
                     </div>
 
@@ -1354,13 +1297,13 @@
                                         <th class="p-4">Asal / Tujuan</th>
                                         <th class="p-4">Tanggal</th>
                                         <th class="p-4">Perihal / Subjek</th>
-                                        <th class="p-4">Status</th>
+                                        <th class="p-4">Status / Disposisi</th>
                                         <th class="p-4 text-center">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-100">
                                     ${state.agenda.length === 0 ? `
-                                        <tr><td colspan="7" class="p-8 text-center text-slate-400 italic">Belum ada catatan agenda.</td></tr>
+                                        <tr><td colspan="7" class="p-8 text-center text-slate-400 italic">Belum ada catatan di buku agenda.</td></tr>
                                     ` : state.agenda.map(a => `
                                         <tr class="hover:bg-slate-50">
                                             <td class="p-4">
@@ -1374,7 +1317,9 @@
                                             <td class="p-4 text-slate-600">${a.subject}</td>
                                             <td class="p-4"><span class="text-xs text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg">${a.status}</span></td>
                                             <td class="p-4 text-center">
-                                                <button onclick="deleteAgendaItem('${a.id}')" class="bg-red-50 text-red-600 p-1.5 rounded-lg text-xs font-semibold" title="Hapus"><i class="fa-solid fa-trash"></i></button>
+                                                <button onclick="deleteAgendaItem('${a.id}')" class="bg-red-50 text-red-600 hover:bg-red-100 p-1.5 rounded-lg text-xs font-semibold transition" title="Hapus Agenda">
+                                                    <i class="fa-solid fa-trash"></i>
+                                                </button>
                                             </td>
                                         </tr>
                                     `).join('')}
@@ -1387,27 +1332,46 @@
         }
 
         async function deleteAgendaItem(id) {
-            showConfirm('Konfirmasi Hapus', 'Hapus agenda surat ini?', async () => {
+            showConfirm('Konfirmasi Hapus', 'Apakah Anda yakin ingin menghapus agenda surat ini?', async () => {
                 await deleteAgendaFromSupabase(id);
                 state.agenda = state.agenda.filter(a => a.id !== id);
                 renderActiveTabContent();
-                showModal('Berhasil', 'Agenda dihapus.', 'success');
+                showModal('Berhasil', 'Agenda surat berhasil dihapus dari database.', 'success');
             });
         }
 
         function openAddAgendaModal() {
             const html = `
                 <div class="space-y-4">
-                    <h3 class="font-bold text-lg text-slate-800">Catat Agenda Surat</h3>
+                    <h3 class="font-bold text-lg text-slate-800">Catat Agenda Surat Masuk / Keluar</h3>
+                    <p class="text-xs text-slate-500">Masukkan rincian surat untuk dicatat ke dalam buku agenda resmi.</p>
                     <form onsubmit="handleSaveAgenda(event)" class="space-y-4">
-                        <div><label class="block text-xs font-semibold text-slate-600 mb-1">Jenis:</label><select id="agendaType" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-sm"><option value="Masuk">Surat Masuk</option><option value="Keluar">Surat Keluar</option></select></div>
-                        <div><label class="block text-xs font-semibold text-slate-600 mb-1">Nomor Surat:</label><input type="text" id="agendaNo" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-sm" placeholder="005/123/..."></div>
-                        <div><label class="block text-xs font-semibold text-slate-600 mb-1">Asal / Tujuan:</label><input type="text" id="agendaFrom" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-sm"></div>
-                        <div><label class="block text-xs font-semibold text-slate-600 mb-1">Tanggal:</label><input type="date" id="agendaDate" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-sm" value="2026-10-06"></div>
-                        <div><label class="block text-xs font-semibold text-slate-600 mb-1">Perihal:</label><textarea id="agendaSubject" rows="3" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-sm"></textarea></div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Jenis Agenda:</label>
+                            <select id="agendaType" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-sm">
+                                <option value="Masuk">Surat Masuk</option>
+                                <option value="Keluar">Surat Keluar</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Nomor Surat:</label>
+                            <input type="text" id="agendaNo" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-sm" placeholder="005/123/Kec-Paguat/2026">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Asal / Tujuan Surat:</label>
+                            <input type="text" id="agendaFrom" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-sm" placeholder="Kecamatan / Instansi Lain">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Tanggal Surat:</label>
+                            <input type="date" id="agendaDate" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-sm" value="2026-08-04">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Perihal / Subjek:</label>
+                            <textarea id="agendaSubject" rows="3" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-sm" placeholder="Perihal surat..."></textarea>
+                        </div>
                         <div class="flex justify-end space-x-3 pt-2">
                             <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl">Batal</button>
-                            <button type="submit" class="px-5 py-2 bg-brand-600 text-white text-xs font-semibold rounded-xl">Simpan</button>
+                            <button type="submit" class="px-5 py-2 bg-brand-600 text-white text-xs font-semibold rounded-xl shadow">Simpan Agenda</button>
                         </div>
                     </form>
                 </div>
@@ -1418,19 +1382,25 @@
         async function handleSaveAgenda(e) {
             e.preventDefault();
             const type = document.getElementById('agendaType').value;
+            const noSurat = document.getElementById('agendaNo').value;
+            const from = document.getElementById('agendaFrom').value;
+            const date = document.getElementById('agendaDate').value;
+            const subject = document.getElementById('agendaSubject').value;
+
             const agObj = {
                 id: 'AG-' + Date.now().toString().slice(-4),
                 type: type,
-                noSurat: document.getElementById('agendaNo').value,
-                from: document.getElementById('agendaFrom').value,
-                date: document.getElementById('agendaDate').value,
-                subject: document.getElementById('agendaSubject').value,
+                noSurat: noSurat,
+                from: from,
+                date: date,
+                subject: subject,
                 status: type === 'Masuk' ? 'Diterima' : 'Terkirim'
             };
+
             await saveAgendaToSupabase(agObj);
             state.agenda.unshift(agObj);
             closeModal();
-            showModal('Sukses', 'Agenda berhasil dicatat.', 'success', () => renderView());
+            showModal('Sukses', 'Agenda surat berhasil dicatat dalam buku agenda server.', 'success', () => renderView());
         }
 
         function renderArsipView(searchQuery = '') {
@@ -1445,13 +1415,13 @@
                 <div class="space-y-6">
                     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col md:flex-row justify-between items-center gap-4">
                         <div>
-                            <h3 class="font-bold text-slate-800 text-lg">Arsip Digital & Validasi Kepala Desa</h3>
-                            <p class="text-xs text-slate-500">Periksa arsip dan lakukan validasi tanda tangan untuk surat yang berstatus menunggu.</p>
+                            <h3 class="font-bold text-slate-800 text-lg">Arsip Digital & Pencarian Instan</h3>
+                            <p class="text-xs text-slate-500">Semua arsip surat keluar dan surat masuk beserta foto hasil scan tersimpan di server dan dapat diakses dari perangkat berbeda.</p>
                         </div>
                         <div class="w-full md:w-80">
                             <div class="relative">
                                 <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400"><i class="fa-solid fa-search"></i></span>
-                                <input type="text" id="searchInput" oninput="filterArsip(this.value)" value="${searchQuery}" class="w-full bg-slate-50 border border-slate-300 rounded-xl pl-10 pr-4 py-2 text-sm" placeholder="Cari NIK / Nama / No Surat...">
+                                <input type="text" id="searchInput" oninput="filterArsip(this.value)" value="${searchQuery}" class="w-full bg-slate-50 border border-slate-300 rounded-xl pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" placeholder="Ketik NIK / Nama / No Surat...">
                             </div>
                         </div>
                     </div>
@@ -1461,37 +1431,40 @@
                             <table class="w-full text-left text-sm">
                                 <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 text-xs uppercase font-semibold">
                                     <tr>
-                                        <th class="p-4">No. Surat</th>
-                                        <th class="p-4">Pemohon / Pengirim</th>
+                                        <th class="p-4">No. Surat / Klasifikasi</th>
+                                        <th class="p-4">Pemohon / Instansi Pengirim</th>
                                         <th class="p-4">Jenis Surat</th>
-                                        <th class="p-4">Lokasi & Tanggal</th>
-                                        <th class="p-4">Status</th>
-                                        <th class="p-4 text-center">Aksi / Validasi</th>
+                                        <th class="p-4">Foto Arsip / Scan</th>
+                                        <th class="p-4">Tanggal Terbit</th>
+                                        <th class="p-4 text-center">Aksi Dokumen</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-100">
                                     ${filtered.length === 0 ? `
-                                        <tr><td colspan="6" class="p-8 text-center text-slate-400">Tidak ada arsip ditemukan.</td></tr>
+                                        <tr><td colspan="6" class="p-8 text-center text-slate-400">Tidak ada arsip surat yang ditemukan.</td></tr>
                                     ` : filtered.map(l => `
                                         <tr class="hover:bg-slate-50">
                                             <td class="p-4 font-mono text-xs font-bold text-brand-700">${l.number}</td>
                                             <td class="p-4">
                                                 <p class="font-semibold text-slate-800">${l.name}</p>
-                                                ${l.nik && l.nik !== '0000000000000000' ? `<p class="text-xs font-mono text-slate-400">NIK: ${l.nik}</p>` : ''}
+                                                ${l.nik && l.nik !== '0000000000000000' ? `<p class="text-xs font-mono text-slate-400">NIK: ${l.nik}</p>` : '<span class="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-medium">Surat Masuk Eksternal</span>'}
                                             </td>
                                             <td class="p-4 text-slate-700">${l.type}</td>
-                                            <td class="p-4 text-slate-600 text-xs font-medium">${l.location || getVillageName()}, ${l.date}</td>
                                             <td class="p-4">
-                                                <span class="px-2.5 py-1 text-xs rounded-full font-medium ${l.status === 'Disetujui' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">
-                                                    ${l.status}
-                                                </span>
+                                                ${l.photo ? `
+                                                    <div class="flex items-center space-x-2">
+                                                        <img src="${l.photo}" class="w-10 h-10 object-cover rounded-lg border shadow cursor-pointer ${l.isScanned ? 'scan-effect' : ''}" onclick="previewLetter('${l.id}')" title="Klik untuk lihat">
+                                                        ${l.isScanned ? '<span class="text-[10px] bg-slate-800 text-white px-1.5 py-0.5 rounded font-mono">Scan</span>' : ''}
+                                                    </div>
+                                                ` : `<span class="text-xs text-slate-400 italic">Tanpa Foto</span>`}
                                             </td>
+                                            <td class="p-4 text-slate-600 text-xs">${l.date}</td>
                                             <td class="p-4 text-center space-x-2">
-                                                <button onclick="previewLetter('${l.id}')" class="bg-slate-100 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-slate-200">
-                                                    <i class="fa-solid fa-eye mr-1"></i> ${l.status === 'Disetujui' ? 'Cetak / Lihat' : 'Validasi & Tanda Tangan'}
+                                                <button onclick="previewLetter('${l.id}')" class="bg-slate-100 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-slate-200 transition">
+                                                    <i class="fa-solid fa-eye mr-1"></i> Lihat
                                                 </button>
-                                                <button onclick="deleteLetter('${l.id}')" class="bg-red-50 text-red-600 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-red-100">
-                                                    <i class="fa-solid fa-trash"></i>
+                                                <button onclick="deleteLetter('${l.id}')" class="bg-red-50 text-red-600 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-red-100 transition">
+                                                    <i class="fa-solid fa-trash mr-1"></i> Hapus
                                                 </button>
                                             </td>
                                         </tr>
@@ -1511,23 +1484,12 @@
         }
 
         async function deleteLetter(id) {
-            showConfirm('Konfirmasi Hapus', 'Hapus arsip surat ini?', async () => {
+            showConfirm('Konfirmasi Hapus', 'Apakah Anda yakin ingin menghapus arsip surat ini?', async () => {
                 await deleteLetterFromSupabase(id);
                 state.letters = state.letters.filter(l => l.id !== id);
                 renderActiveTabContent();
-                showModal('Berhasil', 'Arsip surat dihapus.', 'success');
+                showModal('Berhasil', 'Arsip surat berhasil dihapus dari database.', 'success');
             });
-        }
-
-        async function validateLetterByKades(id) {
-            const letter = state.letters.find(l => l.id === id);
-            if(letter) {
-                letter.status = 'Disetujui';
-                await saveLetterToSupabase(letter);
-                showModal('Berhasil Divalidasi!', `Surat dengan nomor <strong>${letter.number}</strong> telah disetujui dan tanda tangan digital resmi diterapkan.`, 'success', () => {
-                    previewLetter(id);
-                });
-            }
         }
 
         function renderLaporanView() {
@@ -1538,15 +1500,15 @@
                     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col md:flex-row justify-between items-center gap-4">
                         <div>
                             <h3 class="font-bold text-slate-800 text-lg">Rekapitulasi Arsip & Laporan Bulanan</h3>
-                            <p class="text-xs text-slate-500">Cetak laporan resmi rekapitulasi surat ukuran <strong>${pSize}</strong>.</p>
+                            <p class="text-xs text-slate-500">Cetak laporan resmi rekapitulasi surat keluar dan layanan penduduk Desa ${vName} ukuran kertas <strong>${pSize}</strong>.</p>
                         </div>
                         <div class="flex items-center space-x-3">
                             <select id="reportPaperToggle" onchange="changeReportPaperSize(this.value)" class="bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold">
-                                <option value="A4" ${pSize === 'A4' ? 'selected' : ''}>A4</option>
-                                <option value="F4" ${pSize === 'F4' ? 'selected' : ''}>F4 (Folio)</option>
+                                <option value="A4" ${pSize === 'A4' ? 'selected' : ''}>Ukuran Kertas: A4</option>
+                                <option value="F4" ${pSize === 'F4' ? 'selected' : ''}>Ukuran Kertas: F4 (Folio)</option>
                             </select>
                             <button onclick="window.print()" class="bg-slate-900 text-white px-5 py-2.5 rounded-xl text-sm font-semibold shadow hover:bg-slate-800 transition flex items-center space-x-2">
-                                <i class="fa-solid fa-print"></i><span>Cetak Laporan</span>
+                                <i class="fa-solid fa-print"></i><span>Cetak Laporan (${pSize})</span>
                             </button>
                         </div>
                     </div>
@@ -1557,7 +1519,7 @@
 
                             <div class="text-center pt-2">
                                 <h3 class="text-base font-bold uppercase underline">Laporan Rekapitulasi Pelayanan Administrasi Surat Desa</h3>
-                                <p class="text-xs text-slate-500">Periode: Oktober 2026 | Format: ${pSize}</p>
+                                <p class="text-xs text-slate-500">Periode Bulan: Agustus 2026 | Format Kertas: ${pSize}</p>
                             </div>
 
                             <table class="w-full text-left text-sm border-collapse border border-slate-300">
@@ -1565,9 +1527,9 @@
                                     <tr class="bg-slate-100 text-slate-700 text-xs uppercase font-semibold">
                                         <th class="border border-slate-300 p-3">No</th>
                                         <th class="border border-slate-300 p-3">Nomor Surat</th>
-                                        <th class="border border-slate-300 p-3">Pemohon</th>
+                                        <th class="border border-slate-300 p-3">Pemohon / Pengirim</th>
                                         <th class="border border-slate-300 p-3">Jenis Layanan</th>
-                                        <th class="border border-slate-300 p-3">Lokasi, Tanggal</th>
+                                        <th class="border border-slate-300 p-3">Tanggal</th>
                                         <th class="border border-slate-300 p-3">Status</th>
                                     </tr>
                                 </thead>
@@ -1578,7 +1540,7 @@
                                             <td class="border border-slate-300 p-3 font-mono text-xs">${l.number}</td>
                                             <td class="border border-slate-300 p-3 font-semibold">${l.name}</td>
                                             <td class="border border-slate-300 p-3">${l.type}</td>
-                                            <td class="border border-slate-300 p-3 text-xs">${l.location || vName}, ${l.date}</td>
+                                            <td class="border border-slate-300 p-3 text-xs">${l.date}</td>
                                             <td class="border border-slate-300 p-3">${l.status}</td>
                                         </tr>
                                     `).join('')}
@@ -1587,10 +1549,10 @@
 
                             <div class="flex justify-end pt-16 text-xs">
                                 <div class="text-center">
-                                    <p>${vName}, 06 Oktober 2026</p>
+                                    <p>${vName}, 04 Agustus 2026</p>
                                     <p class="font-bold">${state.settings.headTitle} ${vName}</p>
-                                    <div class="h-16 flex items-center justify-center my-1">
-                                        ${state.settings.headSignature ? `<img src="${state.settings.headSignature}" class="h-16 object-contain" alt="Tanda Tangan">` : '<span class="text-[10px] text-slate-400">[Stempel & TTE]</span>'}
+                                    <div class="h-16 flex items-center justify-center">
+                                        <span class="text-[10px] text-slate-400">[Tanda Tangan & Stempel Resmi]</span>
                                     </div>
                                     <p class="font-bold underline">${state.settings.headName}</p>
                                 </div>
@@ -1607,6 +1569,9 @@
             renderActiveTabContent();
         }
 
+        // ==========================================
+        // MODUL MASTER DATA PENDUDUK & IMPOR EXCEL DINAMIS
+        // ==========================================
         function renderPendudukView() {
             const excelData = state.settings.excelResidents;
             return `
@@ -1614,11 +1579,14 @@
                     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col md:flex-row justify-between items-center gap-4">
                         <div>
                             <h3 class="font-bold text-slate-800 text-lg">Master Data Penduduk & Impor Excel Dinamis</h3>
-                            <p class="text-xs text-slate-500">Unggah file Excel (.xlsx) untuk memuat data penduduk.</p>
+                            <p class="text-xs text-slate-500">Unggah file Excel (.xlsx / .xls) untuk memuat data penduduk dengan kolom yang otomatis menyesuaikan isi file.</p>
                         </div>
                         <div class="flex items-center space-x-3">
-                            <button onclick="clearAllResidentsData()" class="bg-red-50 text-red-600 px-4 py-2.5 rounded-xl text-xs font-semibold border border-red-200">Kosongkan Penduduk</button>
-                            <label class="bg-brand-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold shadow cursor-pointer flex items-center space-x-2">
+                            <button onclick="clearAllResidentsData()" class="bg-red-50 text-red-600 px-4 py-2.5 rounded-xl text-xs font-semibold border border-red-200 hover:bg-red-100 transition flex items-center space-x-1.5">
+                                <i class="fa-solid fa-trash-can"></i>
+                                <span>Reset / Kosongkan Semua Penduduk</span>
+                            </button>
+                            <label class="bg-brand-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold shadow hover:bg-brand-700 transition cursor-pointer flex items-center space-x-2">
                                 <i class="fa-solid fa-file-excel"></i>
                                 <span>Impor dari Excel</span>
                                 <input type="file" accept=".xlsx, .xls, .csv" onchange="handleExcelImport(event)" class="hidden">
@@ -1628,8 +1596,8 @@
 
                     ${excelData && excelData.columns && excelData.columns.length > 0 ? `
                         <div class="bg-emerald-50 border border-emerald-200 p-4 rounded-xl flex items-center justify-between text-xs text-emerald-900 shadow-sm">
-                            <div><i class="fa-solid fa-circle-check text-emerald-600 mr-2"></i> Menampilkan data dari Excel (${excelData.rows.length} baris).</div>
-                            <span class="font-mono bg-white px-2.5 py-1 rounded-lg border border-emerald-300 font-bold text-emerald-700">Dinamis</span>
+                            <div><i class="fa-solid fa-circle-check text-emerald-600 mr-2"></i> Menampilkan data dari file Excel (${excelData.rows.length} baris data, ${excelData.columns.length} kolom aktif).</div>
+                            <span class="font-mono bg-white px-2.5 py-1 rounded-lg border border-emerald-300 font-bold text-emerald-700">Mode Kolom Dinamis</span>
                         </div>
 
                         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
@@ -1656,9 +1624,11 @@
                         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex justify-between items-center">
                             <div>
                                 <h4 class="font-bold text-slate-800 text-sm">Daftar Penduduk Server</h4>
-                                <p class="text-xs text-slate-500">Impor file Excel atau tambah manual.</p>
+                                <p class="text-xs text-slate-500">Anda dapat menambahkan data manual atau klik tombol <strong>"Impor dari Excel"</strong> di atas untuk mengubah kolom tabel secara dinamis.</p>
                             </div>
-                            <button onclick="openAddResidentModal()" class="bg-brand-600 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow">Tambah Penduduk</button>
+                            <button onclick="openAddResidentModal()" class="bg-brand-600 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow hover:bg-brand-700 transition flex items-center space-x-1.5">
+                                <i class="fa-solid fa-user-plus"></i><span>Tambah Penduduk</span>
+                            </button>
                         </div>
 
                         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
@@ -1677,7 +1647,7 @@
                                     </thead>
                                     <tbody class="divide-y divide-slate-100">
                                         ${state.residents.length === 0 ? `
-                                            <tr><td colspan="7" class="p-8 text-center text-slate-400 italic">Belum ada data penduduk.</td></tr>
+                                            <tr><td colspan="7" class="p-8 text-center text-slate-400 italic">Belum ada data penduduk. Silakan impor file Excel atau tambah manual.</td></tr>
                                         ` : state.residents.map(r => `
                                             <tr class="hover:bg-slate-50">
                                                 <td class="p-4 font-mono text-xs font-bold text-slate-700">${r.nik}</td>
@@ -1687,7 +1657,9 @@
                                                 <td class="p-4 text-slate-600 text-xs">${r.job}</td>
                                                 <td class="p-4 text-slate-600 text-xs">${r.address}</td>
                                                 <td class="p-4 text-center">
-                                                    <button onclick="deleteSingleResident('${r.nik}')" class="bg-red-50 text-red-600 p-1.5 rounded-lg text-xs font-semibold"><i class="fa-solid fa-trash"></i></button>
+                                                    <button onclick="deleteSingleResident('${r.nik}')" class="bg-red-50 text-red-600 hover:bg-red-100 p-1.5 rounded-lg text-xs font-semibold transition" title="Hapus Data Ini">
+                                                        <i class="fa-solid fa-trash"></i>
+                                                    </button>
                                                 </td>
                                             </tr>
                                         `).join('')}
@@ -1708,64 +1680,110 @@
                 try {
                     const data = new Uint8Array(e.target.result);
                     const workbook = XLSX.read(data, { type: 'array' });
-                    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
                     const jsonRows = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
                     
                     if (jsonRows.length === 0) {
-                        showModal('Peringatan', 'File Excel kosong.', 'error');
+                        showModal('Peringatan', 'File Excel kosong atau format tidak sesuai.', 'error');
                         return;
                     }
 
                     const columns = Object.keys(jsonRows[0]);
-                    state.settings.excelResidents = { columns, rows: jsonRows };
+                    state.settings.excelResidents = {
+                        columns: columns,
+                        rows: jsonRows
+                    };
+
                     await saveSettingsToSupabase();
-                    showModal('Berhasil!', `File Excel berhasil diimpor (${jsonRows.length} baris).`, 'success', () => renderActiveTabContent());
+                    showModal('Berhasil!', `File Excel berhasil diimpor dengan <strong>${columns.length} kolom</strong> dan <strong>${jsonRows.length} baris</strong>. Tampilan tabel otomatis menyesuaikan.`, 'success', () => {
+                        renderActiveTabContent();
+                    });
                 } catch (err) {
-                    showModal('Gagal', 'Gagal membaca file Excel.', 'error');
+                    console.error(err);
+                    showModal('Gagal', 'Terjadi kesalahan saat membaca file Excel.', 'error');
                 }
             };
             reader.readAsArrayBuffer(file);
         }
 
         async function clearAllResidentsData() {
-            showConfirm('Konfirmasi Reset', 'Kosongkan seluruh data penduduk?', async () => {
-                await supabaseClient.from('penduduk').delete().neq('nik', '0000000000000000');
-                state.residents = [];
-                state.settings.excelResidents = null;
-                await saveSettingsToSupabase();
-                renderActiveTabContent();
-                showModal('Berhasil', 'Data penduduk dikosongkan.', 'success');
+            showConfirm('Konfirmasi Reset', 'Apakah Anda yakin ingin mengosongkan/mereset seluruh data penduduk (termasuk data Excel yang diunggah)?', async () => {
+                try {
+                    await supabaseClient.from('penduduk').delete().neq('nik', '0000000000000000');
+                    state.residents = [];
+                    state.settings.excelResidents = null;
+                    await saveSettingsToSupabase();
+                    renderActiveTabContent();
+                    showModal('Berhasil', 'Semua data penduduk berhasil dibersihkan dan direset.', 'success');
+                } catch (e) {
+                    state.residents = [];
+                    state.settings.excelResidents = null;
+                    await saveSettingsToSupabase();
+                    renderActiveTabContent();
+                    showModal('Berhasil', 'Semua data penduduk dibersihkan.', 'success');
+                }
             });
         }
 
         async function deleteSingleResident(nik) {
-            showConfirm('Konfirmasi Hapus', `Hapus penduduk NIK ${nik}?`, async () => {
-                await supabaseClient.from('penduduk').delete().eq('nik', nik);
-                state.residents = state.residents.filter(r => r.nik !== nik);
-                renderActiveTabContent();
-                showModal('Berhasil', 'Data penduduk dihapus.', 'success');
+            showConfirm('Konfirmasi Hapus', `Apakah Anda yakin ingin menghapus data penduduk dengan NIK ${nik}?`, async () => {
+                try {
+                    await supabaseClient.from('penduduk').delete().eq('nik', nik);
+                    state.residents = state.residents.filter(r => r.nik !== nik);
+                    renderActiveTabContent();
+                    showModal('Berhasil', 'Data penduduk berhasil dihapus.', 'success');
+                } catch (e) {
+                    state.residents = state.residents.filter(r => r.nik !== nik);
+                    renderActiveTabContent();
+                    showModal('Berhasil', 'Data penduduk berhasil dihapus.', 'success');
+                }
             });
         }
 
         function openAddResidentModal() {
             const html = `
                 <div class="space-y-4">
-                    <h3 class="font-bold text-lg text-slate-800">Tambah Penduduk</h3>
+                    <h3 class="font-bold text-lg text-slate-800">Tambah Data Warga Penduduk</h3>
                     <form onsubmit="handleSaveNewResident(event)" class="space-y-3">
-                        <div><label class="block text-xs font-semibold text-slate-600 mb-1">NIK:</label><input type="text" id="resNik" required maxlength="16" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-sm font-mono"></div>
-                        <div><label class="block text-xs font-semibold text-slate-600 mb-1">Nama:</label><input type="text" id="resName" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-sm"></div>
-                        <div class="grid grid-cols-2 gap-3">
-                            <div><label class="block text-xs font-semibold text-slate-600 mb-1">Gender:</label><select id="resGender" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm"><option value="Laki-laki">Laki-laki</option><option value="Perempuan">Perempuan</option></select></div>
-                            <div><label class="block text-xs font-semibold text-slate-600 mb-1">Pekerjaan:</label><input type="text" id="resJob" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm"></div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">NIK (16 Digit):</label>
+                            <input type="text" id="resNik" required maxlength="16" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-sm font-mono" placeholder="750101...">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Nama Lengkap:</label>
+                            <input type="text" id="resName" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-sm" placeholder="Nama Warga">
                         </div>
                         <div class="grid grid-cols-2 gap-3">
-                            <div><label class="block text-xs font-semibold text-slate-600 mb-1">Tempat Lahir:</label><input type="text" id="resPob" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm"></div>
-                            <div><label class="block text-xs font-semibold text-slate-600 mb-1">Tgl Lahir:</label><input type="date" id="resDob" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm" value="1995-01-01"></div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Jenis Kelamin:</label>
+                                <select id="resGender" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm">
+                                    <option value="Laki-laki">Laki-laki</option>
+                                    <option value="Perempuan">Perempuan</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Pekerjaan:</label>
+                                <input type="text" id="resJob" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm" placeholder="Petani / Swasta">
+                            </div>
                         </div>
-                        <div><label class="block text-xs font-semibold text-slate-600 mb-1">Alamat:</label><input type="text" id="resAddress" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-sm"></div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Tempat Lahir:</label>
+                                <input type="text" id="resPob" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm" placeholder="Paguat">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Tanggal Lahir:</label>
+                                <input type="date" id="resDob" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm" value="1995-01-01">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Alamat / Dusun:</label>
+                            <input type="text" id="resAddress" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-sm" placeholder="Dsn I Desa Kamiiri">
+                        </div>
                         <div class="flex justify-end space-x-3 pt-2">
                             <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl">Batal</button>
-                            <button type="submit" class="px-5 py-2 bg-brand-600 text-white text-xs font-semibold rounded-xl">Simpan</button>
+                            <button type="submit" class="px-5 py-2 bg-brand-600 text-white text-xs font-semibold rounded-xl shadow">Simpan Penduduk</button>
                         </div>
                     </form>
                 </div>
@@ -1785,10 +1803,11 @@
                 job: document.getElementById('resJob').value,
                 status: 'Kawin'
             };
+
             await supabaseClient.from('penduduk').upsert(newRes);
             state.residents.unshift(newRes);
             closeModal();
-            showModal('Sukses', 'Penduduk ditambahkan.', 'success', () => renderView());
+            showModal('Sukses', 'Data penduduk berhasil ditambahkan ke database server.', 'success', () => renderView());
         }
 
         function renderPenggunaView() {
@@ -1797,11 +1816,11 @@
                     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
                         <div class="border-b border-slate-100 pb-4 mb-6 flex justify-between items-center">
                             <div>
-                                <h3 class="text-lg font-bold text-slate-800">Manajemen Hak Akses & Akun Sekretaris</h3>
-                                <p class="text-xs text-slate-500">Buat akun untuk sekretaris dan kelola hak akses staf desa.</p>
+                                <h3 class="text-lg font-bold text-slate-800">Manajemen Hak Akses & Staf Desa</h3>
+                                <p class="text-xs text-slate-500">Kelola staf yang memiliki akses login ke sistem administrasi desa via server.</p>
                             </div>
                             <button onclick="openAddUserModal()" class="bg-brand-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold shadow hover:bg-brand-700 transition flex items-center space-x-2">
-                                <i class="fa-solid fa-user-plus"></i><span>Tambah Akun Sekretaris / Staf</span>
+                                <i class="fa-solid fa-user-plus"></i><span>Tambah Staf Akses</span>
                             </button>
                         </div>
 
@@ -1810,7 +1829,7 @@
                                 <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 text-xs uppercase font-semibold">
                                     <tr>
                                         <th class="p-4">Nama Staf</th>
-                                        <th class="p-4">Username</th>
+                                        <th class="p-4">Username / ID</th>
                                         <th class="p-4">Jabatan / Peran</th>
                                         <th class="p-4">Email</th>
                                         <th class="p-4">Status</th>
@@ -1825,8 +1844,10 @@
                                             <td class="p-4 text-slate-600 text-xs">${u.role}</td>
                                             <td class="p-4 text-slate-600 text-xs">${u.email}</td>
                                             <td class="p-4"><span class="bg-emerald-100 text-emerald-700 px-2.5 py-1 text-xs rounded-full font-medium">${u.status}</span></td>
-                                            <td class="p-4 text-center">
-                                                <button onclick="removeUser(${u.id})" class="text-red-600 hover:text-red-800 text-xs font-semibold p-1.5 rounded bg-red-50 hover:bg-red-100"><i class="fa-solid fa-trash"></i> Hapus</button>
+                                            <td class="p-4 text-center space-x-2">
+                                                <button onclick="removeUser(${u.id})" class="text-red-600 hover:text-red-800 text-xs font-semibold p-1.5 rounded bg-red-50 hover:bg-red-100 transition">
+                                                    <i class="fa-solid fa-trash"></i> Hapus
+                                                </button>
                                             </td>
                                         </tr>
                                     `).join('')}
@@ -1841,21 +1862,27 @@
         function openAddUserModal() {
             const html = `
                 <div class="space-y-4">
-                    <h3 class="font-bold text-lg text-slate-800">Tambah Akun Baru (Sekretaris / Staf)</h3>
+                    <h3 class="font-bold text-lg text-slate-800">Tambah Staf / Pengguna Baru</h3>
                     <form onsubmit="handleSaveNewUser(event)" class="space-y-3">
-                        <div><label class="block text-xs font-semibold text-slate-600 mb-1">Nama Lengkap:</label><input type="text" id="newUserName" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-sm" placeholder="Nama Sekretaris"></div>
-                        <div><label class="block text-xs font-semibold text-slate-600 mb-1">Username Login:</label><input type="text" id="newUserUsername" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-sm font-mono" placeholder="sekdes"></div>
                         <div>
-                            <label class="block text-xs font-semibold text-slate-600 mb-1">Jabatan / Peran:</label>
-                            <select id="newUserRole" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm">
-                                <option value="Sekretaris Desa">Sekretaris Desa</option>
-                                <option value="Operator Administrasi">Operator Administrasi</option>
-                            </select>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Nama / Label Staf:</label>
+                            <input type="text" id="newUserName" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-sm" placeholder="Contoh: Operator 2">
                         </div>
-                        <div><label class="block text-xs font-semibold text-slate-600 mb-1">Email:</label><input type="email" id="newUserEmail" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-sm" placeholder="sekdes@pohuwato.desa.id"></div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Username Login:</label>
+                            <input type="text" id="newUserUsername" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-sm font-mono" placeholder="operator2">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Jabatan / Peran Sistem:</label>
+                            <input type="text" id="newUserRole" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-sm" placeholder="Staf Pelayanan Umum">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Email Resmi:</label>
+                            <input type="email" id="newUserEmail" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-sm" placeholder="staf@desa.id">
+                        </div>
                         <div class="flex justify-end space-x-3 pt-2">
                             <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl">Batal</button>
-                            <button type="submit" class="px-5 py-2 bg-brand-600 text-white text-xs font-semibold rounded-xl">Simpan Akun</button>
+                            <button type="submit" class="px-5 py-2 bg-brand-600 text-white text-xs font-semibold rounded-xl shadow">Simpan Staf</button>
                         </div>
                     </form>
                 </div>
@@ -1873,18 +1900,19 @@
                 email: document.getElementById('newUserEmail').value,
                 status: 'Aktif'
             };
+
             await saveUserToSupabase(newUser);
             state.allowedUsers.push(newUser);
             closeModal();
-            showModal('Sukses', 'Akun berhasil ditambahkan.', 'success', () => renderView());
+            showModal('Sukses', 'Akses staf berhasil ditambahkan ke server.', 'success', () => renderView());
         }
 
         async function removeUser(id) {
             if(state.allowedUsers.length <= 1) {
-                showModal('Peringatan', 'Minimal harus ada 1 pengguna sistem.', 'error');
+                showModal('Peringatan', 'Sistem memerlukan setidaknya 1 Administrator aktif.', 'error');
                 return;
             }
-            showConfirm('Cabut Akses', 'Hapus akses pengguna ini?', async () => {
+            showConfirm('Cabut Akses', 'Cabut akses pengguna ini?', async () => {
                 await deleteUserFromSupabase(id);
                 state.allowedUsers = state.allowedUsers.filter(u => u.id !== id);
                 renderActiveTabContent();
@@ -1894,96 +1922,219 @@
 
         function renderPengaturanView() {
             const s = state.settings;
-            const hiddenTabs = s.secretaryHiddenTabs || ['pengguna', 'pengaturan'];
-            const allTabs = [
-                { id: 'dashboard', label: 'Dashboard Utama' },
-                { id: 'scan-masuk', label: 'Scan & Arsip Surat Masuk' },
-                { id: 'layanan', label: 'Pembuatan Surat Desa' },
-                { id: 'agenda', label: 'Buku Agenda Surat' },
-                { id: 'arsip', label: 'Arsip Digital & Validasi' },
-                { id: 'laporan', label: 'Rekapitulasi & Laporan PDF' },
-                { id: 'penduduk', label: 'Data Penduduk' },
-                { id: 'pengguna', label: 'Manajemen Hak Akses' },
-                { id: 'pengaturan', label: 'Pengaturan Desa & Kop' }
-            ];
-
             return `
                 <div class="max-w-4xl mx-auto space-y-6">
                     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
                         <div class="border-b border-slate-100 pb-4 mb-6 flex justify-between items-center">
                             <div>
-                                <h3 class="text-lg font-bold text-slate-800">Pengaturan Tanda Tangan, Kop & Pembatasan Menu Sekretaris</h3>
-                                <p class="text-xs text-slate-500">Kelola tanda tangan digital Kepala Desa dan pilih menu yang disembunyikan dari Sekretaris.</p>
+                                <h3 class="text-lg font-bold text-slate-800">Pengaturan Standar Kertas (A4 / F4), Penandatangan & Kop Surat</h3>
+                                <p class="text-xs text-slate-500">Pilih ukuran kertas resmi, atur kop surat, dan simpan langsung ke database server.</p>
                             </div>
-                            <button type="button" onclick="resetToDefaultState()" class="px-3 py-1.5 bg-red-50 text-red-600 hover:bg-red-100 text-xs font-semibold rounded-xl border border-red-200">
-                                Reset Default
+                            <button type="button" onclick="resetToDefaultState()" class="px-3 py-1.5 bg-red-50 text-red-600 hover:bg-red-100 text-xs font-semibold rounded-xl border border-red-200 transition">
+                                <i class="fa-solid fa-rotate-right mr-1"></i> Reset Default
                             </button>
                         </div>
 
                         <form onsubmit="handleSaveSettings(event)" class="space-y-6">
-                            <!-- TANDA TANGAN DIGITAL KEPALA DESA -->
-                            <div class="p-5 bg-emerald-50/70 rounded-2xl border border-emerald-200 space-y-4">
-                                <h4 class="font-bold text-emerald-900 text-xs uppercase tracking-wider"><i class="fa-solid fa-signature mr-1"></i> Tanda Tangan Digital Kepala Desa (Untuk Validasi Surat)</h4>
-                                <p class="text-xs text-emerald-700">Unggah file gambar tanda tangan Kepala Desa (format PNG transparan lebih disukai). Tanda tangan ini akan otomatis muncul pada surat jika sudah divalidasi.</p>
-                                <input type="file" accept="image/*" onchange="uploadSignatureFile(event)" class="text-xs text-slate-700 bg-white border border-emerald-300 rounded-xl p-2 w-full">
-                                ${s.headSignature ? `
-                                    <div class="mt-2 bg-white p-3 rounded-xl border border-emerald-300 inline-block">
-                                        <p class="text-[11px] font-semibold text-slate-600 mb-1">Pratinjau Tanda Tangan Aktif:</p>
-                                        <img src="${s.headSignature}" class="h-16 object-contain bg-slate-50 p-1 rounded">
+                            <!-- Paper Size Selection -->
+                            <div class="p-5 bg-blue-50/70 rounded-2xl border border-blue-200 space-y-3">
+                                <h4 class="font-bold text-blue-900 text-xs uppercase tracking-wider">Ukuran Kertas Dokumen Resmi</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">Pilih Ukuran Kertas Default:</label>
+                                        <select id="setPaperSize" class="w-full bg-white border border-blue-300 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-800">
+                                            <option value="A4" ${s.paperSize === 'A4' ? 'selected' : ''}>A4 (210 × 297 mm - Standar Nasional)</option>
+                                            <option value="F4" ${s.paperSize === 'F4' ? 'selected' : ''}>F4 / Folio (215 × 330 mm - Standar Pemerintahan)</option>
+                                        </select>
                                     </div>
-                                ` : ''}
-                            </div>
-
-                            <!-- PENGATURAN MENU DISEMBUNYIKAN DARI SEKRETARIS -->
-                            <div class="p-5 bg-amber-50/70 rounded-2xl border border-amber-200 space-y-3">
-                                <h4 class="font-bold text-amber-900 text-xs uppercase tracking-wider"><i class="fa-solid fa-eye-slash mr-1"></i> Batasi Menu untuk Akun Sekretaris</h4>
-                                <p class="text-xs text-amber-800">Centang menu di bawah ini agar <strong>tidak tampil</strong> di akun Sekretaris (Kepala Desa/Admin tetap dapat melihat semua menu):</p>
-                                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 pt-2">
-                                    ${allTabs.map(t => `
-                                        <label class="flex items-center space-x-2 text-xs font-semibold text-slate-700 bg-white p-2.5 rounded-xl border border-amber-200 cursor-pointer">
-                                            <input type="checkbox" name="hiddenTab" value="${t.id}" ${hiddenTabs.includes(t.id) ? 'checked' : ''} class="w-4 h-4 text-brand-600 rounded border-slate-300">
-                                            <span>${t.label}</span>
-                                        </label>
-                                    `).join('')}
+                                    <p class="text-xs text-blue-700">Semua pratinjau surat dan laporan akan otomatis mengikuti ukuran ini.</p>
                                 </div>
                             </div>
 
-                            <!-- Paper Size & Pejabat -->
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-200">
-                                <div>
-                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Ukuran Kertas:</label>
-                                    <select id="setPaperSize" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold">
-                                        <option value="A4" ${s.paperSize === 'A4' ? 'selected' : ''}>A4</option>
-                                        <option value="F4" ${s.paperSize === 'F4' ? 'selected' : ''}>F4 (Folio)</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Pejabat Kades:</label>
-                                    <input type="text" id="setHeadName" value="${s.headName || 'Admin'}" required class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs">
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Jabatan:</label>
-                                    <input type="text" id="setHeadTitle" value="${s.headTitle || 'Kepala Desa'}" required class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs">
+                            <!-- Bagian Pengaturan Penandatangan -->
+                            <div class="p-4 bg-emerald-50/60 rounded-2xl border border-emerald-200 space-y-4">
+                                <h4 class="font-bold text-emerald-900 text-xs uppercase tracking-wider">Pengaturan Nama Pejabat / Admin Penandatangan</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">Nama / Label Penandatangan:</label>
+                                        <input type="text" id="setHeadName" value="${s.headName || 'Admin'}" required class="w-full bg-white border border-slate-300 rounded-xl px-4 py-2 text-sm" placeholder="Admin">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">Jabatan Penandatangan:</label>
+                                        <input type="text" id="setHeadTitle" value="${s.headTitle || 'Kepala Desa'}" required class="w-full bg-white border border-slate-300 rounded-xl px-4 py-2 text-sm" placeholder="Kepala Desa">
+                                    </div>
                                 </div>
                             </div>
 
                             <div class="p-4 bg-brand-50/50 rounded-2xl border border-brand-200 space-y-4">
-                                <h4 class="font-bold text-brand-900 text-xs uppercase tracking-wider">Konfigurasi Kop Surat</h4>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div><label class="block text-xs font-semibold text-slate-700 mb-1">Baris 1:</label><input type="text" id="setKop1" value="${s.kopLine1}" required class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs"></div>
-                                    <div><label class="block text-xs font-semibold text-slate-700 mb-1">Baris 2:</label><input type="text" id="setKop2" value="${s.kopLine2}" required class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs"></div>
-                                    <div><label class="block text-xs font-semibold text-slate-700 mb-1">Baris 3 (Nama Desa):</label><input type="text" id="setKop3" value="${s.kopLine3}" required class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs"></div>
-                                    <div><label class="block text-xs font-semibold text-slate-700 mb-1">Baris 4 (Alamat):</label><input type="text" id="setKop4" value="${s.kopLine4}" required class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs"></div>
+                                <h4 class="font-bold text-brand-900 text-xs uppercase tracking-wider">Konfigurasi Baris, Ukuran, Ketebalan, Spasi & Font Kop Surat</h4>
+                                
+                                <!-- Baris 1 -->
+                                <div class="grid grid-cols-1 md:grid-cols-6 gap-3 items-end">
+                                    <div class="md:col-span-2">
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">Baris 1:</label>
+                                        <input type="text" id="setKop1" value="${s.kopLine1}" required class="w-full bg-white border border-slate-300 rounded-xl px-4 py-2 text-sm">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">Ukuran:</label>
+                                        <input type="number" id="setSize1" value="${s.sizeLine1}" min="8" max="48" required class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">Ketebalan:</label>
+                                        <select id="setWeight1" class="w-full bg-white border border-slate-300 rounded-xl px-2 py-2 text-xs">${renderWeightOptions(s.weightLine1)}</select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">Spasi:</label>
+                                        <input type="text" id="setSpace1" value="${s.spaceLine1 || '1.2'}" required class="w-full bg-white border border-slate-300 rounded-xl px-2 py-2 text-xs">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">Font:</label>
+                                        <select id="setFont1" class="w-full bg-white border border-slate-300 rounded-xl px-2 py-2 text-xs">${renderFontOptions(s.fontLine1)}</select>
+                                    </div>
                                 </div>
-                                <div><label class="block text-xs font-semibold text-slate-700 mb-1">Nama Singkat Desa:</label><input type="text" id="setDesaShort" value="${s.desaShort}" required class="w-full md:w-1/2 bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs"></div>
+
+                                <!-- Baris 2 -->
+                                <div class="grid grid-cols-1 md:grid-cols-6 gap-3 items-end">
+                                    <div class="md:col-span-2">
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">Baris 2:</label>
+                                        <input type="text" id="setKop2" value="${s.kopLine2}" required class="w-full bg-white border border-slate-300 rounded-xl px-4 py-2 text-sm">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">Ukuran:</label>
+                                        <input type="number" id="setSize2" value="${s.sizeLine2}" min="8" max="48" required class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">Ketebalan:</label>
+                                        <select id="setWeight2" class="w-full bg-white border border-slate-300 rounded-xl px-2 py-2 text-xs">${renderWeightOptions(s.weightLine2)}</select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">Spasi:</label>
+                                        <input type="text" id="setSpace2" value="${s.spaceLine2 || '1.2'}" required class="w-full bg-white border border-slate-300 rounded-xl px-2 py-2 text-xs">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">Font:</label>
+                                        <select id="setFont2" class="w-full bg-white border border-slate-300 rounded-xl px-2 py-2 text-xs">${renderFontOptions(s.fontLine2)}</select>
+                                    </div>
+                                </div>
+
+                                <!-- Baris 3 -->
+                                <div class="grid grid-cols-1 md:grid-cols-6 gap-3 items-end">
+                                    <div class="md:col-span-2">
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">Baris 3 (Nama Desa):</label>
+                                        <input type="text" id="setKop3" value="${s.kopLine3}" required class="w-full bg-white border border-slate-300 rounded-xl px-4 py-2 text-sm">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">Ukuran:</label>
+                                        <input type="number" id="setSize3" value="${s.sizeLine3}" min="8" max="64" required class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">Ketebalan:</label>
+                                        <select id="setWeight3" class="w-full bg-white border border-slate-300 rounded-xl px-2 py-2 text-xs">${renderWeightOptions(s.weightLine3)}</select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">Spasi:</label>
+                                        <input type="text" id="setSpace3" value="${s.spaceLine3 || '1.1'}" required class="w-full bg-white border border-slate-300 rounded-xl px-2 py-2 text-xs">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">Font:</label>
+                                        <select id="setFont3" class="w-full bg-white border border-slate-300 rounded-xl px-2 py-2 text-xs">${renderFontOptions(s.fontLine3)}</select>
+                                    </div>
+                                </div>
+
+                                <!-- Baris 4 -->
+                                <div class="grid grid-cols-1 md:grid-cols-6 gap-3 items-end">
+                                    <div class="md:col-span-2">
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">Baris 4 (Alamat):</label>
+                                        <input type="text" id="setKop4" value="${s.kopLine4}" required class="w-full bg-white border border-slate-300 rounded-xl px-4 py-2 text-sm">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">Ukuran:</label>
+                                        <input type="number" id="setSize4" value="${s.sizeLine4}" min="6" max="24" required class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">Ketebalan:</label>
+                                        <select id="setWeight4" class="w-full bg-white border border-slate-300 rounded-xl px-2 py-2 text-xs">${renderWeightOptions(s.weightLine4)}</select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">Spasi:</label>
+                                        <input type="text" id="setSpace4" value="${s.spaceLine4 || '1.2'}" required class="w-full bg-white border border-slate-300 rounded-xl px-2 py-2 text-xs">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">Font:</label>
+                                        <select id="setFont4" class="w-full bg-white border border-slate-300 rounded-xl px-2 py-2 text-xs">${renderFontOptions(s.fontLine4)}</select>
+                                    </div>
+                                </div>
+
+                                <div class="pt-2">
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Singkat Desa:</label>
+                                    <input type="text" id="setDesaShort" value="${s.desaShort}" required class="w-full md:w-1/2 bg-white border border-slate-300 rounded-xl px-4 py-2 text-sm">
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-slate-50 rounded-2xl border border-slate-200">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-2">Jumlah Logo pada Kop:</label>
+                                    <select id="setLogoCount" onchange="toggleLogoInputs(this.value)" class="w-full bg-white border border-slate-300 rounded-xl px-4 py-2 text-sm">
+                                        <option value="1" ${s.logoCount === '1' ? 'selected' : ''}>1 Logo (Di Kiri)</option>
+                                        <option value="2" ${s.logoCount === '2' ? 'selected' : ''}>2 Logo (Kiri & Kanan)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-2">Perataan Teks Kop (Align):</label>
+                                    <select id="setAlign" class="w-full bg-white border border-slate-300 rounded-xl px-4 py-2 text-sm">
+                                        <option value="center" ${s.align === 'center' ? 'selected' : ''}>Rata Tengah (Center)</option>
+                                        <option value="left" ${s.align === 'left' ? 'selected' : ''}>Rata Kiri (Left)</option>
+                                        <option value="right" ${s.align === 'right' ? 'selected' : ''}>Rata Kanan (Right)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- LOGO DIMENSIONS & UPLOAD SECTION -->
+                            <div class="space-y-4 p-4 bg-slate-50 rounded-2xl border border-slate-200">
+                                <h4 class="font-bold text-slate-800 text-xs uppercase tracking-wider">Pengaturan Ukuran Logo & File</h4>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pb-4 border-b border-slate-200">
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">Tinggi Logo (px):</label>
+                                        <input type="number" id="setLogoHeight" value="${s.logoHeight || 80}" min="20" max="250" required class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1">Lebar Logo (px):</label>
+                                        <input type="number" id="setLogoWidth" value="${s.logoWidth || 80}" min="20" max="250" required class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs">
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <div class="space-y-2">
+                                        <label class="block text-xs font-semibold text-slate-600">Logo Aplikasi (Sidebar):</label>
+                                        <input type="url" id="setAppLogo" value="${s.appLogo}" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs font-mono">
+                                        <input type="file" accept="image/*" onchange="uploadLogoFile(event, 'appLogo')" class="text-xs text-slate-500">
+                                    </div>
+                                    <div class="space-y-2">
+                                        <label class="block text-xs font-semibold text-slate-600">Logo 1 (Kiri Kop):</label>
+                                        <input type="url" id="setLogo1" value="${s.logo1}" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs font-mono">
+                                        <input type="file" accept="image/*" onchange="uploadLogoFile(event, 'logo1')" class="text-xs text-slate-500">
+                                    </div>
+                                    <div id="logo2Container" class="space-y-2 ${s.logoCount === '1' ? 'opacity-40 pointer-events-none' : ''}">
+                                        <label class="block text-xs font-semibold text-slate-600">Logo 2 (Kanan Kop):</label>
+                                        <input type="url" id="setLogo2" value="${s.logo2}" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs font-mono">
+                                        <input type="file" accept="image/*" onchange="uploadLogoFile(event, 'logo2')" class="text-xs text-slate-500">
+                                    </div>
+                                </div>
                             </div>
 
                             <div class="pt-6 border-t border-slate-100 flex justify-end">
-                                <button type="submit" class="px-6 py-2.5 rounded-xl bg-brand-600 text-white text-sm font-semibold shadow hover:bg-brand-700 transition">
-                                    Simpan Pengaturan
+                                <button type="submit" class="px-6 py-2.5 rounded-xl bg-brand-600 text-white text-sm font-semibold shadow hover:bg-brand-700 transition flex items-center space-x-2">
+                                    <i class="fa-solid fa-floppy-disk"></i>
+                                    <span>Simpan ke Database Server</span>
                                 </button>
                             </div>
                         </form>
+                    </div>
+
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 space-y-4">
+                        <h4 class="font-bold text-slate-800 text-sm">Pratinjau Langsung Kop Surat (Live Preview)</h4>
+                        <div id="liveKopPreview" class="border border-slate-300 p-4 bg-slate-50 rounded-xl overflow-x-auto"></div>
                     </div>
                 </div>
             `;
@@ -1991,8 +2142,6 @@
 
         async function handleSaveSettings(event) {
             event.preventDefault();
-            const checkedTabs = Array.from(document.querySelectorAll('input[name="hiddenTab"]:checked')).map(cb => cb.value);
-
             state.settings.paperSize = document.getElementById('setPaperSize').value;
             state.settings.headName = document.getElementById('setHeadName').value;
             state.settings.headTitle = document.getElementById('setHeadTitle').value;
@@ -2000,69 +2149,61 @@
             state.settings.kopLine2 = document.getElementById('setKop2').value;
             state.settings.kopLine3 = document.getElementById('setKop3').value;
             state.settings.kopLine4 = document.getElementById('setKop4').value;
+            state.settings.sizeLine1 = document.getElementById('setSize1').value;
+            state.settings.sizeLine2 = document.getElementById('setSize2').value;
+            state.settings.sizeLine3 = document.getElementById('setSize3').value;
+            state.settings.sizeLine4 = document.getElementById('setSize4').value;
+            state.settings.weightLine1 = document.getElementById('setWeight1').value;
+            state.settings.weightLine2 = document.getElementById('setWeight2').value;
+            state.settings.weightLine3 = document.getElementById('setWeight3').value;
+            state.settings.weightLine4 = document.getElementById('setWeight4').value;
+            state.settings.spaceLine1 = document.getElementById('setSpace1').value;
+            state.settings.spaceLine2 = document.getElementById('setSpace2').value;
+            state.settings.spaceLine3 = document.getElementById('setSpace3').value;
+            state.settings.spaceLine4 = document.getElementById('setSpace4').value;
+            state.settings.fontLine1 = document.getElementById('setFont1').value;
+            state.settings.fontLine2 = document.getElementById('setFont2').value;
+            state.settings.fontLine3 = document.getElementById('setFont3').value;
+            state.settings.fontLine4 = document.getElementById('setFont4').value;
             state.settings.desaShort = document.getElementById('setDesaShort').value;
-            state.settings.secretaryHiddenTabs = checkedTabs;
+            state.settings.appLogo = document.getElementById('setAppLogo').value;
+            state.settings.logo1 = document.getElementById('setLogo1').value;
+            state.settings.logo2 = document.getElementById('setLogo2').value;
+            state.settings.logoCount = document.getElementById('setLogoCount').value;
+            state.settings.align = document.getElementById('setAlign').value;
+            state.settings.logoHeight = document.getElementById('setLogoHeight').value;
+            state.settings.logoWidth = document.getElementById('setLogoWidth').value;
 
             await saveSettingsToSupabase();
-            showModal('Berhasil', 'Pengaturan berhasil disimpan!', 'success', () => renderView());
+            showModal('Berhasil', 'Pengaturan berhasil disimpan permanen ke server!', 'success', () => renderActiveTabContent());
+        }
+
+        function toggleLogoInputs(val) {
+            const container = document.getElementById('logo2Container');
+            if(val === '1') {
+                container.classList.add('opacity-40', 'pointer-events-none');
+            } else {
+                container.classList.remove('opacity-40', 'pointer-events-none');
+            }
         }
 
         function previewLetter(id) {
             const l = state.letters.find(item => item.id === id);
             const res = state.residents.find(item => item.nik === l.nik) || { pob: 'Paguat', dob: '1990-01-01', job: 'Warga', gender: 'Laki-laki', address: 'Dsn I Desa Kamiiri' };
             const vName = getVillageName();
-            const letterLoc = l.location || vName;
+            const shouldIncludePurpose = l.includePurpose !== false;
             const pSize = state.settings.paperSize || 'A4';
-            const isApproved = l.status === 'Disetujui';
-            const isInvitation = l.type.includes('Undangan');
-
-            let signatureBlockHtml = '';
-            if (l.signMode === 'sekdes_an') {
-                signatureBlockHtml = `
-                    <div class="text-center">
-                        <p>${letterLoc}, ${l.date}</p>
-                        <p class="font-bold">a.n. KEPALA DESA ${vName.toUpperCase()}</p>
-                        <p class="font-bold">SEKRETARIS DESA</p>
-                        <div class="h-20 flex items-center justify-center relative my-1">
-                            ${isApproved && state.settings.headSignature ? `
-                                <img src="${state.settings.headSignature}" class="h-20 max-w-[160px] object-contain absolute -top-2" alt="Tanda Tangan Sekretaris">
-                            ` : `
-                                <span class="text-[10px] text-amber-600 font-semibold">[ ${isApproved ? 'TTE Belum Diunggah' : 'Menunggu Validasi'} ]</span>
-                            `}
-                        </div>
-                        <p class="font-bold underline">${l.secretaryName || 'Sekretaris Desa'}</p>
-                    </div>
-                `;
-            } else {
-                signatureBlockHtml = `
-                    <div class="text-center">
-                        <p>${letterLoc}, ${l.date}</p>
-                        <p class="font-bold">${state.settings.headTitle} ${vName}</p>
-                        <div class="h-20 flex items-center justify-center relative my-1">
-                            ${isApproved && state.settings.headSignature ? `
-                                <img src="${state.settings.headSignature}" class="h-20 max-w-[160px] object-contain absolute -top-2" alt="Tanda Tangan Kepala Desa">
-                            ` : `
-                                <span class="text-[10px] text-amber-600 font-semibold">[ ${isApproved ? 'TTE Belum Diunggah' : 'Menunggu Validasi Kades'} ]</span>
-                            `}
-                        </div>
-                        <p class="font-bold underline">${state.settings.headName}</p>
-                    </div>
-                `;
-            }
+            const isIncoming = l.type === 'Surat Masuk (Eksternal)';
 
             const modalHtml = `
                 <div class="flex justify-between items-center mb-4 no-print bg-slate-100 p-3 rounded-xl border border-slate-200">
-                    <div class="flex items-center space-x-2">
-                        <span class="text-xs font-bold text-slate-700">Status Surat:</span>
-                        <span class="px-2.5 py-1 text-xs rounded-full font-bold ${isApproved ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">${l.status}</span>
+                    <div>
+                        <span class="text-xs font-bold text-slate-700">Format Pratinjau Kertas:</span>
+                        <span class="ml-2 bg-brand-100 text-brand-800 text-xs font-mono font-bold px-2 py-0.5 rounded">${pSize}</span>
                     </div>
                     <div class="flex items-center space-x-2">
-                        ${!isApproved && isUserHeadVillage() ? `
-                            <button onclick="validateLetterByKades('${l.id}')" class="px-4 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-bold shadow hover:bg-emerald-700 animate-pulse">
-                                <i class="fa-solid fa-signature mr-1"></i> Validasi & Tanda Tangan Sekarang
-                            </button>
-                        ` : ''}
-                        <button onclick="window.print()" class="px-4 py-1.5 bg-slate-900 text-white rounded-lg text-xs font-semibold">Cetak</button>
+                        <button onclick="changeModalPaperSize('${id}', 'A4')" class="px-3 py-1 rounded-lg text-xs font-semibold ${pSize === 'A4' ? 'bg-brand-600 text-white' : 'bg-white text-slate-700 border'}">A4</button>
+                        <button onclick="changeModalPaperSize('${id}', 'F4')" class="px-3 py-1 rounded-lg text-xs font-semibold ${pSize === 'F4' ? 'bg-brand-600 text-white' : 'bg-white text-slate-700 border'}">F4</button>
                     </div>
                 </div>
 
@@ -2070,25 +2211,54 @@
                     <div id="printable-letter" class="bg-white p-12 shadow-2xl border border-slate-300 text-slate-800 space-y-4 ${getPaperDimensionsClass(pSize)}">
                         ${renderKopSuratHtml(state.settings)}
 
-                        <div class="text-center pt-2 pb-1 space-y-1">
-                            <h3 class="text-base font-bold uppercase underline tracking-wide">${l.type}</h3>
-                            <p class="text-xs font-mono">Nomor: ${l.number}</p>
-                        </div>
+                        ${isIncoming ? `
+                            <div class="text-center pt-2 pb-1 space-y-1">
+                                <h3 class="text-base font-bold uppercase underline tracking-wide text-emerald-800">Arsip Surat Masuk Eksternal</h3>
+                                <p class="text-xs font-mono">Nomor: ${l.number}</p>
+                            </div>
 
-                        <div class="text-xs leading-relaxed space-y-3 pt-3">
-                            ${isInvitation ? `
-                                <p>Kepada Yth.<br><strong>${l.name}</strong><br>di Tempat</p>
-                                <p>Dengan hormat, sehubungan dengan kegiatan pemerintahan desa, kami mengundang Bapak/Ibu/Saudara(i) untuk hadir dalam acara yang akan diselenggarakan pada:</p>
+                            <div class="text-xs leading-relaxed space-y-3 pt-3 border-b pb-4">
+                                <div class="grid grid-cols-12"><span class="col-span-4 font-semibold">Instansi Pengirim</span><span class="col-span-8">: <strong>${l.name}</strong></span></div>
+                                <div class="grid grid-cols-12"><span class="col-span-4 font-semibold">Tanggal Surat</span><span class="col-span-8">: ${l.date}</span></div>
+                                <div class="grid grid-cols-12"><span class="col-span-4 font-semibold">Sifat / Lampiran</span><span class="col-span-8">: ${l.sifat || 'Penting'} / ${l.lampiran || '-'}</span></div>
+                                <div class="grid grid-cols-12"><span class="col-span-4 font-semibold">Perihal / Subjek</span><span class="col-span-8 font-medium">${l.purpose}</span></div>
+                            </div>
+                        ` : l.type.includes('Undangan') ? `
+                            <div class="grid grid-cols-2 text-xs pt-1 pb-2">
+                                <div class="space-y-0.5">
+                                    <div class="flex"><span class="w-20 font-medium">Nomor</span><span class="mr-2">:</span><span class="font-mono">${l.number}</span></div>
+                                    <div class="flex"><span class="w-20 font-medium">Sifat</span><span class="mr-2">:</span><span>${l.sifat || 'Penting'}</span></div>
+                                    <div class="flex"><span class="w-20 font-medium">Lampiran</span><span class="mr-2">:</span><span>${l.lampiran || '-'}</span></div>
+                                    <div class="flex"><span class="w-20 font-medium">Perihal</span><span class="mr-2">:</span><span class="font-semibold">Undangan Rapat</span></div>
+                                </div>
+                                <div class="text-right space-y-0.5">
+                                    <p>${vName}, 04 Agustus 2026</p>
+                                    <p class="pt-2">Kepada Yang Terhormat</p>
+                                    <p>Bapak/Ibu/sdr (i)</p>
+                                    <p>Di -</p>
+                                    <p class="font-semibold pl-4">Tempat</p>
+                                </div>
+                            </div>
+
+                            <div class="text-xs leading-relaxed space-y-3 pt-2">
+                                <p class="font-semibold">Dengan Hormat,</p>
+                                <p>Sehubungan dengan ${l.purpose}, oleh karena itu kami mengundang Bapak/Ibu/sdr(i) untuk hadir pada rapat persiapan kegiatan dimaksud yang Insya Allah akan dilaksanakan pada :</p>
                                 
-                                <div class="pl-6 space-y-1 py-1 my-2 bg-slate-50 p-3 rounded-lg border border-slate-200">
-                                    <div class="grid grid-cols-12"><span class="col-span-4 font-semibold">Hari / Tanggal</span><span class="col-span-8">: ${l.invDayDate || '-'}</span></div>
-                                    <div class="grid grid-cols-12"><span class="col-span-4 font-semibold">Pukul / Waktu</span><span class="col-span-8">: ${l.invTime || '-'}</span></div>
-                                    <div class="grid grid-cols-12"><span class="col-span-4 font-semibold">Tempat</span><span class="col-span-8">: ${l.invPlace || '-'}</span></div>
-                                    <div class="grid grid-cols-12"><span class="col-span-4 font-semibold">Agenda / Perihal</span><span class="col-span-8">: <strong>${l.purpose}</strong></span></div>
+                                <div class="pl-4 space-y-1 my-2">
+                                    <div class="flex"><span class="w-24">Hari / Tanggal</span><span>: Senin, 10 Agustus 2026</span></div>
+                                    <div class="flex"><span class="w-24">Pukul</span><span>: 14.00 WITA s.d Selesai</span></div>
+                                    <div class="flex"><span class="w-24">Tempat</span><span>: Kantor Desa ${vName}</span></div>
                                 </div>
 
-                                <p>Demikian undangan ini disampaikan atas perhatian dan kehadiran Bapak/Ibu/Saudara(i) kami ucapkan terima kasih.</p>
-                            ` : `
+                                <p>Demikian surat undangan ini kami sampaikan, atas kehadiran dan kerjasamanya kami ucapkan terima kasih.</p>
+                            </div>
+                        ` : `
+                            <div class="text-center pt-2 pb-1 space-y-1">
+                                <h3 class="text-base font-bold uppercase underline tracking-wide">${l.type}</h3>
+                                <p class="text-xs font-mono">Nomor: ${l.number}</p>
+                            </div>
+
+                            <div class="text-xs leading-relaxed space-y-3 pt-3">
                                 <p>Yang bertanda tangan di bawah ini ${state.settings.headTitle}${vName} Kecamatan Paguat Kabupaten Pohuwato, menerangkan dengan sebenarnya bahwa:</p>
                                 
                                 <div class="pl-6 space-y-1 py-1">
@@ -2096,32 +2266,67 @@
                                     <div class="grid grid-cols-12"><span class="col-span-4 font-semibold">NIK / No. KTP</span><span class="col-span-8">: <span class="font-mono">${l.nik}</span></span></div>
                                     <div class="grid grid-cols-12"><span class="col-span-4 font-semibold">Tempat / Tgl. Lahir</span><span class="col-span-8">: ${res.pob},${res.dob}</span></div>
                                     <div class="grid grid-cols-12"><span class="col-span-4 font-semibold">Jenis Kelamin</span><span class="col-span-8">: ${res.gender}</span></div>
+                                    <div class="grid grid-cols-12"><span class="col-span-4 font-semibold">Agama</span><span class="col-span-8">: Islam</span></div>
                                     <div class="grid grid-cols-12"><span class="col-span-4 font-semibold">Pekerjaan</span><span class="col-span-8">: ${res.job}</span></div>
                                     <div class="grid grid-cols-12"><span class="col-span-4 font-semibold">Alamat / Domisili</span><span class="col-span-8">: ${res.address} Desa${vName}</span></div>
                                 </div>
 
-                                <p>Berdasarkan data kependudukan dan keterangan yang ada pada kami, yang bersangkutan benar-benar merupakan penduduk yang berdomisili / memiliki keperluan di Desa ${vName} Kecamatan Paguat Kabupaten Pohuwato.</p>
+                                <p>
+                                    ${l.type.includes('Domisili') ? `Berdasarkan data kependudukan dan keterangan yang ada pada kami, yang bersangkutan benar-benar merupakan penduduk yang berdomisili tetap di Desa ${vName} Kecamatan Paguat Kabupaten Pohuwato.` :
+                                      l.type.includes('Usaha') ? `Berdasarkan pengamatan dan penelitian kami, yang bersangkutan benar-benar memiliki unit usaha produktif / perdagangan di wilayah Desa ${vName} Kecamatan Paguat.` :
+                                      `Surat keterangan ini diberikan kepada yang bersangkutan.`}
+                                </p>
 
-                                <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 font-medium text-slate-700 my-2">
-                                    <strong>Keperluan / Perihal Surat:</strong> ${l.purpose}
-                                </div>
+                                ${shouldIncludePurpose ? `
+                                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 font-medium text-slate-700 my-2">
+                                        <strong>Keperluan / Perihal Surat:</strong> ${l.purpose}
+                                    </div>
+                                ` : ''}
 
                                 <p>Demikian surat keterangan ini dibuat dengan sebenarnya dan diberikan kepada yang bersangkutan untuk dapat dipergunakan sebagaimana mestinya.</p>
-                            `}
-                        </div>
+                            </div>
+                        `}
 
-                        <div class="flex justify-end pt-12 text-xs">
-                            ${signatureBlockHtml}
-                        </div>
+                        ${l.photo ? `
+                            <div class="pt-4 border-t border-slate-200 mt-4">
+                                <div class="flex items-center justify-between mb-2">
+                                    <p class="text-xs font-bold text-slate-700"><i class="fa-solid fa-camera mr-1 text-emerald-600"></i> Tangkapan Foto Dokumen / Hasil Scan:</p>
+                                    ${l.isScanned ? '<span class="text-[10px] bg-slate-900 text-white px-2 py-0.5 rounded font-mono">Mode Scan Aktif</span>' : ''}
+                                </div>
+                                <img src="${l.photo}" class="w-64 h-64 object-cover rounded-xl border shadow-md ${l.isScanned ? 'scan-effect' : ''}" alt="Foto Scan Dokumen">
+                            </div>
+                        ` : ''}
+
+                        ${!isIncoming ? `
+                            <div class="flex justify-end pt-12 text-xs">
+                                <div class="text-center">
+                                    <p>${vName},${l.date}</p>
+                                    <p class="font-bold">${state.settings.headTitle}${vName}</p>
+                                    <div class="h-16 flex items-center justify-center">
+                                        <span class="text-[10px] bg-brand-50 text-brand-700 px-2 py-1 rounded font-mono border border-brand-200">[TTE / Stempel Resmi Desa]</span>
+                                    </div>
+                                    <p class="font-bold underline">${state.settings.headName}</p>
+                                </div>
+                            </div>
+                        ` : ''}
                     </div>
                 </div>
 
                 <div class="mt-6 flex justify-end space-x-3 no-print">
-                    <button onclick="closeModal()" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold">Tutup</button>
-                    <button onclick="window.print()" class="px-5 py-2 bg-brand-600 text-white rounded-xl text-xs font-semibold shadow">Cetak Dokumen</button>
+                    <button onclick="closeModal()" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold hover:bg-slate-300 transition">Tutup</button>
+                    <button onclick="window.print()" class="px-5 py-2 bg-brand-600 text-white rounded-xl text-xs font-semibold shadow hover:bg-brand-700 transition flex items-center space-x-2">
+                        <i class="fa-solid fa-print"></i><span>Cetak Arsip (${pSize})</span>
+                    </button>
                 </div>
             `;
+
             showCustomModalHtml(modalHtml);
+        }
+
+        async function changeModalPaperSize(id, size) {
+            state.settings.paperSize = size;
+            await saveSettingsToSupabase();
+            previewLetter(id);
         }
 
         let currentModalCallback = null;
@@ -2135,7 +2340,7 @@
                     </div>
                     <h3 class="font-bold text-lg text-slate-800">${title}</h3>
                     <p class="text-xs text-slate-600">${message}</p>
-                    <button onclick="closeModal(); if(currentModalCallback) { const cb = currentModalCallback; currentModalCallback = null; cb(); }" class="w-full bg-slate-900 text-white py-2.5 rounded-xl text-xs font-semibold">OK</button>
+                    <button onclick="closeModal(); if(currentModalCallback) { const cb = currentModalCallback; currentModalCallback = null; cb(); }" class="w-full bg-slate-900 text-white py-2.5 rounded-xl text-xs font-semibold hover:bg-slate-800 transition">OK</button>
                 </div>
             `;
             document.getElementById('modalContent').innerHTML = content;
@@ -2151,13 +2356,14 @@
                     <h3 class="font-bold text-lg text-slate-800">${title}</h3>
                     <p class="text-xs text-slate-600">${message}</p>
                     <div class="flex space-x-3 pt-2">
-                        <button onclick="closeModal()" class="w-full bg-slate-200 text-slate-700 py-2.5 rounded-xl text-xs font-semibold">Batal</button>
-                        <button id="modalConfirmYesBtn" class="w-full bg-red-600 text-white py-2.5 rounded-xl text-xs font-semibold shadow">Ya, Lanjutkan</button>
+                        <button onclick="closeModal()" class="w-full bg-slate-200 text-slate-700 py-2.5 rounded-xl text-xs font-semibold hover:bg-slate-300 transition">Batal</button>
+                        <button id="modalConfirmYesBtn" class="w-full bg-red-600 text-white py-2.5 rounded-xl text-xs font-semibold shadow hover:bg-red-700 transition">Ya, Lanjutkan</button>
                     </div>
                 </div>
             `;
             document.getElementById('modalContent').innerHTML = html;
             document.getElementById('customModal').classList.remove('hidden');
+            
             document.getElementById('modalConfirmYesBtn').onclick = () => {
                 closeModal();
                 if(onConfirm) onConfirm();
@@ -2173,6 +2379,7 @@
             document.getElementById('customModal').classList.add('hidden');
         }
 
+        // Inisialisasi awal saat halaman dimuat
         document.addEventListener('DOMContentLoaded', async () => {
             await loadDataFromSupabase();
         });
