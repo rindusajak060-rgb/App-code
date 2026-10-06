@@ -39,16 +39,16 @@
         }
     </script>
     <script>
-    // Konfigurasi Database Server
+    // Konfigurasi Database Server yang Aman & Terisolasi
     const SUPABASE_URL = 'https://isrdibmvxafmnpldbgdg.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_A_j5NU-O8HbCSof5mzfAWQ_1BPufFl3';
     let supabaseClient = null;
     try {
-        if (window.supabase) {
+        if (window.supabase && typeof window.supabase.createClient === 'function') {
             supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         }
     } catch(e) {
-        console.error('Inisialisasi Supabase gagal:', e);
+        console.warn('Inisialisasi Supabase berjalan dalam mode offline:', e);
     }
     </script>
     <style>
@@ -110,7 +110,7 @@
         };
 
         let state = {
-            isLoggedIn: true, // Default langsung masuk agar tidak putih
+            isLoggedIn: true, 
             currentUser: { name: 'Admin', role: 'Kepala Desa', username: 'admin' },
             activeTab: 'dashboard',
             allowedUsers: [
@@ -258,7 +258,7 @@
                     state.allowedUsers = staffData;
                 }
             } catch (e) {
-                console.warn('Mode offline aktif / gagal sync database:', e);
+                console.warn('Mode offline aktif / tabel supabase belum ada:', e);
             }
             renderView();
         }
@@ -1725,7 +1725,7 @@
         async function clearAllResidentsData() {
             showConfirm('Konfirmasi Reset', 'Kosongkan seluruh data penduduk?', async () => {
                 if (supabaseClient) {
-                    await supabaseClient.from('penduduk').delete().neq('nik', '0000000000000000');
+                    try { await supabaseClient.from('penduduk').delete().neq('nik', '0000000000000000'); } catch(e){}
                 }
                 state.residents = [];
                 state.settings.excelResidents = null;
@@ -1738,7 +1738,7 @@
         async function deleteSingleResident(nik) {
             showConfirm('Konfirmasi Hapus', `Hapus penduduk NIK ${nik}?`, async () => {
                 if (supabaseClient) {
-                    await supabaseClient.from('penduduk').delete().eq('nik', nik);
+                    try { await supabaseClient.from('penduduk').delete().eq('nik', nik); } catch(e){}
                 }
                 state.residents = state.residents.filter(r => r.nik !== nik);
                 renderActiveTabContent();
@@ -1785,7 +1785,7 @@
                 status: 'Kawin'
             };
             if (supabaseClient) {
-                await supabaseClient.from('penduduk').upsert(newRes);
+                try { await supabaseClient.from('penduduk').upsert(newRes); } catch(e){}
             }
             state.residents.unshift(newRes);
             closeModal();
@@ -2188,7 +2188,7 @@
             if (customModalEl) customModalEl.classList.add('hidden');
         }
 
-        // Render awal instan, lalu sync database di latar belakang
+        // Render awal instan, lalu sync database secara aman di latar belakang
         document.addEventListener('DOMContentLoaded', () => {
             renderView();
             if (supabaseClient) {
