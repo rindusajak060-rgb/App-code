@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Database Engine Library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- SheetJS Library untuk Impor Excel -->
+    <!-- SheetJS Library untuk Impor & Ekspor Excel -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&family=Roboto:wght@300;400;500;700;900&family=Montserrat:wght@300;400;500;600;700;800;900&family=Open+Sans:wght@300;400;600;700;800&family=Lato:wght@300;400;700;900&family=Raleway:wght@300;400;600;700;800;900&family=Nunito:wght@300;400;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Quicksand:wght@300;400;500;600;700&family=Source+Sans+3:wght@300;400;600;700;900&family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=Playfair+Display:wght@400;600;700;900&family=Merriweather:wght@300;400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -199,7 +199,6 @@
                     await supabaseClient.from('pengaturan_desa').upsert({ id: 1, config: defaultSettings });
                 }
 
-                // Memuat data penduduk dari server tanpa fallback data default agar dapat dikosongkan total
                 const { data: resData } = await supabaseClient.from('penduduk').select('*');
                 state.residents = resData || [];
 
@@ -1570,7 +1569,7 @@
         }
 
         // ==========================================
-        // MODUL MASTER DATA PENDUDUK & IMPOR EXCEL DINAMIS
+        // MODUL MASTER DATA PENDUDUK & IMPOR/EKSPOR EXCEL
         // ==========================================
         function renderPendudukView() {
             const excelData = state.settings.excelResidents;
@@ -1578,16 +1577,20 @@
                 <div class="space-y-6">
                     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col md:flex-row justify-between items-center gap-4">
                         <div>
-                            <h3 class="font-bold text-slate-800 text-lg">Master Data Penduduk & Impor Excel Dinamis</h3>
-                            <p class="text-xs text-slate-500">Unggah file Excel (.xlsx / .xls) untuk memuat data penduduk dengan kolom yang otomatis menyesuaikan isi file.</p>
+                            <h3 class="font-bold text-slate-800 text-lg">Master Data Penduduk & Impor/Ekspor Excel</h3>
+                            <p class="text-xs text-slate-500">Unggah file Excel (.xlsx / .xls) untuk memuat data atau unduh data kependudukan ke format Excel.</p>
                         </div>
-                        <div class="flex items-center space-x-3">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <button onclick="exportResidentsToExcel()" class="bg-emerald-600 text-white px-4 py-2.5 rounded-xl text-xs font-semibold shadow hover:bg-emerald-700 transition flex items-center space-x-1.5">
+                                <i class="fa-solid fa-file-excel"></i>
+                                <span>Ekspor ke Excel</span>
+                            </button>
                             <button onclick="clearAllResidentsData()" class="bg-red-50 text-red-600 px-4 py-2.5 rounded-xl text-xs font-semibold border border-red-200 hover:bg-red-100 transition flex items-center space-x-1.5">
                                 <i class="fa-solid fa-trash-can"></i>
-                                <span>Reset / Kosongkan Semua Penduduk</span>
+                                <span>Reset / Kosongkan</span>
                             </button>
                             <label class="bg-brand-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold shadow hover:bg-brand-700 transition cursor-pointer flex items-center space-x-2">
-                                <i class="fa-solid fa-file-excel"></i>
+                                <i class="fa-solid fa-file-arrow-up"></i>
                                 <span>Impor dari Excel</span>
                                 <input type="file" accept=".xlsx, .xls, .csv" onchange="handleExcelImport(event)" class="hidden">
                             </label>
@@ -1624,7 +1627,7 @@
                         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex justify-between items-center">
                             <div>
                                 <h4 class="font-bold text-slate-800 text-sm">Daftar Penduduk Server</h4>
-                                <p class="text-xs text-slate-500">Anda dapat menambahkan data manual atau klik tombol <strong>"Impor dari Excel"</strong> di atas untuk mengubah kolom tabel secara dinamis.</p>
+                                <p class="text-xs text-slate-500">Anda dapat menambahkan data manual atau mengunggah file Excel untuk memuat data massal.</p>
                             </div>
                             <button onclick="openAddResidentModal()" class="bg-brand-600 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow hover:bg-brand-700 transition flex items-center space-x-1.5">
                                 <i class="fa-solid fa-user-plus"></i><span>Tambah Penduduk</span>
@@ -1670,6 +1673,36 @@
                     `}
                 </div>
             `;
+        }
+
+        function exportResidentsToExcel() {
+            let dataToExport = [];
+            let fileName = "Data_Penduduk_Desa.xlsx";
+
+            if (state.settings.excelResidents && state.settings.excelResidents.rows && state.settings.excelResidents.rows.length > 0) {
+                dataToExport = state.settings.excelResidents.rows;
+                fileName = "Data_Penduduk_Custom_Excel.xlsx";
+            } else {
+                if (!state.residents || state.residents.length === 0) {
+                    showModal('Peringatan', 'Tidak ada data penduduk untuk diekspor.', 'error');
+                    return;
+                }
+                dataToExport = state.residents.map((r, index) => ({
+                    "No": index + 1,
+                    "NIK": r.nik,
+                    "Nama Lengkap": r.name,
+                    "Jenis Kelamin": r.gender,
+                    "Tempat Lahir": r.pob,
+                    "Tanggal Lahir": r.dob,
+                    "Pekerjaan": r.job,
+                    "Alamat / Dusun": r.address
+                }));
+            }
+
+            const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Data Penduduk");
+            XLSX.writeFile(workbook, fileName);
         }
 
         async function handleExcelImport(event) {
