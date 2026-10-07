@@ -202,17 +202,6 @@
                 // Memuat data penduduk dari server tanpa fallback data default agar dapat dikosongkan total
                 const { data: resData } = await supabaseClient.from('penduduk').select('*');
                 state.residents = resData || [];
-                // Memuat pengaturan termasuk data Excel cadangan jika ada
-const { data: setRow } = await supabaseClient.from('pengaturan_desa').select('*').eq('id', 1).single();
-if (setRow && setRow.config) {
-    state.settings = typeof setRow.config === 'string' ? JSON.parse(setRow.config) : setRow.config;
-} else {
-    await supabaseClient.from('pengaturan_desa').upsert({ id: 1, config: defaultSettings });
-}
-
-// Pengamanan ekstra (mencegah error jika data penduduk kosong)
-const { data: resData } = await supabaseClient.from('penduduk').select('*');
-state.residents = Array.isArray(resData) ? resData : [];
 
                 const { data: letterData } = await supabaseClient.from('surat_desa').select('*').order('created_at', { ascending: false });
                 if (letterData && letterData.length > 0) {
