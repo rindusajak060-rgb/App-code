@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&family=Roboto:wght@300;400;500;700;900&family=Montserrat:wght@300;400;500;600;700;800;900&family=Open+Sans:wght@300;400;600;700;800&family=Lato:wght@300;400;700;900&family=Raleway:wght@300;400;600;700;800;900&family=Nunito:wght@300;400;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Quicksand:wght@300;400;500;600;700&family=Source+Sans+3:wght@300;400;600;700;900&family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=Playfair+Display:wght@400;600;700;900&family=Merriweather:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Poppins:wght@400;600;700&family=Roboto:wght@400;700&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script>
         tailwind.config = {
@@ -15,11 +15,7 @@
                 extend: {
                     fontFamily: { 
                         sans: ['Inter', 'sans-serif'], poppins: ['Poppins', 'sans-serif'], roboto: ['Roboto', 'sans-serif'],
-                        montserrat: ['Montserrat', 'sans-serif'], opensans: ['Open Sans', 'sans-serif'], lato: ['Lato', 'sans-serif'],
-                        raleway: ['Raleway', 'sans-serif'], nunito: ['Nunito', 'sans-serif'], jakartasans: ['Plus Jakarta Sans', 'sans-serif'],
-                        quicksand: ['Quicksand', 'sans-serif'], sourcesans: ['Source Sans 3', 'sans-serif'], lora: ['Lora', 'serif'],
-                        playfair: ['Playfair Display', 'serif'], merriweather: ['Merriweather', 'serif'], arial: ['Arial', 'sans-serif'],
-                        serif: ['Times New Roman', 'serif'], mono: ['Courier New', 'monospace']
+                        jakartasans: ['Plus Jakarta Sans', 'sans-serif'], mono: ['Courier New', 'monospace']
                     },
                     colors: { brand: { 50: '#f0fdf4', 100: '#dcfce7', 500: '#22c55e', 600: '#16a34a', 700: '#15803d', 800: '#166534', 900: '#14532d' } }
                 }
@@ -158,12 +154,12 @@
         }
 
         function renderFontOptions(curr) {
-            return ['font-sans|Inter', 'font-poppins|Poppins', 'font-roboto|Roboto', 'font-montserrat|Montserrat', 'font-opensans|Open Sans', 'font-lato|Lato', 'font-raleway|Raleway', 'font-nunito|Nunito', 'font-jakartasans|Plus Jakarta Sans', 'font-quicksand|Quicksand', 'font-sourcesans|Source Sans 3', 'font-lora|Lora (Serif)', 'font-playfair|Playfair (Serif)', 'font-merriweather|Merriweather (Serif)', 'font-arial|Arial', 'font-serif|Times New Roman', 'font-mono|Courier New']
+            return ['font-sans|Inter', 'font-poppins|Poppins', 'font-roboto|Roboto', 'font-jakartasans|Plus Jakarta Sans', 'font-mono|Courier New']
                 .map(f => { const [v, l] = f.split('|'); return `<option value="${v}" ${curr === v ? 'selected' : ''}>${l}</option>`; }).join('');
         }
 
         function renderWeightOptions(curr) {
-            return ['font-light|Light (300)', 'font-normal|Regular (400)', 'font-medium|Medium (500)', 'font-semibold|Semi Bold (600)', 'font-bold|Bold (700)', 'font-extrabold|Extra Bold (800)', 'font-black|Black (900)']
+            return ['font-light|Light (300)', 'font-normal|Regular (400)', 'font-medium|Medium (500)', 'font-semibold|Semi Bold (600)', 'font-bold|Bold (700)', 'font-black|Black (900)']
                 .map(w => { const [v, l] = w.split('|'); return `<option value="${v}" ${curr === v ? 'selected' : ''}>${l}</option>`; }).join('');
         }
 
@@ -172,7 +168,7 @@
             const { logoHeight: h = '80', logoWidth: w = '80', logo1, logo2, logoCount, kopLine1, kopLine2, kopLine3, kopLine4 } = s;
             if (logoCount === '1') {
                 return `<div class="border-b-[3px] border-slate-900 pb-3 mb-4 flex items-center">
-                    <div class="flex items-center justify-center mr-4 shrink-0 overflow-hidden" style="width:${w}px;height:${h}px;"><img src="${logo1}" class="w-full h-full object-contain" onerror="this.src='https://placehold.co/80x80/1e293b/ffffff?text=LOGO'"></div>
+                    <div class="flex items-center justify-center mr-4 shrink-0 overflow-hidden" style="width:${w}px;height:${h}px;"><img src="${logo1}" class="w-full h-full object-contain"></div>
                     <div class="${align} flex-1 px-2 space-y-0.5">
                         <h3 class="${s.fontLine1} ${s.weightLine1} uppercase" style="font-size:${s.sizeLine1}px;line-height:${s.spaceLine1};">${kopLine1}</h3>
                         <h3 class="${s.fontLine2} ${s.weightLine2} uppercase" style="font-size:${s.sizeLine2}px;line-height:${s.spaceLine2};">${kopLine2}</h3>
@@ -521,12 +517,23 @@
             await saveAgendaToSupabase(ag); state.agenda.unshift(ag); closeModal(); renderView();
         }
 
+        function handleArsipSearchInput(el) {
+            const query = el.value;
+            const container = document.getElementById('content-area');
+            container.innerHTML = renderArsipView(query);
+            const searchInputEl = document.getElementById('searchInput');
+            if (searchInputEl) {
+                searchInputEl.focus();
+                searchInputEl.setSelectionRange(searchInputEl.value.length, searchInputEl.value.length);
+            }
+        }
+
         function renderArsipView(query = '') {
             const filtered = state.letters.filter(l => l.name.toLowerCase().includes(query.toLowerCase()) || (l.nik && l.nik.includes(query)) || l.number.toLowerCase().includes(query.toLowerCase()) || l.type.toLowerCase().includes(query.toLowerCase()));
             return `<div class="space-y-6">
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col md:flex-row justify-between items-center gap-4">
                     <div><h3 class="font-bold text-slate-800 text-lg">Arsip Digital & Pencarian Instan</h3><p class="text-xs text-slate-500">Arsip surat dan foto hasil scan tersimpan aman di server.</p></div>
-                    <div class="w-full md:w-80 relative"><span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400"><i class="fa-solid fa-search"></i></span><input type="text" id="searchInput" oninput="renderArsipView(this.value); document.getElementById('content-area').innerHTML = renderArsipView(this.value); document.getElementById('searchInput').focus();" value="${query}" class="w-full bg-slate-50 border border-slate-300 rounded-xl pl-10 pr-4 py-2 text-sm" placeholder="Ketik NIK / Nama / No Surat..."></div>
+                    <div class="w-full md:w-80 relative"><span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400"><i class="fa-solid fa-search"></i></span><input type="text" id="searchInput" oninput="handleArsipSearchInput(this)" value="${query}" class="w-full bg-slate-50 border border-slate-300 rounded-xl pl-10 pr-4 py-2 text-sm" placeholder="Ketik NIK / Nama / No Surat..."></div>
                 </div>
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden"><div class="overflow-x-auto"><table class="w-full text-left text-sm">
                     <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 text-xs uppercase font-semibold"><tr><th class="p-4">No. Surat</th><th class="p-4">Pemohon / Pengirim</th><th class="p-4">Jenis</th><th class="p-4">Foto Arsip</th><th class="p-4">Tanggal</th><th class="p-4 text-center">Aksi</th></tr></thead>
@@ -698,12 +705,21 @@
             });
         }
 
+        function handleResetSystem() {
+            showConfirm('Reset', 'Kembalikan pengaturan awal?', async () => {
+                localStorage.removeItem('siap_desa_session');
+                await supabaseClient.from('pengaturan_desa').upsert({ id: 1, config: defaultSettings });
+                await loadDataFromSupabase();
+                renderView();
+            });
+        }
+
         function renderPengaturanView() {
             const s = state.settings;
             return `<div class="max-w-4xl mx-auto space-y-6"><div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
                 <div class="border-b border-slate-100 pb-4 mb-6 flex justify-between items-center">
                     <div><h3 class="text-lg font-bold text-slate-800">Pengaturan Kertas, Penandatangan & Kop Surat</h3><p class="text-xs text-slate-500">Sesuaikan kop dan ukuran kertas resmi.</p></div>
-                    <button onclick="showConfirm('Reset', 'Kembalikan pengaturan awal?', async () => { localStorage.removeItem('siap_desa_session'); await supabaseClient.from('pengaturan_desa').upsert({id:1, config:defaultSettings}); await loadDataFromSupabase(); renderView(); })" class="px-3 py-1.5 bg-red-50 text-red-600 text-xs font-semibold rounded-xl border border-red-200"><i class="fa-solid fa-rotate-right mr-1"></i> Reset</button>
+                    <button onclick="handleResetSystem()" class="px-3 py-1.5 bg-red-50 text-red-600 text-xs font-semibold rounded-xl border border-red-200"><i class="fa-solid fa-rotate-right mr-1"></i> Reset</button>
                 </div>
                 <form onsubmit="handleSaveSettings(event)" class="space-y-6">
                     <div class="p-5 bg-blue-50/70 rounded-2xl border border-blue-200 space-y-3">
