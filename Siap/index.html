@@ -7,17 +7,20 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Poppins:wght@400;600;700&family=Roboto:wght@400;700&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     fontFamily: { 
-                        sans: ['Inter', 'sans-serif'], poppins: ['Poppins', 'sans-serif'], roboto: ['Roboto', 'sans-serif'],
-                        jakartasans: ['Plus Jakarta Sans', 'sans-serif'], mono: ['Courier New', 'monospace']
+                        sans: ['Inter', 'sans-serif'], 
+                        poppins: ['Poppins', 'sans-serif'],
+                        mono: ['Courier New', 'monospace']
                     },
-                    colors: { brand: { 50: '#f0fdf4', 100: '#dcfce7', 500: '#22c55e', 600: '#16a34a', 700: '#15803d', 800: '#166534', 900: '#14532d' } }
+                    colors: { 
+                        brand: { 50: '#f0fdf4', 100: '#dcfce7', 500: '#22c55e', 600: '#16a34a', 700: '#15803d', 800: '#166534', 900: '#14532d' } 
+                    }
                 }
             }
         }
@@ -50,21 +53,32 @@
 
     <script>
         const defaultSettings = {
-            kopLine1: 'PEMERINTAH KABUPATEN POHUWATO', kopLine2: 'KECAMATAN PAGUAT', kopLine3: 'DESA KAMIIRI',
+            kopLine1: 'PEMERINTAH KABUPATEN POHUWATO', 
+            kopLine2: 'KECAMATAN PAGUAT', 
+            kopLine3: 'DESA KAMIIRI',
             kopLine4: 'Alamat : Jln. Trans Sulawesi Dsn I Desa Kamiiri Kec. Paguat Kab. Pohuwato',
             sizeLine1: '14', sizeLine2: '12', sizeLine3: '18', sizeLine4: '11',
             spaceLine1: '1.2', spaceLine2: '1.2', spaceLine3: '1.1', spaceLine4: '1.2',
             fontLine1: 'font-sans', fontLine2: 'font-sans', fontLine3: 'font-sans', fontLine4: 'font-sans',
             weightLine1: 'font-bold', weightLine2: 'font-semibold', weightLine3: 'font-black', weightLine4: 'font-normal',
-            desaShort: 'Kamiiri', appLogo: 'https://placehold.co/100x100/ffffff/16a34a?text=SIAP',
-            logo1: 'https://placehold.co/100x100/1e293b/ffffff?text=POHUWATO', logo2: 'https://placehold.co/100x100/166534/ffffff?text=DESA',
-            logoCount: '1', align: 'center', logoHeight: '80', logoWidth: '80', headName: 'Admin', headTitle: 'Kepala Desa',
+            desaShort: 'Kamiiri', 
+            appLogo: 'https://placehold.co/100x100/ffffff/16a34a?text=SIAP',
+            logo1: 'https://placehold.co/100x100/1e293b/ffffff?text=POHUWATO', 
+            logo2: 'https://placehold.co/100x100/166534/ffffff?text=DESA',
+            logoCount: '1', align: 'center', logoHeight: '80', logoWidth: '80', 
+            headName: 'Admin', headTitle: 'Kepala Desa',
             paperSize: 'A4', excelResidents: null
         };
 
         let state = {
-            isLoggedIn: false, currentUser: { name: 'Admin', role: 'Administrator Utama', username: 'admin' },
-            activeTab: 'dashboard', allowedUsers: [], settings: defaultSettings, residents: [], letters: [], agenda: []
+            isLoggedIn: false, 
+            currentUser: { name: 'Admin', role: 'Administrator Utama', username: 'admin' },
+            activeTab: 'dashboard', 
+            allowedUsers: [], 
+            settings: defaultSettings, 
+            residents: [], 
+            letters: [], 
+            agenda: []
         };
 
         const classificationCodes = [
@@ -79,7 +93,12 @@
         const sessionSaved = localStorage.getItem('siap_desa_session');
         const isReload = performance.navigation?.type === 1 || performance.getEntriesByType("navigation")[0]?.type === 'reload';
         if (isReload && sessionSaved) {
-            try { const p = JSON.parse(sessionSaved); state.isLoggedIn = p.isLoggedIn; state.currentUser = p.currentUser; if (p.activeTab) state.activeTab = p.activeTab; } catch(e){}
+            try { 
+                const p = JSON.parse(sessionSaved); 
+                state.isLoggedIn = p.isLoggedIn; 
+                state.currentUser = p.currentUser; 
+                if (p.activeTab) state.activeTab = p.activeTab; 
+            } catch(e){}
         }
 
         const saveSession = () => localStorage.setItem('siap_desa_session', JSON.stringify({ isLoggedIn: state.isLoggedIn, currentUser: state.currentUser, activeTab: state.activeTab }));
@@ -146,7 +165,8 @@
             const file = event.target.files[0];
             if (file) {
                 state.settings[fieldName] = await compressImage(file, 250, 250, 0.85);
-                document.getElementById(fieldName === 'appLogo' ? 'setAppLogo' : fieldName === 'logo1' ? 'setLogo1' : 'setLogo2').value = state.settings[fieldName];
+                const targetInput = document.getElementById(fieldName === 'appLogo' ? 'setAppLogo' : fieldName === 'logo1' ? 'setLogo1' : 'setLogo2');
+                if (targetInput) targetInput.value = state.settings[fieldName];
                 const kp = document.getElementById('liveKopPreview');
                 if (kp) kp.innerHTML = renderKopSuratHtml(state.settings);
                 await saveSettingsToSupabase();
@@ -154,12 +174,12 @@
         }
 
         function renderFontOptions(curr) {
-            return ['font-sans|Inter', 'font-poppins|Poppins', 'font-roboto|Roboto', 'font-jakartasans|Plus Jakarta Sans', 'font-mono|Courier New']
+            return ['font-sans|Inter', 'font-poppins|Poppins', 'font-mono|Courier New']
                 .map(f => { const [v, l] = f.split('|'); return `<option value="${v}" ${curr === v ? 'selected' : ''}>${l}</option>`; }).join('');
         }
 
         function renderWeightOptions(curr) {
-            return ['font-light|Light (300)', 'font-normal|Regular (400)', 'font-medium|Medium (500)', 'font-semibold|Semi Bold (600)', 'font-bold|Bold (700)', 'font-black|Black (900)']
+            return ['font-light|Light (300)', 'font-normal|Regular (400)', 'font-semibold|Semi Bold (600)', 'font-bold|Bold (700)', 'font-black|Black (900)']
                 .map(w => { const [v, l] = w.split('|'); return `<option value="${v}" ${curr === v ? 'selected' : ''}>${l}</option>`; }).join('');
         }
 
@@ -714,6 +734,17 @@
             });
         }
 
+        function handleLogoCountChange(sel) {
+            const container = document.getElementById('logo2Container');
+            if (container) {
+                if (sel.value === '1') {
+                    container.classList.add('opacity-40', 'pointer-events-none');
+                } else {
+                    container.classList.remove('opacity-40', 'pointer-events-none');
+                }
+            }
+        }
+
         function renderPengaturanView() {
             const s = state.settings;
             return `<div class="max-w-4xl mx-auto space-y-6"><div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
@@ -748,7 +779,7 @@
                         <div><label class="block text-xs font-semibold mb-1">Nama Singkat Desa:</label><input type="text" id="setDesaShort" value="${s.desaShort}" required class="w-full md:w-1/2 bg-white border border-slate-300 rounded-xl px-4 py-2 text-sm"></div>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-slate-50 rounded-2xl border border-slate-200">
-                        <div><label class="block text-xs font-semibold mb-2">Jumlah Logo:</label><select id="setLogoCount" onchange="document.getElementById('logo2Container').classList.toggle('opacity-40', this.value==='1'); document.getElementById('logo2Container').classList.toggle('pointer-events-none', this.value==='1');" class="w-full bg-white border border-slate-300 rounded-xl px-4 py-2 text-sm"><option value="1" ${s.logoCount==='1'?'selected':''}>1 Logo</option><option value="2" ${s.logoCount==='2'?'selected':''}>2 Logo</option></select></div>
+                        <div><label class="block text-xs font-semibold mb-2">Jumlah Logo:</label><select id="setLogoCount" onchange="handleLogoCountChange(this)" class="w-full bg-white border border-slate-300 rounded-xl px-4 py-2 text-sm"><option value="1" ${s.logoCount==='1'?'selected':''}>1 Logo</option><option value="2" ${s.logoCount==='2'?'selected':''}>2 Logo</option></select></div>
                         <div><label class="block text-xs font-semibold mb-2">Perataan Teks (Align):</label><select id="setAlign" class="w-full bg-white border border-slate-300 rounded-xl px-4 py-2 text-sm"><option value="center" ${s.align==='center'?'selected':''}>Rata Tengah</option><option value="left" ${s.align==='left'?'selected':''}>Rata Kiri</option><option value="right" ${s.align==='right'?'selected':''}>Rata Kanan</option></select></div>
                     </div>
                     <div class="space-y-4 p-4 bg-slate-50 rounded-2xl border border-slate-200">
@@ -776,12 +807,17 @@
             showModal('Berhasil', 'Pengaturan tersimpan!', 'success', () => renderActiveTabContent());
         }
 
+        function changeModalPaperSize(id, size) {
+            state.settings.paperSize = size;
+            saveSettingsToSupabase().then(() => previewLetter(id));
+        }
+
         function previewLetter(id) {
             const l = state.letters.find(x => x.id === id), res = state.residents.find(x => x.nik === l.nik) || { pob: 'Paguat', dob: '1990-01-01', job: 'Warga', gender: 'Laki-laki', address: 'Dsn I Desa Kamiiri' }, vName = getVillageName(), pSize = state.settings.paperSize || 'A4', isIncoming = l.type === 'Surat Masuk (Eksternal)';
             showCustomModalHtml(`
                 <div class="flex justify-between items-center mb-4 no-print bg-slate-100 p-3 rounded-xl border">
                     <div><span class="text-xs font-bold">Ukuran Kertas:</span><span class="ml-2 bg-brand-100 text-brand-800 text-xs font-mono font-bold px-2 py-0.5 rounded">${pSize}</span></div>
-                    <div class="flex space-x-2"><button onclick="state.settings.paperSize='A4'; saveSettingsToSupabase(); previewLetter('${id}');" class="px-3 py-1 rounded text-xs font-semibold ${pSize==='A4'?'bg-brand-600 text-white':'bg-white border'}">A4</button><button onclick="state.settings.paperSize='F4'; saveSettingsToSupabase(); previewLetter('${id}');" class="px-3 py-1 rounded text-xs font-semibold ${pSize==='F4'?'bg-brand-600 text-white':'bg-white border'}">F4</button></div>
+                    <div class="flex space-x-2"><button onclick="changeModalPaperSize('${id}', 'A4')" class="px-3 py-1 rounded text-xs font-semibold ${pSize==='A4'?'bg-brand-600 text-white':'bg-white border'}">A4</button><button onclick="changeModalPaperSize('${id}', 'F4')" class="px-3 py-1 rounded text-xs font-semibold ${pSize==='F4'?'bg-brand-600 text-white':'bg-white border'}">F4</button></div>
                 </div>
                 <div class="flex justify-center bg-slate-200/60 p-4 rounded-xl overflow-x-auto">
                     <div id="printable-letter" class="bg-white p-12 shadow-2xl border border-slate-300 text-slate-800 space-y-4 ${getPaperDimensionsClass(pSize)}">
