@@ -28,7 +28,15 @@
     <script>
         const SUPABASE_URL = 'https://isrdibmvxafmnpldbgdg.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_A_j5NU-O8HbCSof5mzfAWQ_1BPufFl3';
-        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        let supabaseClient = null;
+        try {
+            if (window.supabase) {
+                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            }
+        } catch (err) {
+            console.warn('Gagal menginisialisasi Supabase:', err);
+        }
     </script>
     <style>
         @media print {
@@ -74,7 +82,9 @@
             isLoggedIn: false, 
             currentUser: { name: 'Admin', role: 'Administrator Utama', username: 'admin' },
             activeTab: 'dashboard', 
-            allowedUsers: [], 
+            allowedUsers: [
+                { id: 1, name: 'Admin', username: 'admin', role: 'Administrator / Kepala Desa', status: 'Aktif', email: 'admin@pohuwato.desa.id' }
+            ], 
             settings: defaultSettings, 
             residents: [], 
             letters: [], 
@@ -124,31 +134,68 @@
 
         async function loadDataFromSupabase() {
             try {
-                const { data: setRow } = await supabaseClient.from('pengaturan_desa').select('*').eq('id', 1).single();
-                if (setRow?.config) state.settings = typeof setRow.config === 'string' ? JSON.parse(setRow.config) : setRow.config;
-                
-                const { data: resData } = await supabaseClient.from('penduduk').select('*');
-                state.residents = resData || [];
+                if (supabaseClient) {
+                    const { data: setRow } = await supabaseClient.from('pengaturan_desa').select('*').eq('id', 1).single();
+                    if (setRow?.config) state.settings = typeof setRow.config === 'string' ? JSON.parse(setRow.config) : setRow.config;
+                    
+                    const { data: resData } = await supabaseClient.from('penduduk').select('*');
+                    if (resData) state.residents = resData;
 
-                const { data: letterData } = await supabaseClient.from('surat_desa').select('*').order('created_at', { ascending: false });
-                state.letters = letterData?.map(l => ({ ...l, signedBy: l.signed_by, includePurpose: l.include_purpose, isScanned: l.is_scanned })) || [];
+                    const { data: letterData } = await supabaseClient.from('surat_desa').select('*').order('created_at', { ascending: false });
+                    if (letterData) {
+                        state.letters = letterData.map(l => ({ ...l, signedBy: l.signed_by, includePurpose: l.include_purpose, isScanned: l.is_scanned }));
+                    }
 
-                const { data: agendaData } = await supabaseClient.from('agenda_surat').select('*').order('created_at', { ascending: false });
-                state.agenda = agendaData?.map(a => ({ ...a, noSurat: a.no_surat, from: a.surat_from })) || [];
+                    const { data: agendaData } = await supabaseClient.from('agenda_surat').select('*').order('created_at', { ascending: false });
+                    if (agendaData) {
+                        state.agenda = agendaData.map(a => ({ ...a, noSurat: a.no_surat, from: a.surat_from }));
+                    }
 
-                const { data: staffData } = await supabaseClient.from('staf_desa').select('*');
-                state.allowedUsers = staffData || [{ id: 1, name: 'Admin', username: 'admin', role: 'Administrator / Kepala Desa', status: 'Aktif', email: 'admin@pohuwato.desa.id' }];
-            } catch (e) { console.error(e); }
-            renderView();
+                    const { data: staffData } = await supabaseClient.from('staf_desa').select('*');
+                    if (staffData && staffData.length > 0) state.allowedUsers = staffData;
+                }
+            } catch (e) {
+                console.warn('Gagal memuat data dari Supabase, menggunakan state lokal:', e);
+            } finally {
+                renderView();
+            }
         }
 
-        const saveSettingsToSupabase = () => supabaseClient.from('pengaturan_desa').upsert({ id: 1, config: state.settings, updated_at: new Date() });
-        const saveLetterToSupabase = (l) => supabaseClient.from('surat_desa').upsert({ id: l.id, nik: l.nik || null, name: l.name, type: l.type, code: l.code, number: l.number, date: l.date, purpose: l.purpose, status: l.status, signed_by: l.signedBy, sifat: l.sifat, lampiran: l.lampiran, include_purpose: l.includePurpose, photo: l.photo, is_scanned: l.isScanned });
-        const deleteLetterFromSupabase = (id) => supabaseClient.from('surat_desa').delete().eq('id', id);
-        const saveAgendaToSupabase = (a) => supabaseClient.from('agenda_surat').upsert({ id: a.id, type: a.type, no_surat: a.noSurat, surat_from: a.from, date: a.date, subject: a.subject, status: a.status });
-        const deleteAgendaFromSupabase = (id) => supabaseClient.from('agenda_surat').delete().eq('id', id);
-        const saveUserToSupabase = (u) => supabaseClient.from('staf_desa').upsert(u);
-        const deleteUserFromSupabase = (id) => supabaseClient.from('staf_desa').delete().eq('id', id);
+        const saveSettingsToSupabase = async () => {
+            if (supabaseClient) {
+                try { await supabaseClient.from('pengaturan_desa').upsert({ id: 1, config: state.settings, updated_at: new Date() }); } catch(e){}
+            }
+        };
+        const saveLetterToSupabase = async (l) => {
+            if (supabaseClient) {
+                try { await supabaseClient.from('surat_desa').upsert({ id: l.id, nik: l.nik || null, name: l.name, type: l.type, code: l.code, number: l.number, date: l.date, purpose: l.purpose, status: l.status, signed_by: l.signedBy, sifat: l.sifat, lampiran: l.lampiran, include_purpose: l.includePurpose, photo: l.photo, is_scanned: l.isScanned }); } catch(e){}
+            }
+        };
+        const deleteLetterFromSupabase = async (id) => {
+            if (supabaseClient) {
+                try { await supabaseClient.from('surat_desa').delete().eq('id', id); } catch(e){}
+            }
+        };
+        const saveAgendaToSupabase = async (a) => {
+            if (supabaseClient) {
+                try { await supabaseClient.from('agenda_surat').upsert({ id: a.id, type: a.type, no_surat: a.noSurat, surat_from: a.from, date: a.date, subject: a.subject, status: a.status }); } catch(e){}
+            }
+        };
+        const deleteAgendaFromSupabase = async (id) => {
+            if (supabaseClient) {
+                try { await supabaseClient.from('agenda_surat').delete().eq('id', id); } catch(e){}
+            }
+        };
+        const saveUserToSupabase = async (u) => {
+            if (supabaseClient) {
+                try { await supabaseClient.from('staf_desa').upsert(u); } catch(e){}
+            }
+        };
+        const deleteUserFromSupabase = async (id) => {
+            if (supabaseClient) {
+                try { await supabaseClient.from('staf_desa').delete().eq('id', id); } catch(e){}
+            }
+        };
 
         const getVillageName = () => state.settings.desaShort || 'Kamiiri';
         const getPaperDimensionsClass = (size) => size === 'F4' ? 'w-full max-w-[215mm] min-h-[330mm] mx-auto' : 'w-full max-w-[210mm] min-h-[297mm] mx-auto';
@@ -226,6 +273,7 @@
 
         function renderView() {
             const wrapper = document.getElementById('appContainer');
+            if (!wrapper) return;
             if (!state.isLoggedIn) { wrapper.innerHTML = renderLoginView(); return; }
             const vName = getVillageName();
             const navClass = (t) => state.activeTab === t ? 'flex items-center px-3 py-2.5 rounded-lg transition text-white bg-brand-600 shadow-md' : 'flex items-center px-3 py-2.5 rounded-lg transition text-slate-300 hover:bg-slate-800 hover:text-white';
@@ -303,6 +351,7 @@
         function renderActiveTabContent() {
             updateDynamicVillageUI();
             const container = document.getElementById('content-area');
+            if (!container) return;
             const titles = { dashboard: 'Dashboard Utama Desa ', 'scan-masuk': 'Pemindaian & Arsip Surat Masuk', layanan: 'Pembuatan Surat Keterangan Warga', agenda: 'Buku Agenda Surat', arsip: 'Arsip Digital & Pencarian Instan', laporan: 'Rekapitulasi & Laporan PDF', penduduk: 'Master Data Penduduk', pengguna: 'Manajemen Hak Akses', pengaturan: 'Pengaturan Desa & Kop' };
             const tEl = document.getElementById('pageTitle');
             if (tEl) tEl.innerText = titles[state.activeTab] + (state.activeTab === 'dashboard' ? getVillageName() : '');
@@ -397,8 +446,10 @@
         function toggleIncomingScanFilter() {
             tempIncomingIsScanned = !tempIncomingIsScanned;
             const img = document.getElementById('incomingPhotoImg');
-            img.classList.toggle('scan-effect', tempIncomingIsScanned);
-            document.getElementById('incomingScanFilterText').innerText = tempIncomingIsScanned ? 'Nonaktifkan Efek Scan' : 'Aktifkan Efek Scan';
+            if (img) {
+                img.classList.toggle('scan-effect', tempIncomingIsScanned);
+                document.getElementById('incomingScanFilterText').innerText = tempIncomingIsScanned ? 'Nonaktifkan Efek Scan' : 'Aktifkan Efek Scan';
+            }
         }
 
         function clearIncomingPhoto() {
@@ -468,12 +519,16 @@
 
         function autofillResident(nik) {
             const res = state.residents.find(r => r.nik === nik);
-            document.getElementById('inputNik').value = res ? res.nik : '';
-            document.getElementById('inputName').value = res ? res.name : '';
+            const nEl = document.getElementById('inputNik');
+            const nameEl = document.getElementById('inputName');
+            if (nEl) nEl.value = res ? res.nik : '';
+            if (nameEl) nameEl.value = res ? res.name : '';
         }
 
         function updateClassificationCode() {
-            document.getElementById('inputCode').value = document.getElementById('letterType').value.split('|')[1];
+            const cEl = document.getElementById('inputCode');
+            const lEl = document.getElementById('letterType');
+            if (cEl && lEl) cEl.value = lEl.value.split('|')[1];
         }
 
         async function handleGenerateLetter(e) {
@@ -540,11 +595,13 @@
         function handleArsipSearchInput(el) {
             const query = el.value;
             const container = document.getElementById('content-area');
-            container.innerHTML = renderArsipView(query);
-            const searchInputEl = document.getElementById('searchInput');
-            if (searchInputEl) {
-                searchInputEl.focus();
-                searchInputEl.setSelectionRange(searchInputEl.value.length, searchInputEl.value.length);
+            if (container) {
+                container.innerHTML = renderArsipView(query);
+                const searchInputEl = document.getElementById('searchInput');
+                if (searchInputEl) {
+                    searchInputEl.focus();
+                    searchInputEl.setSelectionRange(searchInputEl.value.length, searchInputEl.value.length);
+                }
             }
         }
 
@@ -647,7 +704,9 @@
 
         async function clearAllResidentsData() {
             showConfirm('Reset Penduduk', 'Kosongkan seluruh data penduduk?', async () => {
-                await supabaseClient.from('penduduk').delete().neq('nik', '0000000000000000');
+                if (supabaseClient) {
+                    try { await supabaseClient.from('penduduk').delete().neq('nik', '0000000000000000'); } catch(e){}
+                }
                 state.residents = []; state.settings.excelResidents = null;
                 await saveSettingsToSupabase(); renderActiveTabContent();
                 showModal('Berhasil', 'Data penduduk dikosongkan.', 'success');
@@ -656,7 +715,9 @@
 
         async function deleteSingleResident(nik) {
             showConfirm('Hapus Penduduk', `Hapus penduduk NIK ${nik}?`, async () => {
-                await supabaseClient.from('penduduk').delete().eq('nik', nik);
+                if (supabaseClient) {
+                    try { await supabaseClient.from('penduduk').delete().eq('nik', nik); } catch(e){}
+                }
                 state.residents = state.residents.filter(r => r.nik !== nik);
                 renderActiveTabContent(); showModal('Berhasil', 'Penduduk dihapus.', 'success');
             });
@@ -683,7 +744,9 @@
         async function handleSaveNewResident(e) {
             e.preventDefault();
             const r = { nik: document.getElementById('resNik').value.trim(), name: document.getElementById('resName').value, gender: document.getElementById('resGender').value, pob: document.getElementById('resPob').value, dob: document.getElementById('resDob').value, address: document.getElementById('resAddress').value, job: document.getElementById('resJob').value, status: 'Kawin' };
-            await supabaseClient.from('penduduk').upsert(r);
+            if (supabaseClient) {
+                try { await supabaseClient.from('penduduk').upsert(r); } catch(e){}
+            }
             state.residents.unshift(r); closeModal(); renderView();
         }
 
@@ -728,7 +791,9 @@
         function handleResetSystem() {
             showConfirm('Reset', 'Kembalikan pengaturan awal?', async () => {
                 localStorage.removeItem('siap_desa_session');
-                await supabaseClient.from('pengaturan_desa').upsert({ id: 1, config: defaultSettings });
+                if (supabaseClient) {
+                    try { await supabaseClient.from('pengaturan_desa').upsert({ id: 1, config: defaultSettings }); } catch(e){}
+                }
                 await loadDataFromSupabase();
                 renderView();
             });
