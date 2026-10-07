@@ -126,7 +126,6 @@
         let tempIncomingScanPhoto = null;
         let tempIncomingIsScanned = false;
 
-        // Memulihkan sesi dan tab aktif saat halaman di-refresh
         let sessionSaved = localStorage.getItem('siap_desa_session');
         let isReload = false;
         if (performance.navigation && performance.navigation.type === 1) {
@@ -200,7 +199,38 @@
                 }
 
                 const { data: resData } = await supabaseClient.from('penduduk').select('*');
-                state.residents = resData || [];
+                if (resData && resData.length > 0) {
+                    state.residents = resData;
+                } else {
+                    const defaultResidents = [
+                        {
+                            name: 'Budi Santoso',
+                            nokk: '7501011234560001',
+                            nik: '7501011234560001',
+                            gender: 'Laki-laki',
+                            pob: 'Paguat',
+                            dob: '1990-05-12',
+                            age: '36',
+                            ageLimit: 'Dewasa',
+                            religion: 'Islam',
+                            maritalStatus: 'Kawin',
+                            familyStatus: 'Kepala Keluarga',
+                            education: 'SMA/Sederajat',
+                            job: 'Petani',
+                            fatherName: 'Sartono',
+                            motherName: 'Siti Aminah',
+                            kepkel: 'Budi Santoso',
+                            statusPerkawinan: 'Kawin',
+                            healthInsurance: 'BPJS PBI',
+                            dtks: 'Terdaftar',
+                            assistance: 'PKH',
+                            birthCert: 'Ada',
+                            dusun: 'Dusun I'
+                        }
+                    ];
+                    await supabaseClient.from('penduduk').upsert(defaultResidents);
+                    state.residents = defaultResidents;
+                }
 
                 const { data: letterData } = await supabaseClient.from('surat_desa').select('*').order('created_at', { ascending: false });
                 if (letterData && letterData.length > 0) {
@@ -1126,10 +1156,10 @@
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold text-slate-600 mb-2">Pilih Warga (NIK / Nama):</label>
+                                <label class="block text-xs font-semibold text-slate-600 mb-2">Pilih Warga (NIK / Nama / Dusun):</label>
                                 <select id="selectNik" onchange="autofillResident(this.value)" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
                                     <option value="">-- Pilih Warga Penduduk --</option>
-                                    ${state.residents.map(r => `<option value="${r.nik}">${r.nik} - ${r.name}</option>`).join('')}
+                                    ${state.residents.map(r => `<option value="${r.nik}">${r.nik} - ${r.name} (${r.dusun || 'Dusun -'})</option>`).join('')}
                                 </select>
                             </div>
                         </div>
@@ -1445,8 +1475,7 @@
                                         <tr class="hover:bg-slate-50">
                                             <td class="p-4 font-mono text-xs font-bold text-brand-700">${l.number}</td>
                                             <td class="p-4">
-                                                <p class="font-semibold text-slate-800">${l.name}</p>
-                                                ${l.nik && l.nik !== '0000000000000000' ? `<p class="text-xs font-mono text-slate-400">NIK: ${l.nik}</p>` : '<span class="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-medium">Surat Masuk Eksternal</span>'}
+                                                <p class="font-semibold text-slate-800">${l.name}</p>${l.nik && l.nik !== '0000000000000000' ? `<p class="text-xs font-mono text-slate-400">NIK: ${l.nik}</p>` : '<span class="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-medium">Surat Masuk Eksternal</span>'}
                                             </td>
                                             <td class="p-4 text-slate-700">${l.type}</td>
                                             <td class="p-4">
@@ -1578,7 +1607,7 @@
                     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col md:flex-row justify-between items-center gap-4">
                         <div>
                             <h3 class="font-bold text-slate-800 text-lg">Master Data Penduduk & Impor/Ekspor Excel</h3>
-                            <p class="text-xs text-slate-500">Unggah file Excel (.xlsx / .xls) untuk memuat data atau unduh data kependudukan ke format Excel.</p>
+                            <p class="text-xs text-slate-500">Unggah file Excel (.xlsx / .xls) dengan atribut lengkap atau unduh data kependudukan ke format Excel.</p>
                         </div>
                         <div class="flex flex-wrap items-center gap-2">
                             <button onclick="exportResidentsToExcel()" class="bg-emerald-600 text-white px-4 py-2.5 rounded-xl text-xs font-semibold shadow hover:bg-emerald-700 transition flex items-center space-x-1.5">
@@ -1599,13 +1628,13 @@
 
                     ${excelData && excelData.columns && excelData.columns.length > 0 ? `
                         <div class="bg-emerald-50 border border-emerald-200 p-4 rounded-xl flex items-center justify-between text-xs text-emerald-900 shadow-sm">
-                            <div><i class="fa-solid fa-circle-check text-emerald-600 mr-2"></i> Menampilkan data dari file Excel (${excelData.rows.length} baris data, ${excelData.columns.length} kolom aktif).</div>
+                            <div><i class="fa-solid fa-circle-check text-emerald-600 mr-2"></i> Menampilkan data dari file Excel (${excelData.rows.length} baris data,${excelData.columns.length} kolom aktif).</div>
                             <span class="font-mono bg-white px-2.5 py-1 rounded-lg border border-emerald-300 font-bold text-emerald-700">Mode Kolom Dinamis</span>
                         </div>
 
                         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                             <div class="overflow-x-auto">
-                                <table class="w-full text-left text-sm">
+                                <table class="w-full text-left text-sm whitespace-nowrap">
                                     <thead class="bg-slate-50 border-b border-slate-200 text-slate-700 text-xs uppercase font-semibold">
                                         <tr>
                                             <th class="p-3 border-r text-center w-12">No</th>
@@ -1627,39 +1656,71 @@
                         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex justify-between items-center">
                             <div>
                                 <h4 class="font-bold text-slate-800 text-sm">Daftar Penduduk Server</h4>
-                                <p class="text-xs text-slate-500">Anda dapat menambahkan data manual atau mengunggah file Excel untuk memuat data massal.</p>
+                                <p class="text-xs text-slate-500">Atribut lengkap: Nama, NOKK, NIK, JK, Tempat/Tanggal Lahir, Usia, Batasan Umur, Agama, Status Nikah, Status Keluarga, Pendidikan, Pekerjaan, Nama Ayah, Ibu, Kepkel, Status Perkawinan, Jaminan Kesehatan, DTKS, Bantuan, Akta Kelahiran, Dusun.</p>
                             </div>
-                            <button onclick="openAddResidentModal()" class="bg-brand-600 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow hover:bg-brand-700 transition flex items-center space-x-1.5">
+                            <button onclick="openAddResidentModal()" class="bg-brand-600 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow hover:bg-brand-700 transition flex items-center space-x-1.5 shrink-0">
                                 <i class="fa-solid fa-user-plus"></i><span>Tambah Penduduk</span>
                             </button>
                         </div>
 
                         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                             <div class="overflow-x-auto">
-                                <table class="w-full text-left text-sm">
+                                <table class="w-full text-left text-sm whitespace-nowrap">
                                     <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 text-xs uppercase font-semibold">
                                         <tr>
-                                            <th class="p-4">NIK</th>
-                                            <th class="p-4">Nama Lengkap</th>
-                                            <th class="p-4">Gender</th>
-                                            <th class="p-4">Tempat, Tgl Lahir</th>
-                                            <th class="p-4">Pekerjaan</th>
-                                            <th class="p-4">Alamat</th>
-                                            <th class="p-4 text-center">Aksi</th>
+                                            <th class="p-3 border-r">Nama</th>
+                                            <th class="p-3 border-r">NOKK</th>
+                                            <th class="p-3 border-r">NIK</th>
+                                            <th class="p-3 border-r">JK</th>
+                                            <th class="p-3 border-r">Tempat Lahir</th>
+                                            <th class="p-3 border-r">Tanggal Lahir</th>
+                                            <th class="p-3 border-r">Usia</th>
+                                            <th class="p-3 border-r">Batasan Umur</th>
+                                            <th class="p-3 border-r">Agama</th>
+                                            <th class="p-3 border-r">Status Nikah</th>
+                                            <th class="p-3 border-r">Status Keluarga</th>
+                                            <th class="p-3 border-r">Pendidikan</th>
+                                            <th class="p-3 border-r">Pekerjaan</th>
+                                            <th class="p-3 border-r">Nama Ayah</th>
+                                            <th class="p-3 border-r">Nama Ibu</th>
+                                            <th class="p-3 border-r">Kepkel</th>
+                                            <th class="p-3 border-r">Status Perkawinan</th>
+                                            <th class="p-3 border-r">Jaminan Kesehatan</th>
+                                            <th class="p-3 border-r">DTKS</th>
+                                            <th class="p-3 border-r">Bantuan</th>
+                                            <th class="p-3 border-r">Akta Kelahiran</th>
+                                            <th class="p-3 border-r">Dusun</th>
+                                            <th class="p-3 text-center">Aksi</th>
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y divide-slate-100">
                                         ${state.residents.length === 0 ? `
-                                            <tr><td colspan="7" class="p-8 text-center text-slate-400 italic">Belum ada data penduduk. Silakan impor file Excel atau tambah manual.</td></tr>
+                                            <tr><td colspan="23" class="p-8 text-center text-slate-400 italic">Belum ada data penduduk. Silakan impor file Excel atau tambah manual.</td></tr>
                                         ` : state.residents.map(r => `
                                             <tr class="hover:bg-slate-50">
-                                                <td class="p-4 font-mono text-xs font-bold text-slate-700">${r.nik}</td>
-                                                <td class="p-4 font-semibold text-slate-800">${r.name}</td>
-                                                <td class="p-4 text-slate-600 text-xs">${r.gender}</td>
-                                                <td class="p-4 text-slate-600 text-xs">${r.pob}, ${r.dob}</td>
-                                                <td class="p-4 text-slate-600 text-xs">${r.job}</td>
-                                                <td class="p-4 text-slate-600 text-xs">${r.address}</td>
-                                                <td class="p-4 text-center">
+                                                <td class="p-3 border-r font-semibold text-slate-800">${r.name || ''}</td>
+                                                <td class="p-3 border-r font-mono text-xs text-slate-600">${r.nokk || ''}</td>
+                                                <td class="p-3 border-r font-mono text-xs text-brand-700 font-bold">${r.nik || ''}</td>
+                                                <td class="p-3 border-r text-xs">${r.gender || ''}</td>
+                                                <td class="p-3 border-r text-xs">${r.pob || ''}</td>
+                                                <td class="p-3 border-r text-xs">${r.dob || ''}</td>
+                                                <td class="p-3 border-r text-xs">${r.age || ''}</td>
+                                                <td class="p-3 border-r text-xs">${r.ageLimit || ''}</td>
+                                                <td class="p-3 border-r text-xs">${r.religion || ''}</td>
+                                                <td class="p-3 border-r text-xs">${r.maritalStatus || ''}</td>
+                                                <td class="p-3 border-r text-xs">${r.familyStatus || ''}</td>
+                                                <td class="p-3 border-r text-xs">${r.education || ''}</td>
+                                                <td class="p-3 border-r text-xs">${r.job || ''}</td>
+                                                <td class="p-3 border-r text-xs">${r.fatherName || ''}</td>
+                                                <td class="p-3 border-r text-xs">${r.motherName || ''}</td>
+                                                <td class="p-3 border-r text-xs font-semibold">${r.kepkel || ''}</td>
+                                                <td class="p-3 border-r text-xs">${r.statusPerkawinan || ''}</td>
+                                                <td class="p-3 border-r text-xs">${r.healthInsurance || ''}</td>
+                                                <td class="p-3 border-r text-xs">${r.dtks || ''}</td>
+                                                <td class="p-3 border-r text-xs">${r.assistance || ''}</td>
+                                                <td class="p-3 border-r text-xs">${r.birthCert || ''}</td>
+                                                <td class="p-3 border-r text-xs">${r.dusun || ''}</td>
+                                                <td class="p-3 text-center">
                                                     <button onclick="deleteSingleResident('${r.nik}')" class="bg-red-50 text-red-600 hover:bg-red-100 p-1.5 rounded-lg text-xs font-semibold transition" title="Hapus Data Ini">
                                                         <i class="fa-solid fa-trash"></i>
                                                     </button>
@@ -1689,13 +1750,28 @@
                 }
                 dataToExport = state.residents.map((r, index) => ({
                     "No": index + 1,
+                    "Nama": r.name,
+                    "NOKK": r.nokk,
                     "NIK": r.nik,
-                    "Nama Lengkap": r.name,
-                    "Jenis Kelamin": r.gender,
+                    "JK": r.gender,
                     "Tempat Lahir": r.pob,
                     "Tanggal Lahir": r.dob,
+                    "Usia": r.age,
+                    "Batasan Umur": r.ageLimit,
+                    "Agama": r.religion,
+                    "Status Nikah": r.maritalStatus,
+                    "Status Keluarga": r.familyStatus,
+                    "Pendidikan": r.education,
                     "Pekerjaan": r.job,
-                    "Alamat / Dusun": r.address
+                    "Nama Ayah": r.fatherName,
+                    "Nama Ibu": r.motherName,
+                    "Kepkel": r.kepkel,
+                    "Status Perkawinan": r.statusPerkawinan,
+                    "Jaminan Kesehatan": r.healthInsurance,
+                    "DTKS": r.dtks,
+                    "Bantuan": r.assistance,
+                    "Akta Kelahiran": r.birthCert,
+                    "Dusun": r.dusun
                 }));
             }
 
@@ -1778,29 +1854,37 @@
             const html = `
                 <div class="space-y-4">
                     <h3 class="font-bold text-lg text-slate-800">Tambah Data Warga Penduduk</h3>
-                    <form onsubmit="handleSaveNewResident(event)" class="space-y-3">
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-600 mb-1">NIK (16 Digit):</label>
-                            <input type="text" id="resNik" required maxlength="16" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-sm font-mono" placeholder="750101...">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-600 mb-1">Nama Lengkap:</label>
-                            <input type="text" id="resName" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-sm" placeholder="Nama Warga">
-                        </div>
-                        <div class="grid grid-cols-2 gap-3">
+                    <form onsubmit="handleSaveNewResident(event)" class="space-y-3 max-h-[70vh] overflow-y-auto pr-2">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                             <div>
-                                <label class="block text-xs font-semibold text-slate-600 mb-1">Jenis Kelamin:</label>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Nama Lengkap:</label>
+                                <input type="text" id="resName" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm" placeholder="Nama Warga">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Nomor KK (NOKK):</label>
+                                <input type="text" id="resNokk" required maxlength="16" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-mono" placeholder="750101...">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">NIK (16 Digit):</label>
+                                <input type="text" id="resNik" required maxlength="16" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-mono" placeholder="750101...">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">JK (Jenis Kelamin):</label>
                                 <select id="resGender" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm">
                                     <option value="Laki-laki">Laki-laki</option>
                                     <option value="Perempuan">Perempuan</option>
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold text-slate-600 mb-1">Pekerjaan:</label>
-                                <input type="text" id="resJob" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm" placeholder="Petani / Swasta">
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Agama:</label>
+                                <input type="text" id="resReligion" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm" value="Islam">
                             </div>
                         </div>
-                        <div class="grid grid-cols-2 gap-3">
+
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
                             <div>
                                 <label class="block text-xs font-semibold text-slate-600 mb-1">Tempat Lahir:</label>
                                 <input type="text" id="resPob" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm" placeholder="Paguat">
@@ -1809,12 +1893,81 @@
                                 <label class="block text-xs font-semibold text-slate-600 mb-1">Tanggal Lahir:</label>
                                 <input type="date" id="resDob" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm" value="1995-01-01">
                             </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Usia:</label>
+                                <input type="text" id="resAge" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm" placeholder="31">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Batasan Umur:</label>
+                                <input type="text" id="resAgeLimit" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm" placeholder="Dewasa">
+                            </div>
                         </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-600 mb-1">Alamat / Dusun:</label>
-                            <input type="text" id="resAddress" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-sm" placeholder="Dsn I Desa Kamiiri">
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Status Nikah:</label>
+                                <input type="text" id="resMaritalStatus" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm" placeholder="Belum Kawin / Kawin">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Status Keluarga:</label>
+                                <input type="text" id="resFamilyStatus" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm" placeholder="Kepala Keluarga / Anggota">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Status Perkawinan:</label>
+                                <input type="text" id="resStatusPerkawinan" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm" placeholder="Kawin">
+                            </div>
                         </div>
-                        <div class="flex justify-end space-x-3 pt-2">
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Pendidikan:</label>
+                                <input type="text" id="resEducation" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm" placeholder="SMA / S1">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Pekerjaan:</label>
+                                <input type="text" id="resJob" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm" placeholder="Petani / Swasta">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Dusun:</label>
+                                <input type="text" id="resDusun" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm" placeholder="Dusun I">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Nama Ayah:</label>
+                                <input type="text" id="resFatherName" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm" placeholder="Nama Ayah">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Nama Ibu:</label>
+                                <input type="text" id="resMotherName" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm" placeholder="Nama Ibu">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Nama Kepkel (Kepala Keluarga):</label>
+                                <input type="text" id="resKepkel" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm" placeholder="Nama Kepala Keluarga">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Jaminan Kesehatan:</label>
+                                <input type="text" id="resHealthInsurance" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm" placeholder="BPJS PBI / Mandiri">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">DTKS:</label>
+                                <input type="text" id="resDtks" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm" placeholder="Terdaftar / Tidak">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Bantuan:</label>
+                                <input type="text" id="resAssistance" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm" placeholder="PKH / BPNT / -">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Akta Kelahiran:</label>
+                                <input type="text" id="resBirthCert" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm" placeholder="Ada / Tidak">
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end space-x-3 pt-3 border-t">
                             <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl">Batal</button>
                             <button type="submit" class="px-5 py-2 bg-brand-600 text-white text-xs font-semibold rounded-xl shadow">Simpan Penduduk</button>
                         </div>
@@ -1827,14 +1980,28 @@
         async function handleSaveNewResident(e) {
             e.preventDefault();
             const newRes = {
-                nik: document.getElementById('resNik').value.trim(),
                 name: document.getElementById('resName').value,
+                nokk: document.getElementById('resNokk').value.trim(),
+                nik: document.getElementById('resNik').value.trim(),
                 gender: document.getElementById('resGender').value,
                 pob: document.getElementById('resPob').value,
                 dob: document.getElementById('resDob').value,
-                address: document.getElementById('resAddress').value,
+                age: document.getElementById('resAge').value,
+                ageLimit: document.getElementById('resAgeLimit').value,
+                religion: document.getElementById('resReligion').value,
+                maritalStatus: document.getElementById('resMaritalStatus').value,
+                familyStatus: document.getElementById('resFamilyStatus').value,
+                education: document.getElementById('resEducation').value,
                 job: document.getElementById('resJob').value,
-                status: 'Kawin'
+                fatherName: document.getElementById('resFatherName').value,
+                motherName: document.getElementById('resMotherName').value,
+                kepkel: document.getElementById('resKepkel').value,
+                statusPerkawinan: document.getElementById('resStatusPerkawinan').value,
+                healthInsurance: document.getElementById('resHealthInsurance').value,
+                dtks: document.getElementById('resDtks').value,
+                assistance: document.getElementById('resAssistance').value,
+                birthCert: document.getElementById('resBirthCert').value,
+                dusun: document.getElementById('resDusun').value
             };
 
             await supabaseClient.from('penduduk').upsert(newRes);
@@ -2222,7 +2389,7 @@
 
         function previewLetter(id) {
             const l = state.letters.find(item => item.id === id);
-            const res = state.residents.find(item => item.nik === l.nik) || { pob: 'Paguat', dob: '1990-01-01', job: 'Warga', gender: 'Laki-laki', address: 'Dsn I Desa Kamiiri' };
+            const res = state.residents.find(item => item.nik === l.nik) || { pob: 'Paguat', dob: '1990-01-01', job: 'Warga', gender: 'Laki-laki', dusun: 'Dusun I', religion: 'Islam', statusPerkawinan: 'Kawin', fatherName: '-', motherName: '-' };
             const vName = getVillageName();
             const shouldIncludePurpose = l.includePurpose !== false;
             const pSize = state.settings.paperSize || 'A4';
@@ -2253,7 +2420,7 @@
                             <div class="text-xs leading-relaxed space-y-3 pt-3 border-b pb-4">
                                 <div class="grid grid-cols-12"><span class="col-span-4 font-semibold">Instansi Pengirim</span><span class="col-span-8">: <strong>${l.name}</strong></span></div>
                                 <div class="grid grid-cols-12"><span class="col-span-4 font-semibold">Tanggal Surat</span><span class="col-span-8">: ${l.date}</span></div>
-                                <div class="grid grid-cols-12"><span class="col-span-4 font-semibold">Sifat / Lampiran</span><span class="col-span-8">: ${l.sifat || 'Penting'} / ${l.lampiran || '-'}</span></div>
+                                <div class="grid grid-cols-12"><span class="col-span-4 font-semibold">Sifat / Lampiran</span><span class="col-span-8">: ${l.sifat \vert{}\vert{} 'Penting'} /${l.lampiran || '-'}</span></div>
                                 <div class="grid grid-cols-12"><span class="col-span-4 font-semibold">Perihal / Subjek</span><span class="col-span-8 font-medium">${l.purpose}</span></div>
                             </div>
                         ` : l.type.includes('Undangan') ? `
@@ -2292,16 +2459,18 @@
                             </div>
 
                             <div class="text-xs leading-relaxed space-y-3 pt-3">
-                                <p>Yang bertanda tangan di bawah ini ${state.settings.headTitle}${vName} Kecamatan Paguat Kabupaten Pohuwato, menerangkan dengan sebenarnya bahwa:</p>
+                                <p>Yang bertanda tangan di bawah ini ${state.settings.headTitle} Desa${vName} Kecamatan Paguat Kabupaten Pohuwato, menerangkan dengan sebenarnya bahwa:</p>
                                 
-                                <div class="pl-6 space-y-1 py-1">
+                                <div class="pl-6 space-y-1.5 py-1">
                                     <div class="grid grid-cols-12"><span class="col-span-4 font-semibold">Nama Lengkap</span><span class="col-span-8">: <strong>${l.name}</strong></span></div>
                                     <div class="grid grid-cols-12"><span class="col-span-4 font-semibold">NIK / No. KTP</span><span class="col-span-8">: <span class="font-mono">${l.nik}</span></span></div>
-                                    <div class="grid grid-cols-12"><span class="col-span-4 font-semibold">Tempat / Tgl. Lahir</span><span class="col-span-8">: ${res.pob},${res.dob}</span></div>
-                                    <div class="grid grid-cols-12"><span class="col-span-4 font-semibold">Jenis Kelamin</span><span class="col-span-8">: ${res.gender}</span></div>
-                                    <div class="grid grid-cols-12"><span class="col-span-4 font-semibold">Agama</span><span class="col-span-8">: Islam</span></div>
-                                    <div class="grid grid-cols-12"><span class="col-span-4 font-semibold">Pekerjaan</span><span class="col-span-8">: ${res.job}</span></div>
-                                    <div class="grid grid-cols-12"><span class="col-span-4 font-semibold">Alamat / Domisili</span><span class="col-span-8">: ${res.address} Desa${vName}</span></div>
+                                    <div class="grid grid-cols-12"><span class="col-span-4 font-semibold">Tempat / Tgl. Lahir</span><span class="col-span-8">: ${res.pob \vert{}\vert{} ''},${res.dob || ''}</span></div>
+                                    <div class="grid grid-cols-12"><span class="col-span-4 font-semibold">Jenis Kelamin</span><span class="col-span-8">: ${res.gender || ''}</span></div>
+                                    <div class="grid grid-cols-12"><span class="col-span-4 font-semibold">Agama</span><span class="col-span-8">: ${res.religion || 'Islam'}</span></div>
+                                    <div class="grid grid-cols-12"><span class="col-span-4 font-semibold">Pekerjaan</span><span class="col-span-8">: ${res.job || ''}</span></div>
+                                    <div class="grid grid-cols-12"><span class="col-span-4 font-semibold">Status Perkawinan</span><span class="col-span-8">: ${res.statusPerkawinan || res.maritalStatus || 'Kawin'}</span></div>
+                                    <div class="grid grid-cols-12"><span class="col-span-4 font-semibold">Nama Ayah / Ibu</span><span class="col-span-8">: ${res.fatherName \vert{}\vert{} '-'} /${res.motherName || '-'}</span></div>
+                                    <div class="grid grid-cols-12"><span class="col-span-4 font-semibold">Alamat / Dusun</span><span class="col-span-8">: ${res.dusun \vert{}\vert{} 'Dusun I'} Desa${vName}</span></div>
                                 </div>
 
                                 <p>
@@ -2334,7 +2503,7 @@
                             <div class="flex justify-end pt-12 text-xs">
                                 <div class="text-center">
                                     <p>${vName},${l.date}</p>
-                                    <p class="font-bold">${state.settings.headTitle}${vName}</p>
+                                    <p class="font-bold">${state.settings.headTitle} Desa${vName}</p>
                                     <div class="h-16 flex items-center justify-center">
                                         <span class="text-[10px] bg-brand-50 text-brand-700 px-2 py-1 rounded font-mono border border-brand-200">[TTE / Stempel Resmi Desa]</span>
                                     </div>
@@ -2418,4 +2587,4 @@
         });
     </script>
 </body>
-    </html>
+</html>
