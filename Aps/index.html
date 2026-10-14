@@ -415,22 +415,13 @@
                         </div>
                     </div>
 
+                    <!-- FORM 1: PENILAIAN KATEGORI (MULTI-SELECT) -->
                     <div class="bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-emerald-500/10 p-4 rounded-3xl border border-emerald-200/80 shadow-xs space-y-3">
                         <h4 class="text-xs font-bold text-emerald-900 uppercase tracking-wider flex items-center">
-                            <i class="fa-solid fa-circle-check text-emerald-600 mr-1.5"></i> Form Penilaian Berdasarkan Kategori
+                            <i class="fa-solid fa-circle-check text-emerald-600 mr-1.5"></i> Form Penilaian Kategori (Pilih Banyak Santri)
                         </h4>
                         
                         <div class="space-y-2.5">
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-700 mb-1">Pilih Santri</label>
-                                <select x-model="gradingForm.santriId" class="w-full text-xs bg-white border border-emerald-200 rounded-xl px-3 py-2 focus:outline-none font-semibold text-slate-700">
-                                    <option value="">-- Pilih Nama Santri --</option>
-                                    <template x-for="s in santriList" :key="s.id">
-                                        <option :value="s.id" x-text="s.nama + ' (' + (s.kelompok || 'Tanpa Kelompok') + ')'"></option>
-                                    </template>
-                                </select>
-                            </div>
-
                             <div>
                                 <label class="block text-[10px] font-bold text-slate-700 mb-1">Pilih Kategori Prestasi / Pelanggaran</label>
                                 <select x-model="gradingForm.categoryId" class="w-full text-xs bg-white border border-emerald-200 rounded-xl px-3 py-2 focus:outline-none font-semibold text-slate-700">
@@ -442,30 +433,67 @@
                             </div>
 
                             <div>
+                                <div class="flex justify-between items-center mb-1">
+                                    <label class="block text-[10px] font-bold text-slate-700">Pilih Santri (Bisa Ceklis Banyak)</label>
+                                    <button type="button" @click="toggleSelectAllGrading()" class="text-[10px] text-emerald-700 font-bold hover:underline" x-text="gradingForm.santriIds.length === santriList.length ? 'Batalkan Semua' : 'Pilih Semua'"></button>
+                                </div>
+                                <div class="bg-white border border-emerald-200 rounded-xl p-2.5 max-h-48 overflow-y-auto space-y-1.5">
+                                    <div class="relative mb-2">
+                                        <input type="text" x-model="gradingSantriSearch" placeholder="Cari santri..." class="w-full px-2.5 py-1.5 text-[11px] bg-slate-50 border border-slate-200 rounded-lg focus:outline-none">
+                                    </div>
+                                    <template x-for="s in filteredGradingSantriList" :key="s.id">
+                                        <label class="flex items-center space-x-2 text-xs p-1.5 hover:bg-emerald-50/50 rounded-lg cursor-pointer">
+                                            <input type="checkbox" :value="s.id" x-model="gradingForm.santriIds" class="rounded text-emerald-600 focus:ring-emerald-500 w-4 h-4">
+                                            <span class="font-semibold text-slate-800 flex-1" x-text="s.nama + ' (' + (s.kelompok || 'Tanpa Kelompok') + ')'"></span>
+                                            <span class="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-bold" x-text="s.poin + ' Poin'"></span>
+                                        </label>
+                                    </template>
+                                    <template x-if="filteredGradingSantriList.length === 0">
+                                        <p class="text-[11px] text-slate-400 text-center py-2">Santri tidak ditemukan.</p>
+                                    </template>
+                                </div>
+                                <span class="text-[10px] text-slate-500 mt-1 block font-medium" x-text="gradingForm.santriIds.length + ' santri dipilih.'"></span>
+                            </div>
+
+                            <div>
                                 <label class="block text-[10px] font-bold text-slate-700 mb-1">Catatan Tambahan (Opsional)</label>
                                 <input type="text" x-model="gradingForm.catatan" placeholder="Contoh: Surat Al-Baqarah ayat 1-20" class="w-full px-3 py-2 text-xs bg-white border border-emerald-200 rounded-xl focus:outline-none">
                             </div>
 
                             <button @click="submitGrading()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-100 transition">
-                                <i class="fa-solid fa-paper-plane mr-1"></i> Berikan Penilaian Kategori
+                                <i class="fa-solid fa-paper-plane mr-1"></i> Berikan Penilaian Kategori Massal
                             </button>
                         </div>
                     </div>
 
+                    <!-- FORM 2: POIN BONUS & CATATAN BEBAS (MULTI-SELECT) -->
                     <div class="bg-gradient-to-br from-amber-500/15 via-orange-500/5 to-amber-500/10 p-4 rounded-3xl border border-amber-200/80 shadow-xs space-y-3">
                         <h4 class="text-xs font-bold text-amber-900 uppercase tracking-wider flex items-center">
-                            <i class="fa-solid fa-award text-amber-600 mr-1.5"></i> Form Poin Bonus & Catatan Alasan Bebas
+                            <i class="fa-solid fa-award text-amber-600 mr-1.5"></i> Form Poin Bonus & Catatan (Pilih Banyak Santri)
                         </h4>
                         
                         <div class="space-y-2.5">
                             <div>
-                                <label class="block text-[10px] font-bold text-slate-700 mb-1">Pilih Santri</label>
-                                <select x-model="bonusForm.santriId" class="w-full text-xs bg-white border border-amber-200 rounded-xl px-3 py-2 focus:outline-none font-semibold text-slate-700">
-                                    <option value="">-- Pilih Nama Santri --</option>
-                                    <template x-for="s in santriList" :key="s.id">
-                                        <option :value="s.id" x-text="s.nama + ' (' + (s.kelompok || 'Tanpa Kelompok') + ')'"></option>
+                                <div class="flex justify-between items-center mb-1">
+                                    <label class="block text-[10px] font-bold text-slate-700">Pilih Santri (Bisa Ceklis Banyak)</label>
+                                    <button type="button" @click="toggleSelectAllBonus()" class="text-[10px] text-amber-700 font-bold hover:underline" x-text="bonusForm.santriIds.length === santriList.length ? 'Batalkan Semua' : 'Pilih Semua'"></button>
+                                </div>
+                                <div class="bg-white border border-amber-200 rounded-xl p-2.5 max-h-48 overflow-y-auto space-y-1.5">
+                                    <div class="relative mb-2">
+                                        <input type="text" x-model="bonusSantriSearch" placeholder="Cari santri..." class="w-full px-2.5 py-1.5 text-[11px] bg-slate-50 border border-slate-200 rounded-lg focus:outline-none">
+                                    </div>
+                                    <template x-for="s in filteredBonusSantriList" :key="s.id">
+                                        <label class="flex items-center space-x-2 text-xs p-1.5 hover:bg-amber-50/50 rounded-lg cursor-pointer">
+                                            <input type="checkbox" :value="s.id" x-model="bonusForm.santriIds" class="rounded text-amber-600 focus:ring-amber-500 w-4 h-4">
+                                            <span class="font-semibold text-slate-800 flex-1" x-text="s.nama + ' (' + (s.kelompok || 'Tanpa Kelompok') + ')'"></span>
+                                            <span class="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-bold" x-text="s.poin + ' Poin'"></span>
+                                        </label>
                                     </template>
-                                </select>
+                                    <template x-if="filteredBonusSantriList.length === 0">
+                                        <p class="text-[11px] text-slate-400 text-center py-2">Santri tidak ditemukan.</p>
+                                    </template>
+                                </div>
+                                <span class="text-[10px] text-slate-500 mt-1 block font-medium" x-text="bonusForm.santriIds.length + ' santri dipilih.'"></span>
                             </div>
 
                             <div>
@@ -479,7 +507,7 @@
                             </div>
 
                             <button @click="submitBonusPoin()" class="w-full py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold shadow-md shadow-amber-100 transition">
-                                <i class="fa-solid fa-paper-plane mr-1"></i> Simpan Poin Bonus & Catatan
+                                <i class="fa-solid fa-paper-plane mr-1"></i> Simpan Poin Bonus Massal
                             </button>
                         </div>
                     </div>
@@ -1034,7 +1062,7 @@
             santriSearch: '',
             selectedKelompokFilter: '',
             santriSortBy: 'default',
-            absensiSearch: '', // State tambahan untuk pencarian halaman absensi
+            absensiSearch: '', 
             santriForm: { id: null, nama: '', kelompok: '', hafalan: '', umur: '', alamat: '', foto: '', poin: 0 },
             isSantriModalOpen: false,
 
@@ -1048,8 +1076,10 @@
             pointItems: [],
             pointItemForm: { id: null, nama: '', poin: 0 },
 
-            gradingForm: { santriId: '', categoryId: '', catatan: '' },
-            bonusForm: { santriId: '', jumlahPoin: '', catatan: '' },
+            gradingForm: { santriIds: [], categoryId: '', catatan: '' },
+            gradingSantriSearch: '',
+            bonusForm: { santriIds: [], jumlahPoin: '', catatan: '' },
+            bonusSantriSearch: '',
 
             attendanceLogsList: [],
             selectedAction: {},
@@ -1220,7 +1250,6 @@
                 return [...new Set(this.santriList.map(s => s.kelompok).filter(Boolean))].sort();
             },
 
-            // Filter & Sorting santri (Mendukung Pencarian, Filter Kelompok/Guru, dan Sorting Abjad A-Z / Z-A)
             get filteredSantriFixedPosition() {
                 let result = [...this.santriList];
                 if (this.santriSearch) {
@@ -1239,13 +1268,44 @@
                 return result;
             },
 
-            // Getter pencarian khusus untuk daftar santri di halaman absensi
             get filteredAbsensiList() {
                 let result = [...this.santriList];
                 if (this.absensiSearch) {
                     result = result.filter(s => s.nama.toLowerCase().includes(this.absensiSearch.toLowerCase()));
                 }
                 return result;
+            },
+
+            get filteredGradingSantriList() {
+                let result = [...this.santriList];
+                if (this.gradingSantriSearch) {
+                    result = result.filter(s => s.nama.toLowerCase().includes(this.gradingSantriSearch.toLowerCase()));
+                }
+                return result;
+            },
+
+            get filteredBonusSantriList() {
+                let result = [...this.santriList];
+                if (this.bonusSantriSearch) {
+                    result = result.filter(s => s.nama.toLowerCase().includes(this.bonusSantriSearch.toLowerCase()));
+                }
+                return result;
+            },
+
+            toggleSelectAllGrading() {
+                if (this.gradingForm.santriIds.length === this.santriList.length) {
+                    this.gradingForm.santriIds = [];
+                } else {
+                    this.gradingForm.santriIds = this.santriList.map(s => s.id);
+                }
+            },
+
+            toggleSelectAllBonus() {
+                if (this.bonusForm.santriIds.length === this.santriList.length) {
+                    this.bonusForm.santriIds = [];
+                } else {
+                    this.bonusForm.santriIds = this.santriList.map(s => s.id);
+                }
             },
 
             async saveSantri() {
@@ -1339,59 +1399,70 @@
             },
 
             async submitGrading() {
-                if (!this.gradingForm.santriId || !this.gradingForm.categoryId) {
-                    this.showToast('Pilih santri dan kategori penilaian terlebih dahulu!', 'warning');
+                if (!this.gradingForm.santriIds || this.gradingForm.santriIds.length === 0 || !this.gradingForm.categoryId) {
+                    this.showToast('Pilih minimal satu santri dan kategori penilaian terlebih dahulu!', 'warning');
                     return;
                 }
 
-                let santri = this.santriList.find(s => s.id == this.gradingForm.santriId);
                 let category = this.pointItems.find(c => c.id == this.gradingForm.categoryId);
-
-                if (!santri || !category) return;
+                if (!category) return;
 
                 let poinAdd = parseInt(category.poin) || 0;
                 let keteranganCatatan = this.gradingForm.catatan ? `${category.nama} - ${this.gradingForm.catatan}` : category.nama;
 
-                showLoading('Menyimpan penilaian kategori...');
-                await supabaseClient.from('santri').update({ poin: (santri.poin || 0) + poinAdd }).eq('id', santri.id);
-                await supabaseClient.from('attendance_logs').insert([{ 
-                    santri_nama: santri.nama, 
-                    status: `Penilaian Kategori (${poinAdd >= 0 ? '+' + poinAdd : poinAdd})`, 
-                    poin: poinAdd, 
-                    catatan: keteranganCatatan,
-                    tanggal: new Date().toLocaleDateString() 
-                }]);
+                showLoading('Menyimpan penilaian kategori massal...');
+                
+                for (let santriId of this.gradingForm.santriIds) {
+                    let santri = this.santriList.find(s => s.id == santriId);
+                    if (santri) {
+                        await supabaseClient.from('santri').update({ poin: (santri.poin || 0) + poinAdd }).eq('id', santri.id);
+                        await supabaseClient.from('attendance_logs').insert([{ 
+                            santri_nama: santri.nama, 
+                            status: `Penilaian Kategori (${poinAdd >= 0 ? '+' + poinAdd : poinAdd})`, 
+                            poin: poinAdd, 
+                            catatan: keteranganCatatan,
+                            tanggal: new Date().toLocaleDateString() 
+                        }]);
+                    }
+                }
 
                 hideLoading();
-                this.gradingForm = { santriId: '', categoryId: '', catatan: '' };
+                this.gradingForm = { santriIds: [], categoryId: '', catatan: '' };
+                this.gradingSantriSearch = '';
                 this.loadInitialData();
-                this.showToast('Penilaian kategori & poin berhasil disimpan!');
+                this.showToast('Penilaian kategori massal berhasil disimpan!');
             },
 
             async submitBonusPoin() {
-                if (!this.bonusForm.santriId || !this.bonusForm.jumlahPoin || !this.bonusForm.catatan) {
-                    this.showToast('Pilih santri, masukkan jumlah poin, dan tulis catatan alasannya!', 'warning');
+                if (!this.bonusForm.santriIds || this.bonusForm.santriIds.length === 0 || !this.bonusForm.jumlahPoin || !this.bonusForm.catatan) {
+                    this.showToast('Pilih minimal satu santri, masukkan jumlah poin, dan tulis catatan alasannya!', 'warning');
                     return;
                 }
 
-                let santri = this.santriList.find(s => s.id == this.bonusForm.santriId);
                 let poinAdd = parseInt(this.bonusForm.jumlahPoin) || 0;
                 let keterangan = this.bonusForm.catatan.trim();
 
-                showLoading('Menyimpan poin bonus...');
-                await supabaseClient.from('santri').update({ poin: (santri.poin || 0) + poinAdd }).eq('id', santri.id);
-                await supabaseClient.from('attendance_logs').insert([{ 
-                    santri_nama: santri.nama, 
-                    status: `Poin Bonus Bebas (${poinAdd >= 0 ? '+' + poinAdd : poinAdd})`, 
-                    poin: poinAdd, 
-                    catatan: keterangan,
-                    tanggal: new Date().toLocaleDateString() 
-                }]);
+                showLoading('Menyimpan poin bonus massal...');
+                
+                for (let santriId of this.bonusForm.santriIds) {
+                    let santri = this.santriList.find(s => s.id == santriId);
+                    if (santri) {
+                        await supabaseClient.from('santri').update({ poin: (santri.poin || 0) + poinAdd }).eq('id', santri.id);
+                        await supabaseClient.from('attendance_logs').insert([{ 
+                            santri_nama: santri.nama, 
+                            status: `Poin Bonus Bebas (${poinAdd >= 0 ? '+' + poinAdd : poinAdd})`, 
+                            poin: poinAdd, 
+                            catatan: keterangan,
+                            tanggal: new Date().toLocaleDateString() 
+                        }]);
+                    }
+                }
 
                 hideLoading();
-                this.bonusForm = { santriId: '', jumlahPoin: '', catatan: '' };
+                this.bonusForm = { santriIds: [], jumlahPoin: '', catatan: '' };
+                this.bonusSantriSearch = '';
                 this.loadInitialData();
-                this.showToast('Poin bonus & catatan berhasil disimpan!');
+                this.showToast('Poin bonus & catatan massal berhasil disimpan!');
             },
 
             async processAbsensiOnly(santriId) {
